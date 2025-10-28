@@ -1,0 +1,200 @@
+// 模拟数据
+const mockData = {
+  // 首页数据
+  indexData: {
+    recentDraws: [
+      {
+        period: '25121',
+        week: '6',
+        firstZone: ['02', '03', '08', '13', '21'],
+        secondZone: [],
+        thirdZone: [],
+        lastZone: ['07', '12'],
+        sum: '47',
+        span: '19',
+        zoneRatio: '3:2:0',
+        oddEvenRatio: '3:2'
+      },
+      {
+        period: '25120',
+        week: '3',
+        firstZone: ['11', '13'],
+        secondZone: ['22', '26'],
+        thirdZone: ['35'],
+        lastZone: ['02', '08'],
+        sum: '107',
+        span: '24',
+        zoneRatio: '1:2:2',
+        oddEvenRatio: '3:2'
+      },
+      {
+        period: '25119',
+        week: '1',
+        firstZone: ['08'],
+        secondZone: ['15'],
+        thirdZone: ['27', '29', '31'],
+        lastZone: ['01', '07'],
+        sum: '110',
+        span: '23',
+        zoneRatio: '1:1:3',
+        oddEvenRatio: '4:1'
+      },
+      {
+        period: '25118',
+        week: '6',
+        firstZone: ['02'],
+        secondZone: ['08', '09', '12'],
+        thirdZone: ['21'],
+        lastZone: ['04', '05'],
+        sum: '52',
+        span: '19',
+        zoneRatio: '4:1:0',
+        oddEvenRatio: '2:3'
+      },
+      {
+        period: '25117',
+        week: '3',
+        firstZone: ['05', '10'],
+        secondZone: ['18', '21'],
+        thirdZone: ['29'],
+        lastZone: ['05', '07'],
+        sum: '83',
+        span: '24',
+        zoneRatio: '2:2:1',
+        oddEvenRatio: '3:2'
+      },
+      {
+        period: '25116',
+        week: '1',
+        firstZone: ['02', '06'],
+        secondZone: ['16', '22'],
+        thirdZone: ['29'],
+        lastZone: ['08', '12'],
+        sum: '75',
+        span: '27',
+        zoneRatio: '2:2:1',
+        oddEvenRatio: '1:4'
+      },
+      {
+        period: '25115',
+        week: '6',
+        firstZone: ['03'],
+        secondZone: ['12', '14'],
+        thirdZone: ['21', '35'],
+        lastZone: ['01', '05'],
+        sum: '85',
+        span: '32',
+        zoneRatio: '2:2:1',
+        oddEvenRatio: '3:2'
+      },
+      {
+        period: '25114',
+        week: '3',
+        firstZone: ['03', '08', '09'],
+        secondZone: ['12', '16'],
+        thirdZone: [],
+        lastZone: ['01', '05'],
+        sum: '48',
+        span: '13',
+        zoneRatio: '4:1:0',
+        oddEvenRatio: '2:3'
+      },
+      {
+        period: '25113',
+        week: '1',
+        firstZone: ['01'],
+        secondZone: ['14', '18'],
+        thirdZone: ['28', '35'],
+        lastZone: ['02', '03'],
+        sum: '96',
+        span: '34',
+        zoneRatio: '1:2:2',
+        oddEvenRatio: '2:3'
+      },
+      {
+        period: '25112',
+        week: '1',
+        firstZone: ['03', '04'],
+        secondZone: ['21', '23', '24'],
+        thirdZone: [],
+        lastZone: ['09', '12'],
+        sum: '75',
+        span: '21',
+        zoneRatio: '2:3:0',
+        oddEvenRatio: '3:2'
+      }
+    ]
+  },
+  
+  // 双杀分析数据
+  killAnalysisData: {
+    latestDraw: {
+      period: '25120',
+      drawDate: '2025-10-22',
+      firstZoneNumbers: ['11', '13', '22', '26', '35'],
+      lastZoneNumbers: ['02', '08']
+    },
+    recommendedNumbers: {
+      firstZone: ['16', '20', '07', '12'],
+      lastZone: ['02', '08', '10', '12']
+    },
+    firstZoneCombinations: [
+      { combination: '11-13', count: 3, stats: [] },
+      { combination: '11-22', count: 2, stats: [] },
+      { combination: '11-26', count: 2, stats: [] },
+      { combination: '11-35', count: 1, stats: [] },
+      { combination: '13-22', count: 0, stats: [] },
+      { combination: '13-26', count: 2, stats: [] },
+      { combination: '13-35', count: 0, stats: [] },
+      { combination: '22-26', count: 1, stats: [] },
+      { combination: '22-35', count: 0, stats: [] },
+      { combination: '26-35', count: 1, stats: [] }
+    ],
+    lastZoneCombinations: [
+      { combination: '02-08', count: 5, stats: [] }
+    ]
+  },
+  
+  // 组合详情数据
+  combinationDetailData: {
+    latestDraw: {
+      period: '25120',
+      drawDate: '2025-10-22',
+      firstZoneNumbers: ['11', '13', '22', '26', '35'],
+      lastZoneNumbers: ['02', '08']
+    },
+    combinationInfo: {
+      balls: '11和13',
+      statPeriod: 100,
+      nextAppearBall: '2',
+      appearCount: 1
+    },
+    records: [
+      {
+        id: 1,
+        combinationPeriod: '25011',
+        firstZoneDrawNumbers: '11 13 20 25 29',
+        nextPeriod: '25012',
+        nextFirstZoneDrawNumbers: '2 5 8 10 30'
+      }
+    ]
+  }
+};
+
+// 导出数据
+window.mockData = mockData;
+
+// 页面跳转函数
+function goToKillAnalysis() {
+  window.location.href = 'sha_hao_fen_xi.html';
+}
+
+function goToCombinationDetail(combination, type = 'first') {
+  // 保存选中的组合信息到localStorage
+  localStorage.setItem('selectedCombination', combination);
+  window.location.href = `zu_he_xiang_qing.html?combination=${combination}&type=${type}`;
+}
+
+function goBack() {
+  window.history.back();
+}

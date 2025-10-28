@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大乐透统计分析 - 首页</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="index-page">
+  <div class="container">
+    <h1 class="page-title">首页</h1>
+    
+    <!-- 工具栏 -->
+    <div class="section">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <!-- 期数选择按钮 -->
+        <div>
+          <button class="btn btn-red">最近10期</button>
+          <button class="btn">最近35期</button>
+          <button class="btn">最近50期</button>
+          <button class="btn">最近30期</button>
+          <button class="btn">最近120期</button>
+        </div>
+        
+        <!-- 查询和操作 -->
+        <div>
+          <input type="text" placeholder="起始期号" value="25112" style="width: 80px;">
+          <span>-</span>
+          <input type="text" placeholder="结束期号" value="25121" style="width: 80px;">
+          <button class="btn btn-green">查看</button>
+          <span style="margin-left: 10px;">当前显示: 25121-25112</span>
+          <button class="btn btn-green">更新</button>
+          <button class="btn btn-red" onclick="goToKillAnalysis()">杀号分析</button>
+        </div>
+      </div>
+      
+      <!-- 标记形式选择 -->
+      <div class="mark-options">
+        <label><input type="checkbox" id="chkDuplicate"> 重号</label>
+        <label><input type="checkbox" id="chkConsecutive"> 连号</label>
+        <label><input type="checkbox" id="chkEdge"> 边号</label>
+        <label><input type="checkbox"> 遗漏数据</label>
+        <label><input type="checkbox"> 遗漏分层</label>
+      </div>
+    </div>
+    
+    <!-- 彩票结果表格 -->
+    <div class="section">
+      <table class="lottery-table">
+        <thead>
+          <tr>
+            <th colspan="2"></th>
+            <!-- 一区 -->
+            <th colspan="12">一区</th>
+            <!-- 二区 -->
+            <th colspan="12">二区</th>
+            <!-- 三区 -->
+            <th colspan="11">三区</th>
+            <!-- 后区 -->
+            <th colspan="12">后区</th>
+            <!-- 统计信息 -->
+            <th colspan="4">统计信息</th>
+          </tr>
+          <tr>
+            <th>期号</th>
+            <th>星期</th>
+            <!-- 前区号码 -->
+            <th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th><th>10</th><th>11</th><th>12</th>
+            <th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th><th>21</th><th>22</th><th>23</th><th>24</th>
+            <th>25</th><th>26</th><th>27</th><th>28</th><th>29</th><th>30</th><th>31</th><th>32</th><th>33</th><th>34</th><th>35</th>
+            <!-- 后区号码 -->
+            <th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th><th>10</th><th>11</th><th>12</th>
+            <!-- 统计信息 -->
+            <th>和值</th><th>跨度</th><th>区比</th><th>奇偶比</th>
+          </tr>
+        </thead>
+        <tbody id="drawResults">
+          <!-- 数据将通过JavaScript动态生成 -->
+        </tbody>
+      </table>
+      
+      <!-- 分页 -->
+      <div class="pagination">
+        <a href="#">上一页</a>
+        <a href="#" class="active">1</a>
+        <a href="#">2</a>
+        <a href="#">下一页</a>
+        <span style="margin-left: 20px;">共 10 条记录，每页 5 条</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // 检测重号
+    function findDuplicateNumbers(data) {
+      const duplicateCache = {};
+      
+      // 遍历所有期数，检测与前一期的重复号码
+      for (let i = 1; i < data.length; i++) {
+        const currentPeriod = data[i].period;
+        const currentNumbers = [...data[i].firstZone, ...data[i].secondZone, ...data[i].thirdZone];
+        const prevNumbers = [...data[i-1].firstZone, ...data[i-1].secondZone, ...data[i-1].thirdZone];
+        
+        // 使用Set和filter查找交集（重号）
+        const duplicates = [...new Set(currentNumbers)].filter(num => prevNumbers.includes(num));
+        duplicateCache[currentPeriod] = duplicates;
+      }
+      
+      return duplicateCache;
+    }
+    
+    // 检测连号
+    function findConsecutiveNumbers(data) {
+      const consecutiveCache = {};
+      
+      // 遍历所有期数
+      data.forEach(draw => {
+        const currentPeriod = draw.period;
+        // 分别检测前区和后区的连号
+        const consecutiveGroups = {
+          firstZone: findConsecutiveGroupsInArray([...draw.firstZone, ...draw.secondZone, ...draw.thirdZone]),
+          lastZone: findConsecutiveGroupsInArray(draw.lastZone)
+        };
+        
+        consecutiveCache[currentPeriod] = consecutiveGroups;
+      });
+      
+      return consecutiveCache;
+    }
+    
+    // 检测邻号（边号）
+    function findEdgeNumbers(data) {
+      const edgeCache = {};
+      
+      // 遍历所有期数，检测与前一期的邻号
+      for (let i = 1; i < data.length; i++) {
+        const currentPeriod = data[i].period;
+        const currentNumbers = [...data[i].firstZone, ...data[i].secondZone, ...data[i].thirdZone, ...data[i].lastZone];
+        const prevNumbers = [...data[i-1].firstZone, ...data[i-1].secondZone, ...data[i-1].thirdZone, ...data[i-1].lastZone];
+        
+        // 检测每个当前号码是否为上期号码的邻号
+        const edgeNumbers = [];
+        currentNumbers.forEach(num => {
+          const numInt = parseInt(num);
+          // 检查是否存在相邻的号码在上期出现
+          if (prevNumbers.some(prevNum => Math.abs(parseInt(prevNum) - numInt) === 1)) {
+            edgeNumbers.push(num);
+          }
+        });
+        
+        edgeCache[currentPeriod] = edgeNumbers;
+      }
+      
+      return edgeCache;
+    }
+    
+    // 检测单个数组中的连号组
+    function findConsecutiveGroupsInArray(numbers) {
+      if (!numbers || numbers.length < 2) return [];
+      
+      // 将字符串转换为数字并排序
+      const sortedNumbers = [...new Set(numbers.map(num => parseInt(num)))]
+        .sort((a, b) => a - b);
+      
+      const consecutiveGroups = [];
+      let currentGroup = [sortedNumbers[0]];
+      
+      // 遍历排序后的数组，查找连续的数字
+      for (let i = 1; i < sortedNumbers.length; i++) {
+        if (sortedNumbers[i] === sortedNumbers[i-1] + 1) {
+          // 连续数字，添加到当前组
+          currentGroup.push(sortedNumbers[i]);
+        } else {
+          // 不连续，保存前一组（如果长度>=2）
+          if (currentGroup.length >= 2) {
+            consecutiveGroups.push(currentGroup.map(num => String(num).padStart(2, '0')));
+          }
+          // 开始新组
+          currentGroup = [sortedNumbers[i]];
+        }
+      }
+      
+      // 检查最后一组
+      if (currentGroup.length >= 2) {
+        consecutiveGroups.push(currentGroup.map(num => String(num).padStart(2, '0')));
+      }
+      
+      return consecutiveGroups;
+    }
+    
+    // 渲染首页数据
+    function renderIndexData() {
+      const data = mockData.indexData.recentDraws;
+      const tbody = document.getElementById('drawResults');
+      tbody.innerHTML = '';
+      
+      // 计算重号
+      const duplicateCache = findDuplicateNumbers(data);
+      // 计算连号
+      const consecutiveCache = findConsecutiveNumbers(data);
+      
+      // 获取复选框状态
+      const showDuplicates = document.getElementById('chkDuplicate')?.checked || false;
+      const showConsecutive = document.getElementById('chkConsecutive')?.checked || false;
+      const showEdgeNumbers = document.getElementById('chkEdge')?.checked || false;
+      
+      // 计算邻号
+      const edgeCache = findEdgeNumbers(data);
+      
+      data.forEach(draw => {
+        const tr = document.createElement('tr');
+        
+        // 期号和星期
+        tr.innerHTML = `
+          <td>${draw.period}</td>
+          <td>${draw.week}</td>
+        `;
+        
+        // 前区号码（一区、二区、三区）
+        const allFirstZoneNumbers = Array.from({length: 35}, (_, i) => String(i + 1).padStart(2, '0'));
+        const currentNumbers = [...draw.firstZone, ...draw.secondZone, ...draw.thirdZone];
+        const isDuplicate = showDuplicates && duplicateCache[draw.period] ? duplicateCache[draw.period] : [];
+          // 处理邻号信息
+          const isEdgeNumber = showEdgeNumbers && edgeCache[draw.period] ? edgeCache[draw.period] : [];
+          
+          // 处理连号信息
+        const consecutiveGroups = showConsecutive && consecutiveCache[draw.period] ? consecutiveCache[draw.period] : null;
+        
+        allFirstZoneNumbers.forEach(num => {
+          const td = document.createElement('td');
+          if (currentNumbers.includes(num)) {
+            const ball = document.createElement('div');
+            ball.className = 'red-ball';
+            ball.textContent = num;
+            
+            // 如果是重号且复选框已勾选，则添加高亮类
+            if (isDuplicate.includes(num)) {
+              ball.classList.add('duplicate-number');
+            }
+            
+            // 如果是邻号且复选框已勾选，则添加高亮类
+            if (isEdgeNumber.includes(num)) {
+              ball.classList.add('edge-number');
+            }
+            
+            // 如果是连号且复选框已勾选，检查是否属于连号组
+            if (consecutiveGroups && consecutiveGroups.firstZone) {
+              for (let i = 0; i < consecutiveGroups.firstZone.length; i++) {
+                if (consecutiveGroups.firstZone[i].includes(num)) {
+                  ball.classList.add(`consecutive-group-${i}`);
+                  // 为连号组的第一个和最后一个添加特殊样式
+                  const group = consecutiveGroups.firstZone[i];
+                  if (num === group[0]) {
+                    ball.classList.add('consecutive-start');
+                  }
+                  if (num === group[group.length - 1]) {
+                    ball.classList.add('consecutive-end');
+                  }
+                }
+              }
+            }
+            
+            td.appendChild(ball);
+          }
+          tr.appendChild(td);
+        });
+        
+        // 后区号码
+        const allLastZoneNumbers = Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0'));
+        
+        allLastZoneNumbers.forEach(num => {
+          const td = document.createElement('td');
+          if (draw.lastZone.includes(num)) {
+            const ball = document.createElement('div');
+            ball.className = 'blue-ball';
+            ball.textContent = num;
+            // 后区也可以检测重号
+            if (isDuplicate.includes(num)) {
+              ball.classList.add('duplicate-number');
+            }
+            
+            // 后区也可以检测邻号
+            if (isEdgeNumber.includes(num)) {
+              ball.classList.add('edge-number');
+            }
+            
+            // 后区也可以检测连号
+            if (consecutiveGroups && consecutiveGroups.lastZone) {
+              for (let i = 0; i < consecutiveGroups.lastZone.length; i++) {
+                if (consecutiveGroups.lastZone[i].includes(num)) {
+                  ball.classList.add(`consecutive-group-${i}`);
+                  // 为连号组的第一个和最后一个添加特殊样式
+                  const group = consecutiveGroups.lastZone[i];
+                  if (num === group[0]) {
+                    ball.classList.add('consecutive-start');
+                  }
+                  if (num === group[group.length - 1]) {
+                    ball.classList.add('consecutive-end');
+                  }
+                }
+              }
+            }
+            
+            td.appendChild(ball);
+          }
+          tr.appendChild(td);
+        });
+        
+        // 统计信息
+        tr.innerHTML += `
+          <td>${draw.sum}</td>
+          <td>${draw.span}</td>
+          <td>${draw.zoneRatio}</td>
+          <td>${draw.oddEvenRatio}</td>
+        `;
+        
+        tbody.appendChild(tr);
+      });
+    }
+    
+    // 重号复选框事件监听
+    document.getElementById('chkDuplicate')?.addEventListener('change', function() {
+      renderIndexData(); // 重新渲染数据以更新重号显示
+    });
+    
+    // 连号复选框事件监听
+    document.getElementById('chkConsecutive')?.addEventListener('change', function() {
+      renderIndexData(); // 重新渲染数据以更新连号显示
+    });
+    
+    // 邻号复选框事件监听
+    document.getElementById('chkEdge')?.addEventListener('change', function() {
+      renderIndexData(); // 重新渲染数据以更新邻号显示
+    });
+    
+    // 页面加载完成后渲染数据
+    window.addEventListener('load', renderIndexData);
+  </script>
+</body>
+</html>

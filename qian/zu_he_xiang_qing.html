@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大乐透统计分析 - 组合详情</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h1 class="page-title">组合详情</h1>
+      <!-- 返回按钮 -->
+      <button class="btn back-btn" onclick="window.location.href='sha_hao_fen_xi.html'">返回</button>
+    </div>
+    
+    <!-- 最新开奖信息 -->
+    <div class="section">
+      <h3>最新开奖信息</h3>
+      <div id="latestDrawInfo" style="margin-top: 10px;">
+        <!-- 数据将通过JavaScript动态生成 -->
+      </div>
+    </div>
+    
+    <!-- 组合信息 -->
+    <div class="section">
+      <div id="combinationInfo" style="margin-bottom: 20px; padding: 10px; background-color: #f9f9f9; border-radius: 4px;">
+        <!-- 数据将通过JavaScript动态生成 -->
+      </div>
+      
+      <!-- 记录表格 -->
+      <table class="lottery-table">
+        <thead>
+          <tr id="tableHeader">
+            <th>序号</th>
+            <th>组合出现的期号</th>
+            <th>前区开奖号</th>
+            <th>下一期期号</th>
+            <th>下一期前区开奖号</th>
+          </tr>
+        </thead>
+        <tbody id="combinationRecords">
+          <!-- 数据将通过JavaScript动态生成 -->
+        </tbody>
+      </table>
+      
+      <!-- 分页 -->
+      <div class="pagination">
+        <a href="#">上一页</a>
+        <a href="#" class="active">1</a>
+        <a href="#">2</a>
+        <a href="#">下一页</a>
+        <span style="margin-left: 20px;">共 10 条记录，每页 5 条</span>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // 获取选中的组合和类型
+    function getSelectedCombination() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const combination = urlParams.get('combination') || localStorage.getItem('selectedCombination') || '11-13';
+      const type = urlParams.get('type') || 'first'; // 默认前区
+      return { combination, type };
+    }
+    
+    // 渲染组合详情数据
+    function renderCombinationDetailData() {
+      const data = mockData.combinationDetailData;
+      const { combination, type } = getSelectedCombination();
+      
+      // 渲染最新开奖信息
+      const latestDrawInfo = document.getElementById('latestDrawInfo');
+      latestDrawInfo.innerHTML = `
+        <p>期号：${data.latestDraw.period} 开奖日期：${data.latestDraw.drawDate} 前区号码：${data.latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ')} 后区号码：${data.latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}</p>
+      `;
+      
+      // 渲染组合信息
+      const combinationInfo = document.getElementById('combinationInfo');
+      // 确保只显示两个球的组合，取前两个数字
+      const twoBallCombination = combination.split('-').slice(0, 2).join('和');
+      combinationInfo.innerHTML = `
+        <strong>组合球：${twoBallCombination} | 统计期数:${data.combinationInfo.statPeriod}</strong>
+        <span style="float: right; color: #c00;">下一期出现的球：${data.combinationInfo.nextAppearBall} 共出现${data.combinationInfo.appearCount}次</span>
+      `;
+      
+      // 根据类型修改表头
+      const tableHeader = document.getElementById('tableHeader');
+      const isLastZone = type === 'last';
+      
+      tableHeader.innerHTML = `
+        <th>序号</th>
+        <th>组合出现的期号</th>
+        <th>${isLastZone ? '后区开奖号' : '前区开奖号'}</th>
+        <th>下一期期号</th>
+        <th>${isLastZone ? '下一期后区开奖号' : '下一期前区开奖号'}</th>
+      `;
+      
+      // 渲染记录表格
+      const combinationRecords = document.getElementById('combinationRecords');
+      data.records.forEach(record => {
+        const tr = document.createElement('tr');
+        
+        // 根据类型显示不同的数据
+        const drawNumbers = isLastZone ? 
+          (record.lastZoneDrawNumbers || '02 08') : // 模拟后区数据
+          record.firstZoneDrawNumbers;
+          
+        const nextDrawNumbers = isLastZone ? 
+          (record.nextLastZoneDrawNumbers || '02 08') : // 模拟后区数据
+          record.nextFirstZoneDrawNumbers;
+        
+        tr.innerHTML = `
+          <td>${record.id}</td>
+          <td>${record.combinationPeriod}</td>
+          <td>${drawNumbers}</td>
+          <td>${record.nextPeriod}</td>
+          <td>${nextDrawNumbers}</td>
+        `;
+        combinationRecords.appendChild(tr);
+      });
+    }
+    
+    // 页面加载完成后渲染数据
+    window.addEventListener('load', renderCombinationDetailData);
+  </script>
+</body>
+</html>

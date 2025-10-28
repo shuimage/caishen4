@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大乐透统计分析 - 杀号分析</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="main-layout">
+      <!-- 左侧导航栏 -->
+      <div class="left-sidebar">
+        <!-- 顶部快捷栏 -->
+        <div class="top-bar">
+          <div class="current-period">25120期</div>
+        </div>
+        
+        <!-- 主导航区 -->
+        <nav class="main-nav">
+          <ul>
+            <li class="nav-item active">
+              <span class="nav-icon">✕</span>
+              <span>双杀组合分析</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-icon">📊</span>
+              <span>走势分析</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-icon">📈</span>
+              <span>冷热分析</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-icon">⏱️</span>
+              <span>遗漏分析</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-icon">📋</span>
+              <span>统计分析</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-icon">⚙️</span>
+              <span>算法杀号</span>
+            </li>
+          </ul>
+        </nav>
+        
+        <!-- 期数选择区 -->
+        <div class="period-selection" style="position: relative; top: -400px;">
+          <h4 class="section-title">选择统计范围</h4>
+          <select class="period-dropdown">
+            <option>自定义期数</option>
+            <option selected>最近100期</option>
+            <option>最近50期</option>
+            <option>最近35期</option>
+            <option>最近200期</option>
+            <option>最近300期</option>
+            <option>最近500期</option>
+            <option>最近1000期</option>
+            <option>全部期</option>
+          </select>
+          <div class="quick-period-buttons">
+            <button class="quick-period-btn">近5期</button>
+            <button class="quick-period-btn">近10期</button>
+            <button class="quick-period-btn">最新1期</button>
+          </div>
+        </div>
+        
+
+      </div>
+      
+      <!-- 右侧主内容区 -->
+      <div class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h1 class="page-title">双杀组合分析</h1>
+          <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
+        </div>
+    
+    <!-- 主要内容区域 -->
+      <div style="display: flex; gap: 20px; margin-bottom: 5px;">
+        <!-- 最新开奖信息 -->
+        <div class="section" style="flex: 1;">
+          <h3>最新开奖信息</h3>
+          <div id="latestDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+            <!-- 数据将通过JavaScript动态生成 -->
+          </div>
+        </div>
+        
+        <!-- 前区推荐杀号 -->
+        <div class="section" style="flex: 0.5;">
+          <h3>前区推荐杀号：</h3>
+          <div id="firstZoneRecommendations" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+            <!-- 数据将通过JavaScript动态生成 -->
+          </div>
+        </div>
+        
+        <!-- 后区推荐杀号 -->
+        <div class="section" style="flex: 0.5;">
+          <h3>后区推荐杀号：</h3>
+          <div id="lastZoneRecommendations" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+            <!-- 数据将通过JavaScript动态生成 -->
+          </div>
+        </div>
+      </div>
+      
+      <!-- 前区两球组合统计 -->
+      <div class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="margin: 0;">前区两球组合统计</h3>
+          <div style="color: #DF2220;">
+            共有10种前区两球组合，7种组合在历史下期出现过号码
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="combination-table">
+            <thead id="firstZoneTableHeader">
+              <tr>
+                <th>组合号</th>
+                <th>出现次数</th>
+                <!-- 前区号码1-35将通过JavaScript动态生成 -->
+              </tr>
+            </thead>
+            <tbody id="firstZoneCombinations">
+              <!-- 数据将通过JavaScript动态生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      
+      <!-- 后区两球组合统计 -->
+      <div class="section">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="margin: 0;">后区两球组合统计</h3>
+          <div style="color: #DF2220;">
+            最新开奖后区两球组合：02,08 历史下期出现过5次相关号码
+          </div>
+        </div>
+        <div style="overflow-x: auto;">
+          <table class="combination-table">
+            <thead id="lastZoneTableHeader">
+              <tr>
+                <th>组合号</th>
+                <th>出现次数</th>
+                <!-- 后区号码1-12将通过JavaScript动态生成 -->
+              </tr>
+            </thead>
+            <tbody id="lastZoneCombinations">
+              <!-- 数据将通过JavaScript动态生成 -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // 渲染杀号分析数据
+    function renderKillAnalysisData() {
+      const data = mockData.killAnalysisData;
+      
+      // 渲染最新开奖信息 - 调整为两行显示
+      const latestDrawInfo = document.getElementById('latestDrawInfo');
+      latestDrawInfo.innerHTML = `
+        <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+          期号: ${data.latestDraw.period}
+        </div>
+        <div>
+          开奖日期: ${data.latestDraw.drawDate}
+        </div>
+        <div>
+          前区号码: ${data.latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ')}
+        </div>
+        <div>
+          后区号码: ${data.latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}
+        </div>
+      `;
+      
+      // 渲染前区推荐杀号
+      const firstZoneRecommendations = document.getElementById('firstZoneRecommendations');
+      data.recommendedNumbers.firstZone.forEach(num => {
+        const ball = document.createElement('span');
+        ball.className = 'red-ball';
+        ball.textContent = num;
+        firstZoneRecommendations.appendChild(ball);
+      });
+      
+      // 渲染后区推荐杀号
+      const lastZoneRecommendations = document.getElementById('lastZoneRecommendations');
+      data.recommendedNumbers.lastZone.forEach(num => {
+        const ball = document.createElement('span');
+        ball.className = 'blue-ball';
+        ball.textContent = num;
+        lastZoneRecommendations.appendChild(ball);
+      });
+      
+      // 渲染前区两球组合统计
+      const firstZoneCombinations = document.getElementById('firstZoneCombinations');
+      data.firstZoneCombinations.forEach(combo => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${combo.combination}</td>
+          <td class="count" style="background-color: #cce5ff;">${combo.count}</td>
+        `;
+        
+        // 添加35个单元格
+        for (let i = 0; i < 35; i++) {
+          const td = document.createElement('td');
+          // 随机添加一些统计数据（模拟）
+          if (Math.random() > 0.7) {
+            td.textContent = Math.floor(Math.random() * 3) + 1;
+            td.className = 'highlight';
+            td.onclick = () => goToCombinationDetail(`${combo.combination}-${String(i + 1).padStart(2, '0')}`);
+          }
+          tr.appendChild(td);
+        }
+        
+        firstZoneCombinations.appendChild(tr);
+      });
+      
+      // 渲染后区两球组合统计
+      const lastZoneCombinations = document.getElementById('lastZoneCombinations');
+      data.lastZoneCombinations.forEach(combo => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${combo.combination}</td>
+          <td class="count" style="background-color: #cce5ff;">${combo.count}</td>
+        `;
+        
+        // 添加12个单元格
+        for (let i = 0; i < 12; i++) {
+          const td = document.createElement('td');
+          // 模拟数据
+          if (i === 0 || i === 6 || i === 7 || i === 11) {
+            td.textContent = Math.floor(Math.random() * 20) + 1;
+            td.className = 'highlight';
+            td.onclick = () => goToCombinationDetail(`${combo.combination}-${String(i + 1).padStart(2, '0')}`, 'last');
+          }
+          tr.appendChild(td);
+        }
+        
+        lastZoneCombinations.appendChild(tr);
+      });
+    }
+    
+    // 渲染表格头部
+    function renderTableHeaders() {
+      // 渲染前区表格头部
+      const firstZoneHeader = document.getElementById('firstZoneTableHeader');
+      const firstZoneRow = firstZoneHeader.querySelector('tr');
+      for (let i = 1; i <= 35; i++) {
+        const th = document.createElement('th');
+        th.textContent = String(i).padStart(2, '0');
+        firstZoneRow.appendChild(th);
+      }
+      
+      // 渲染后区表格头部
+      const lastZoneHeader = document.getElementById('lastZoneTableHeader');
+      const lastZoneRow = lastZoneHeader.querySelector('tr');
+      for (let i = 1; i <= 12; i++) {
+        const th = document.createElement('th');
+        th.textContent = String(i).padStart(2, '0');
+        lastZoneRow.appendChild(th);
+      }
+    }
+    
+    // 页面加载完成后渲染数据
+    window.addEventListener('load', function() {
+      renderTableHeaders();
+      renderKillAnalysisData();
+    });
+    
+    // 移动端侧边栏切换
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.left-sidebar');
+      sidebar.classList.toggle('open');
+    }
+    
+    // 导航项点击事件
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.addEventListener('click', function() {
+        // 移除所有导航项的活动状态
+        document.querySelectorAll('.nav-item').forEach(navItem => {
+          navItem.classList.remove('active');
+        });
+        // 添加当前导航项的活动状态
+        this.classList.add('active');
+        
+        // 在移动端点击导航后关闭侧边栏
+        if (window.innerWidth <= 768) {
+          toggleSidebar();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
