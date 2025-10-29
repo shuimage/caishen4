@@ -18,8 +18,8 @@
           <button class="btn btn-red">最近10期</button>
           <button class="btn">最近35期</button>
           <button class="btn">最近50期</button>
-          <button class="btn">最近30期</button>
           <button class="btn">最近120期</button>
+          <button class="btn">全部</button>
         </div>
         
         <!-- 查询和操作 -->
@@ -90,8 +90,102 @@
     </div>
   </div>
 
-  <script src="js/data.js"></script>
   <script>
+    // 从后端API获取开奖数据
+    async function fetchLotteryData(type = '10') {
+      try {
+        console.log('开始从API获取数据，类型:', type);
+        
+        // 添加超时处理
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+        
+        // 调用后端API - 端口已更改为8084
+        const response = await fetch(`http://localhost:8084/getLotteryResults?type=${type}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId); // 清除超时定时器
+        
+        if (!response.ok) {
+          throw new Error(`API响应错误: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        if (!data.success || !data.data || !Array.isArray(data.data)) {
+          throw new Error('API返回数据格式错误');
+        }
+        
+        console.log('API数据获取成功，共', data.data.length, '条记录');
+        return data.data;
+      } catch (error) {
+        console.error('获取开奖数据失败:', error);
+        if (error.name === 'AbortError') {
+          alert('请求超时，请稍后重试');
+        } else {
+          alert('接口调用失败，请检查网络连接');
+        }
+        return [];
+      }
+    }
+    
+    // 处理API返回的数据格式，转换为前端需要的格式
+    function transformApiData(apiData) {
+      console.log('开始转换API数据，原始数据:', apiData);
+      return apiData.map(item => {
+        // 确保红球和蓝球数据是数组
+        const redBalls = Array.isArray(item.redBalls) ? item.redBalls : [];
+        const blueBalls = Array.isArray(item.blueBalls) ? item.blueBalls : [];
+        
+        console.log(`处理期号: ${item.issue}`);
+        console.log(`红球:`, redBalls);
+        console.log(`蓝球:`, blueBalls);
+        
+        // 分离红球到三个区间，并确保格式统一为两位数字字符串
+        const firstZone = [];
+        const secondZone = [];
+        const thirdZone = [];
+        
+        redBalls.forEach(ball => {
+          // 标准化球号格式为两位数字字符串
+          const ballStr = String(ball).padStart(2, '0');
+          const num = parseInt(ball);
+          if (!isNaN(num)) {
+            if (num <= 12) {
+              firstZone.push(ballStr);
+            } else if (num <= 24) {
+              secondZone.push(ballStr);
+            } else {
+              thirdZone.push(ballStr);
+            }
+          }
+        });
+        
+        // 标准化蓝球格式为两位数字字符串
+        const formattedBlueBalls = blueBalls.map(ball => {
+          return String(ball).padStart(2, '0');
+        });
+        
+        return {
+          period: item.issue,
+          week: item.weekday || '',
+          firstZone: firstZone,
+          secondZone: secondZone,
+          thirdZone: thirdZone,
+          lastZone: formattedBlueBalls,
+          sum: item.sum || '',
+          span: item.span || '',
+          zoneRatio: item.intervalRatio || '',
+          oddEvenRatio: item.parityRatio || ''
+        };
+      });
+    }
+    
     // 检测重号
     function findDuplicateNumbers(data) {
       const duplicateCache = {};
@@ -189,26 +283,46 @@
       return consecutiveGroups;
     }
     
+    // 全局变量存储当前加载的所有数据
+    let currentAllData = [];
+    let currentPage = 1;
+    let pageSize = 10;
+    let currentType = '10';
+    
     // 渲染首页数据
-    function renderIndexData() {
-      const data = mockData.indexData.recentDraws;
+    function renderIndexData(data, page = 1) {
       const tbody = document.getElementById('drawResults');
       tbody.innerHTML = '';
       
-      // 计算重号
+      // 如果没有数据，显示提示
+      if (!data || data.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td colspan="80" style="text-align: center; padding: 20px;">暂无数据</td>`;
+        tbody.appendChild(tr);
+        updatePagination(0, 1);
+        return;
+      }
+      
+      // 保存完整数据
+      currentAllData = data;
+      currentType = document.querySelector('.btn.btn-red')?.textContent.replace('最近', '').replace('期', '').replace('全部', 'all') || '10';
+      
+      // 计算分页数据
+      const startIndex = (page - 1) * pageSize;
+      const endIndex = startIndex + pageSize;
+      const paginatedData = data.slice(startIndex, endIndex);
+      
+      // 计算重号、连号、邻号（基于完整数据）
       const duplicateCache = findDuplicateNumbers(data);
-      // 计算连号
       const consecutiveCache = findConsecutiveNumbers(data);
+      const edgeCache = findEdgeNumbers(data);
       
       // 获取复选框状态
       const showDuplicates = document.getElementById('chkDuplicate')?.checked || false;
       const showConsecutive = document.getElementById('chkConsecutive')?.checked || false;
       const showEdgeNumbers = document.getElementById('chkEdge')?.checked || false;
       
-      // 计算邻号
-      const edgeCache = findEdgeNumbers(data);
-      
-      data.forEach(draw => {
+      paginatedData.forEach(draw => {
         const tr = document.createElement('tr');
         
         // 期号和星期
@@ -221,27 +335,42 @@
         const allFirstZoneNumbers = Array.from({length: 35}, (_, i) => String(i + 1).padStart(2, '0'));
         const currentNumbers = [...draw.firstZone, ...draw.secondZone, ...draw.thirdZone];
         const isDuplicate = showDuplicates && duplicateCache[draw.period] ? duplicateCache[draw.period] : [];
-          // 处理邻号信息
-          const isEdgeNumber = showEdgeNumbers && edgeCache[draw.period] ? edgeCache[draw.period] : [];
-          
-          // 处理连号信息
+        const isEdgeNumber = showEdgeNumbers && edgeCache[draw.period] ? edgeCache[draw.period] : [];
         const consecutiveGroups = showConsecutive && consecutiveCache[draw.period] ? consecutiveCache[draw.period] : null;
+        
+        console.log(`渲染期号: ${draw.period}`);
+        console.log(`当前号码:`, currentNumbers);
+        console.log(`后区号码:`, draw.lastZone);
         
         allFirstZoneNumbers.forEach(num => {
           const td = document.createElement('td');
           if (currentNumbers.includes(num)) {
             const ball = document.createElement('div');
+            // 确保红球样式正确应用
             ball.className = 'red-ball';
             ball.textContent = num;
+            ball.style.display = 'inline-flex';
+            ball.style.alignItems = 'center';
+            ball.style.justifyContent = 'center';
+            ball.style.width = '24px';
+            ball.style.height = '24px';
+            ball.style.borderRadius = '50%';
+            ball.style.backgroundColor = 'var(--primary-color)';
+            ball.style.color = 'white';
+            ball.style.fontSize = '12px';
+            ball.style.fontWeight = '600';
             
             // 如果是重号且复选框已勾选，则添加高亮类
             if (isDuplicate.includes(num)) {
               ball.classList.add('duplicate-number');
+              ball.style.backgroundColor = '#4caf50';
             }
             
             // 如果是邻号且复选框已勾选，则添加高亮类
             if (isEdgeNumber.includes(num)) {
               ball.classList.add('edge-number');
+              ball.style.backgroundColor = '#FFD700';
+              ball.style.color = '#8B0000';
             }
             
             // 如果是连号且复选框已勾选，检查是否属于连号组
@@ -249,6 +378,8 @@
               for (let i = 0; i < consecutiveGroups.firstZone.length; i++) {
                 if (consecutiveGroups.firstZone[i].includes(num)) {
                   ball.classList.add(`consecutive-group-${i}`);
+                  ball.style.backgroundColor = '#212121';
+                  ball.style.color = 'white';
                   // 为连号组的第一个和最后一个添加特殊样式
                   const group = consecutiveGroups.firstZone[i];
                   if (num === group[0]) {
@@ -271,18 +402,34 @@
         
         allLastZoneNumbers.forEach(num => {
           const td = document.createElement('td');
-          if (draw.lastZone.includes(num)) {
+          // 确保正确比较，忽略可能的格式差异
+          if (draw.lastZone.some(ball => String(ball).padStart(2, '0') === num)) {
             const ball = document.createElement('div');
+            // 确保蓝球样式正确应用
             ball.className = 'blue-ball';
             ball.textContent = num;
+            ball.style.display = 'inline-flex';
+            ball.style.alignItems = 'center';
+            ball.style.justifyContent = 'center';
+            ball.style.width = '24px';
+            ball.style.height = '24px';
+            ball.style.borderRadius = '50%';
+            ball.style.backgroundColor = 'var(--secondary-color)';
+            ball.style.color = 'white';
+            ball.style.fontSize = '12px';
+            ball.style.fontWeight = '600';
+            
             // 后区也可以检测重号
             if (isDuplicate.includes(num)) {
               ball.classList.add('duplicate-number');
+              ball.style.backgroundColor = '#4caf50';
             }
             
             // 后区也可以检测邻号
             if (isEdgeNumber.includes(num)) {
               ball.classList.add('edge-number');
+              ball.style.backgroundColor = '#FFD700';
+              ball.style.color = '#00008B';
             }
             
             // 后区也可以检测连号
@@ -290,6 +437,8 @@
               for (let i = 0; i < consecutiveGroups.lastZone.length; i++) {
                 if (consecutiveGroups.lastZone[i].includes(num)) {
                   ball.classList.add(`consecutive-group-${i}`);
+                  ball.style.backgroundColor = '#212121';
+                  ball.style.color = 'white';
                   // 为连号组的第一个和最后一个添加特殊样式
                   const group = consecutiveGroups.lastZone[i];
                   if (num === group[0]) {
@@ -317,25 +466,207 @@
         
         tbody.appendChild(tr);
       });
+      
+      // 更新分页信息
+      updatePagination(data.length, page);
     }
     
-    // 重号复选框事件监听
-    document.getElementById('chkDuplicate')?.addEventListener('change', function() {
-      renderIndexData(); // 重新渲染数据以更新重号显示
+    // 更新分页控件
+    function updatePagination(totalItems, currentPageNum) {
+      const pagination = document.querySelector('.pagination');
+      const totalPages = Math.ceil(totalItems / pageSize);
+      
+      // 更新分页HTML
+      let paginationHtml = `
+        <a href="#" ${currentPageNum <= 1 ? 'style="pointer-events: none; color: #ccc;"' : ''} onclick="goToPage(${currentPageNum - 1})">&lt;上一页</a>
+      `;
+      
+      // 添加页码按钮，实现省略号折叠
+      const showPages = 5; // 显示的页码数量
+      const halfShowPages = Math.floor(showPages / 2);
+      
+      // 总是显示第一页
+      paginationHtml += `
+        <a href="#" class="${1 === currentPageNum ? 'active' : ''}" onclick="goToPage(1)"><span>1</span></a>
+      `;
+      
+      // 如果第一页和当前页区域之间有间隔，显示省略号
+      if (currentPageNum - halfShowPages > 2) {
+        paginationHtml += `<span style="margin: 0 5px;">...</span>`;
+      }
+      
+      // 显示当前页附近的页码
+      const startPage = Math.max(2, currentPageNum - halfShowPages);
+      const endPage = Math.min(totalPages - 1, currentPageNum + halfShowPages);
+      
+      for (let i = startPage; i <= endPage; i++) {
+        paginationHtml += `
+          <a href="#" class="${i === currentPageNum ? 'active' : ''}" onclick="goToPage(${i})"><span>${i}</span></a>
+        `;
+      }
+      
+      // 如果当前页区域和最后一页之间有间隔，显示省略号
+      if (currentPageNum + halfShowPages < totalPages - 1) {
+        paginationHtml += `<span style="margin: 0 5px;">...</span>`;
+      }
+      
+      // 总是显示最后一页（如果总页数大于1）
+      if (totalPages > 1) {
+        paginationHtml += `
+          <a href="#" class="${totalPages === currentPageNum ? 'active' : ''}" onclick="goToPage(${totalPages})"><span>${totalPages}</span></a>
+        `;
+      }
+      
+      paginationHtml += `
+        <a href="#" ${currentPageNum >= totalPages ? 'style="pointer-events: none; color: #ccc;"' : ''} onclick="goToPage(${currentPageNum + 1})">&gt;下一页</a>
+        <span style="margin-left: 20px;">共 ${totalItems} 条记录，每页 <input type="number" id="pageSizeInput" value="${pageSize}" min="1" max="100" style="width: 60px; text-align: center; margin: 0 5px;" onchange="changePageSize(this.value)" onkeyup="if(event.key === 'Enter') changePageSize(this.value)"> 条</span>
+      `;
+      
+      pagination.innerHTML = paginationHtml;
+      currentPage = currentPageNum;
+    }
+    
+    // 跳转到指定页
+    function goToPage(page) {
+      if (page < 1 || page > Math.ceil(currentAllData.length / pageSize)) {
+        return;
+      }
+      renderIndexData(currentAllData, page);
+    }
+    
+    // 修改每页显示条数
+    function changePageSize(newSize) {
+      // 验证输入是否为正整数
+      const size = parseInt(newSize);
+      if (!isNaN(size) && size > 0 && size <= 100) {
+        pageSize = size;
+        currentPage = 1; // 重置为第一页
+        renderIndexData(currentAllData, 1);
+      } else {
+        // 恢复原值
+        document.getElementById('pageSizeInput').value = pageSize;
+        alert('请输入1-100之间的正整数');
+      }
+    }
+    
+    // 加载指定类型的数据
+    async function loadDataByType(type) {
+      console.log('加载数据类型:', type);
+      // 显示加载中状态
+      const tbody = document.getElementById('drawResults');
+      tbody.innerHTML = '<tr><td colspan="80" style="text-align: center; padding: 20px;">加载中...</td></tr>';
+      
+      // 从API获取数据
+      const apiData = await fetchLotteryData(type);
+      
+      // 转换数据格式
+      const transformedData = transformApiData(apiData);
+      
+      // 重置为第一页并渲染数据
+      renderIndexData(transformedData, 1);
+    }
+    
+    // 为期数选择按钮添加事件监听
+    document.addEventListener('DOMContentLoaded', function() {
+      // 最近10期按钮
+      const btn10 = document.querySelector('.btn.btn-red');
+      if (btn10) {
+        btn10.addEventListener('click', function() {
+          // 更新按钮样式
+          document.querySelectorAll('.btn').forEach(btn => {
+            btn.classList.remove('btn-red');
+          });
+          this.classList.add('btn-red');
+          // 加载最近10期数据
+          loadDataByType('10');
+        });
+      }
+      
+      // 其他期数按钮（可以根据需要实现）
+      const btn35 = document.querySelector('.btn:nth-of-type(2)');
+      if (btn35) {
+        btn35.addEventListener('click', function() {
+          document.querySelectorAll('.btn').forEach(btn => {
+            btn.classList.remove('btn-red');
+          });
+          this.classList.add('btn-red');
+          loadDataByType('35');
+        });
+      }
+      
+      const btn50 = document.querySelector('.btn:nth-of-type(3)');
+      if (btn50) {
+        btn50.addEventListener('click', function() {
+          document.querySelectorAll('.btn').forEach(btn => {
+            btn.classList.remove('btn-red');
+          });
+          this.classList.add('btn-red');
+          loadDataByType('50');
+        });
+      }
+      
+      // 移除了最近30期按钮的代码
+      
+      const btn120 = document.querySelector('.btn:nth-of-type(4)');
+      if (btn120) {
+        btn120.addEventListener('click', function() {
+          document.querySelectorAll('.btn').forEach(btn => {
+            btn.classList.remove('btn-red');
+          });
+          this.classList.add('btn-red');
+          loadDataByType('120');
+        });
+      }
+      
+      // 全部按钮事件监听
+      const btnAll = document.querySelector('.btn:nth-of-type(5)');
+      if (btnAll) {
+        btnAll.addEventListener('click', function() {
+          document.querySelectorAll('.btn').forEach(btn => {
+            btn.classList.remove('btn-red');
+          });
+          this.classList.add('btn-red');
+          loadDataByType('all');
+        });
+      }
+      
+      // 重号复选框事件监听
+      document.getElementById('chkDuplicate')?.addEventListener('change', function() {
+        // 重新获取数据并渲染（实际应用中可以优化为只重新渲染标记）
+        const activeBtn = document.querySelector('.btn.btn-red');
+        if (activeBtn) {
+          // 获取当前选中的类型
+          const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
+          loadDataByType(type);
+        }
+      });
+      
+      // 连号复选框事件监听
+      document.getElementById('chkConsecutive')?.addEventListener('change', function() {
+        const activeBtn = document.querySelector('.btn.btn-red');
+        if (activeBtn) {
+          const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
+          loadDataByType(type);
+        }
+      });
+      
+      // 邻号复选框事件监听
+      document.getElementById('chkEdge')?.addEventListener('change', function() {
+        const activeBtn = document.querySelector('.btn.btn-red');
+        if (activeBtn) {
+          const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
+          loadDataByType(type);
+        }
+      })
+      
+      // 页面加载完成后，默认加载最近10期数据
+      loadDataByType('10');
     });
     
-    // 连号复选框事件监听
-    document.getElementById('chkConsecutive')?.addEventListener('change', function() {
-      renderIndexData(); // 重新渲染数据以更新连号显示
-    });
-    
-    // 邻号复选框事件监听
-    document.getElementById('chkEdge')?.addEventListener('change', function() {
-      renderIndexData(); // 重新渲染数据以更新邻号显示
-    });
-    
-    // 页面加载完成后渲染数据
-    window.addEventListener('load', renderIndexData);
+    // 页面跳转函数
+    function goToKillAnalysis() {
+      window.location.href = 'sha_hao_fen_xi.html';
+    }
   </script>
 </body>
 </html>
