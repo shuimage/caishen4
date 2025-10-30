@@ -198,3 +198,104 @@ function goToCombinationDetail(combination, type = 'first') {
 function goBack() {
   window.history.back();
 }
+
+// 获取最新大乐透数据
+async function fetchLatestLotteryData() {
+    try {
+        // 从后端API获取最新数据
+        console.log('正在请求数据...');
+        const response = await fetch('http://localhost:18889/getLatestData');
+        
+        // 检查响应是否成功
+        if (!response.ok) {
+            throw new Error(`HTTP error! Status: ${response.status}`);
+        }
+        
+        // 解析JSON响应
+        const data = await response.json();
+        
+        // 检查返回的数据结构是否正确
+        if (data.success && Array.isArray(data.latestResults) && data.latestResults.length > 0) {
+            console.log('成功获取数据:', data.latestResults.length, '条');
+            console.log('数据来源:', data.fromMock ? '模拟数据' : '真实数据');
+            return data.latestResults;
+        } else if (Array.isArray(data.latestResults) && data.latestResults.length > 0) {
+            // 即使success为false，只要有数据也返回
+            console.log('获取到数据但服务器报告错误，返回可用数据');
+            return data.latestResults;
+        } else {
+            throw new Error('Invalid data structure received from server');
+        }
+    } catch (error) {
+        console.error('获取数据失败:', error);
+        
+        // 当请求失败时，返回默认的模拟数据，确保页面能正常显示
+        console.log('网络请求失败，使用默认模拟数据...');
+        return getDefaultLotteryData();
+    }
+}
+
+/**
+ * 获取默认的大乐透模拟数据，用于网络请求失败时
+ * @returns {Array} 默认的模拟数据数组
+ */
+function getDefaultLotteryData() {
+    console.log('使用默认模拟数据');
+    return [
+        {
+            issue: '25121',
+            drawDate: '2025-10-25',
+            weekday: '6',
+            redBalls: ['02', '03', '08', '13', '21'],
+            blueBalls: ['07', '12'],
+            sum: '47',
+            span: '19',
+            intervalRatio: '3:2:0',
+            parityRatio: '3:2'
+        },
+        {
+            issue: '25120',
+            drawDate: '2025-10-22',
+            weekday: '3',
+            redBalls: ['11', '13', '22', '26', '35'],
+            blueBalls: ['02', '08'],
+            sum: '107',
+            span: '24',
+            intervalRatio: '1:2:2',
+            parityRatio: '3:2'
+        },
+        {
+            issue: '25119',
+            drawDate: '2025-10-20',
+            weekday: '1',
+            redBalls: ['08', '15', '27', '29', '31'],
+            blueBalls: ['01', '07'],
+            sum: '110',
+            span: '23',
+            intervalRatio: '1:1:3',
+            parityRatio: '4:1'
+        },
+        {
+            issue: '25118',
+            drawDate: '2025-10-18',
+            weekday: '6',
+            redBalls: ['02', '08', '09', '12', '21'],
+            blueBalls: ['04', '05'],
+            sum: '52',
+            span: '19',
+            intervalRatio: '4:1:0',
+            parityRatio: '2:3'
+        },
+        {
+            issue: '25117',
+            drawDate: '2025-10-15',
+            weekday: '3',
+            redBalls: ['05', '10', '18', '21', '29'],
+            blueBalls: ['05', '07'],
+            sum: '83',
+            span: '24',
+            intervalRatio: '2:2:1',
+            parityRatio: '3:2'
+        }
+    ];
+}

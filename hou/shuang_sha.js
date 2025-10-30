@@ -276,14 +276,14 @@ async function getDoubleKillAnalysis(period) {
 
 /**
  * 双杀分析接口
- * @route GET /doubleKillAnalysis
+ * @route GET /shuang_sha_fen_xi
  * @group 数据分析 - 双杀分析相关接口
  * @param {string} period.query.required - 统计周期 (35, 50, 100, 200, 300, 500, 1000)
  * @returns {object} 200 - 成功响应，包含最新开奖数据和组合统计
  * @returns {object} 400 - 参数错误
  * @returns {object} 500 - 服务器内部错误
  */
-router.get('/doubleKillAnalysis', async (req, res) => {
+router.get('/shuang_sha_fen_xi', async (req, res) => {
   try {
     const { period } = req.query;
     

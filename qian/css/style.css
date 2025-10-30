@@ -5,6 +5,26 @@
   box-sizing: border-box;
 }
 
+/* 排序图标样式 */
+.sort-icon {
+  display: inline-block;
+  margin-left: 5px;
+  cursor: pointer;
+  color: #666;
+  font-size: 14px;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.sort-icon:hover {
+  color: #ff4444;
+  transform: scale(1.2);
+}
+
+.sort-icon:active {
+  transform: scale(0.9);
+}
+
 /* 主题颜色变量 */
 :root {
   --primary-color: #DF2220;
