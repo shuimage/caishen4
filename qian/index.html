@@ -29,7 +29,7 @@
           <input type="text" placeholder="结束期号" value="25121" style="width: 80px;">
           <button class="btn btn-green">查看</button>
           <span style="margin-left: 10px;">当前显示: 25121-25112</span>
-          <button class="btn btn-green">更新</button>
+          <button class="btn btn-green" id="updateBtn">更新</button>
           <button class="btn btn-red" onclick="goToKillAnalysis()">杀号分析</button>
         </div>
       </div>
@@ -62,7 +62,7 @@
             <th colspan="4">统计信息</th>
           </tr>
           <tr>
-            <th>期号</th>
+            <th>期号 <span id="sortIcon" class="sort-icon" onclick="toggleSort()">↑</span></th>
             <th>星期</th>
             <!-- 前区号码 -->
             <th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th><th>10</th><th>11</th><th>12</th>
@@ -98,10 +98,10 @@
         
         // 添加超时处理
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30秒超时
+        const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
         
-        // 调用后端API - 端口已更改为8084
-        const response = await fetch(`http://localhost:8084/getLotteryResults?type=${type}`, {
+        // 调用后端API - 使用正确的接口地址
+        const response = await fetch(`http://localhost:18892/huo_qu_sql_shu_ju?type=${type}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -117,27 +117,47 @@
         
         const data = await response.json();
         
-        if (!data.success || !data.data || !Array.isArray(data.data)) {
+        // 处理后端返回的数据结构
+        let resultData = [];
+        if (data.success && Array.isArray(data.data)) {
+          resultData = data.data;
+          console.log('API数据获取成功，返回', resultData.length, '条记录');
+        } else {
           throw new Error('API返回数据格式错误');
         }
         
-        console.log('API数据获取成功，共', data.data.length, '条记录');
-        return data.data;
+        return resultData;
       } catch (error) {
         console.error('获取开奖数据失败:', error);
-        if (error.name === 'AbortError') {
-          alert('请求超时，请稍后重试');
-        } else {
-          alert('接口调用失败，请检查网络连接');
-        }
+        alert('接口调用失败');
         return [];
       }
     }
+    
+    // 注意：已移除所有模拟数据相关代码
+    // 接口失败时将直接显示错误提示，不会使用任何模拟数据
     
     // 处理API返回的数据格式，转换为前端需要的格式
     function transformApiData(apiData) {
       console.log('开始转换API数据，原始数据:', apiData);
       return apiData.map(item => {
+        // 确保item是有效的对象
+        if (!item || typeof item !== 'object') {
+          console.warn('跳过无效数据项:', item);
+          return {
+            period: '',
+            week: '',
+            firstZone: [],
+            secondZone: [],
+            thirdZone: [],
+            lastZone: [],
+            sum: '',
+            span: '',
+            zoneRatio: '',
+            oddEvenRatio: ''
+          };
+        }
+        
         // 确保红球和蓝球数据是数组
         const redBalls = Array.isArray(item.redBalls) ? item.redBalls : [];
         const blueBalls = Array.isArray(item.blueBalls) ? item.blueBalls : [];
@@ -151,37 +171,63 @@
         const secondZone = [];
         const thirdZone = [];
         
+        // 安全处理红球数据，避免item.red.replace错误
         redBalls.forEach(ball => {
-          // 标准化球号格式为两位数字字符串
-          const ballStr = String(ball).padStart(2, '0');
-          const num = parseInt(ball);
-          if (!isNaN(num)) {
-            if (num <= 12) {
-              firstZone.push(ballStr);
-            } else if (num <= 24) {
-              secondZone.push(ballStr);
-            } else {
-              thirdZone.push(ballStr);
+          try {
+            // 确保ball是字符串
+            const ballStr = String(ball).trim();
+            // 只保留数字部分
+            const cleanedBall = ballStr.replace(/[^0-9]/g, '');
+            // 转换为数字进行区间判断
+            const num = parseInt(cleanedBall);
+            
+            if (!isNaN(num) && num >= 1 && num <= 35) {
+              // 标准化为两位数字字符串
+              const formattedBall = String(num).padStart(2, '0');
+              if (num <= 12) {
+                firstZone.push(formattedBall);
+              } else if (num <= 24) {
+                secondZone.push(formattedBall);
+              } else {
+                thirdZone.push(formattedBall);
+              }
             }
+          } catch (e) {
+            console.warn('处理红球失败，跳过:', ball, '错误:', e.message);
           }
         });
         
         // 标准化蓝球格式为两位数字字符串
         const formattedBlueBalls = blueBalls.map(ball => {
-          return String(ball).padStart(2, '0');
-        });
+          try {
+            // 确保ball是字符串
+            const ballStr = String(ball).trim();
+            // 只保留数字部分
+            const cleanedBall = ballStr.replace(/[^0-9]/g, '');
+            // 转换为数字
+            const num = parseInt(cleanedBall);
+            
+            if (!isNaN(num) && num >= 1 && num <= 12) {
+              return String(num).padStart(2, '0');
+            }
+            return '';
+          } catch (e) {
+            console.warn('处理蓝球失败，跳过:', ball, '错误:', e.message);
+            return '';
+          }
+        }).filter(ball => ball !== ''); // 过滤空字符串
         
         return {
-          period: item.issue,
-          week: item.weekday || '',
+          period: String(item.issue || '').trim(),
+          week: String(item.weekday || '').trim(),
           firstZone: firstZone,
           secondZone: secondZone,
           thirdZone: thirdZone,
           lastZone: formattedBlueBalls,
-          sum: item.sum || '',
-          span: item.span || '',
-          zoneRatio: item.intervalRatio || '',
-          oddEvenRatio: item.parityRatio || ''
+          sum: String(item.sum || '').trim(),
+          span: String(item.span || '').trim(),
+          zoneRatio: String(item.intervalRatio || '').trim(),
+          oddEvenRatio: String(item.parityRatio || '').trim()
         };
       });
     }
@@ -288,6 +334,27 @@
     let currentPage = 1;
     let pageSize = 10;
     let currentType = '10';
+    let sortOrder = 'desc'; // 排序顺序：'asc'升序，'desc'降序
+    
+    // 按期号排序数据
+    function sortByPeriod(data, order = 'desc') {
+      return [...data].sort((a, b) => {
+        const periodA = parseInt(a.period);
+        const periodB = parseInt(b.period);
+        return order === 'asc' ? periodA - periodB : periodB - periodA;
+      });
+    }
+    
+    // 切换排序状态并重新渲染
+    function toggleSort() {
+      sortOrder = sortOrder === 'desc' ? 'asc' : 'desc';
+      const sortIcon = document.getElementById('sortIcon');
+      sortIcon.textContent = sortOrder === 'asc' ? '↑' : '↓';
+      
+      // 对当前数据进行排序并重新渲染
+      const sortedData = sortByPeriod(currentAllData, sortOrder);
+      renderIndexData(sortedData, currentPage);
+    }
     
     // 渲染首页数据
     function renderIndexData(data, page = 1) {
@@ -306,6 +373,10 @@
       // 保存完整数据
       currentAllData = data;
       currentType = document.querySelector('.btn.btn-red')?.textContent.replace('最近', '').replace('期', '').replace('全部', 'all') || '10';
+      
+      // 应用排序
+      const sortedData = sortByPeriod(data, sortOrder);
+      data = sortedData;
       
       // 计算分页数据
       const startIndex = (page - 1) * pageSize;
@@ -549,6 +620,283 @@
       }
     }
     
+    // 全局变量存储待同步的数据
+    let pendingSyncData = null;
+    
+    // 创建数据预览弹窗
+    function createDataPreviewModal(data) {
+      // 移除已存在的弹窗
+      const existingModal = document.getElementById('dataPreviewModal');
+      if (existingModal) {
+        existingModal.remove();
+      }
+      
+      // 创建弹窗容器
+      const modal = document.createElement('div');
+      modal.id = 'dataPreviewModal';
+      modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+        font-family: Arial, sans-serif;
+      `;
+      
+      // 创建弹窗内容
+      const modalContent = document.createElement('div');
+      modalContent.style.cssText = `
+        background-color: white;
+        padding: 20px;
+        border-radius: 8px;
+        width: 80%;
+        max-width: 800px;
+        max-height: 80vh;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      `;
+      
+      // 弹窗标题
+      const modalTitle = document.createElement('h3');
+      modalTitle.textContent = '数据预览';
+      modalTitle.style.marginTop = '0';
+      modalContent.appendChild(modalTitle);
+      
+      // 数据信息
+      const infoDiv = document.createElement('div');
+      infoDiv.style.marginBottom = '15px';
+      infoDiv.innerHTML = `<p>发现 ${data.latestResults.length} 条数据，最新期号：${data.lastIssue || '无'}</p>`;
+      modalContent.appendChild(infoDiv);
+      
+      // 数据表格
+      const table = document.createElement('table');
+      table.style.width = '100%';
+      table.style.borderCollapse = 'collapse';
+      table.style.marginBottom = '20px';
+      
+      // 表格头部
+      const thead = document.createElement('thead');
+      const headerRow = document.createElement('tr');
+      headerRow.style.backgroundColor = '#f5f5f5';
+
+      const headers = ['期号', '日期', '星期', '前区', '后区', '和值', '跨度'];
+      headers.forEach(headerText => {
+        const th = document.createElement('th');
+        th.textContent = headerText;
+        th.style.border = '1px solid #ddd';
+        th.style.padding = '8px';
+        th.style.textAlign = 'left';
+        headerRow.appendChild(th);
+      });
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+      
+      // 表格数据
+      const tbody = document.createElement('tbody');
+      data.latestResults.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.style.backgroundColor = index % 2 === 0 ? '#fff' : '#f9f9f9';
+        
+        const dataCells = [
+          item.issue || '',
+          item.drawDate || '',
+          item.weekday || '',
+          Array.isArray(item.redBalls) ? item.redBalls.join(' ') : item.redBalls || '',
+          Array.isArray(item.blueBalls) ? item.blueBalls.join(' ') : item.blueBalls || '',
+          item.sum || '',
+          item.span || ''
+        ];
+        
+        dataCells.forEach(cellData => {
+          const td = document.createElement('td');
+          td.textContent = cellData;
+          td.style.border = '1px solid #ddd';
+          td.style.padding = '8px';
+          tr.appendChild(td);
+        });
+        
+        tbody.appendChild(tr);
+      });
+      table.appendChild(tbody);
+      modalContent.appendChild(table);
+      
+      // 按钮容器
+      const buttonContainer = document.createElement('div');
+      buttonContainer.style.textAlign = 'center';
+      buttonContainer.style.marginTop = '20px';
+      
+      // 取消按钮
+      const cancelBtn = document.createElement('button');
+      cancelBtn.textContent = '取消';
+      cancelBtn.style.cssText = `
+        padding: 8px 16px;
+        margin-right: 10px;
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      `;
+      cancelBtn.addEventListener('click', () => {
+        modal.remove();
+        pendingSyncData = null;
+      });
+      buttonContainer.appendChild(cancelBtn);
+      
+      // 确认同步按钮
+      const confirmBtn = document.createElement('button');
+      confirmBtn.textContent = '确认同步数据';
+      confirmBtn.style.cssText = `
+        padding: 8px 16px;
+        background-color: #28a745;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      `;
+      confirmBtn.addEventListener('click', async () => {
+        modal.remove();
+        await syncDataToDatabase();
+      });
+      buttonContainer.appendChild(confirmBtn);
+      
+      modalContent.appendChild(buttonContainer);
+      modal.appendChild(modalContent);
+      
+      // 添加到文档
+      document.body.appendChild(modal);
+    }
+    
+    // 获取数据但不同步到数据库
+    async function fetchDataForPreview() {
+      console.log('开始获取数据进行预览...');
+      const updateBtn = document.getElementById('updateBtn');
+      const originalText = updateBtn.textContent;
+      
+      // 禁用按钮，显示加载状态
+      updateBtn.disabled = true;
+      updateBtn.textContent = '获取最新期号...';
+      
+      try {
+        // 第一步：调用sql_zui_xin_yi_qi.js接口获取数据库中最新一期开奖期号
+        console.log('第一步：获取数据库中最新一期开奖期号');
+        const lastIssueResponse = await fetch('http://localhost:18890/sql_zui_xin_yi_qi', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!lastIssueResponse.ok) {
+          throw new Error('获取最新期号接口响应错误');
+        }
+        
+        const lastIssueData = await lastIssueResponse.json();
+        
+        if (!lastIssueData.success) {
+          throw new Error('获取最新期号失败: ' + (lastIssueData.message || '未知错误'));
+        }
+        
+        console.log('成功获取数据库最新期号:', lastIssueData.lastIssue);
+        
+        // 更新按钮状态
+        updateBtn.textContent = '获取开奖数据...';
+        
+        // 第二步：调用huo_qu_xin_lang_shu_ju.js接口获取最新开奖数据
+        console.log('第二步：获取最新开奖数据');
+        const response = await fetch('http://localhost:18891/huo_qu_xin_lang_shu_ju', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('获取开奖数据接口响应错误');
+        }
+        
+        const data = await response.json();
+        
+        if (data.success && data.latestResults && data.latestResults.length > 0) {
+          console.log('数据获取成功，显示预览:', data);
+          pendingSyncData = data;
+          createDataPreviewModal(data);
+        } else {
+          console.error('获取数据失败或无新数据:', data.message);
+          alert('获取数据失败或暂无新数据');
+        }
+      } catch (error) {
+        console.error('获取数据失败:', error);
+        alert('获取数据失败');
+      } finally {
+        // 恢复按钮状态
+        updateBtn.disabled = false;
+        updateBtn.textContent = originalText;
+      }
+    }
+    
+    // 同步数据到数据库
+    async function syncDataToDatabase() {
+      console.log('开始同步数据到数据库...');
+      const updateBtn = document.getElementById('updateBtn');
+      const originalText = updateBtn.textContent;
+      
+      // 禁用按钮，显示加载状态
+      updateBtn.disabled = true;
+      updateBtn.textContent = '同步中...';
+      
+      try {
+        // 调用geng_xin_kai_jiang.js提供的同步到数据库接口
+        const response = await fetch('http://localhost:18889/geng_xin_kai_jiang', {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error('网络响应错误');
+        }
+        
+        const data = await response.json();
+        
+        // 检查同步是否成功
+        if (data.success) {
+          console.log('数据同步成功:', data);
+          alert(`同步成功！${data.message || '已同步最新开奖数据'}`);
+          pendingSyncData = null;
+          
+          // 重新加载当前选中类型的数据
+          const activeBtn = document.querySelector('.btn.btn-red');
+          if (activeBtn) {
+            const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
+            await loadDataByType(type);
+          }
+        } else {
+          console.error('同步失败:', data.message);
+          alert('同步失败');
+        }
+      } catch (error) {
+        console.error('同步数据失败:', error);
+        alert('同步失败');
+      } finally {
+        // 恢复按钮状态
+        updateBtn.disabled = false;
+        updateBtn.textContent = originalText;
+      }
+    }
+    
+    // 更新开奖数据 - 主函数
+    function updateLotteryData() {
+      // 先获取数据进行预览
+      fetchDataForPreview();
+    }
+    
     // 加载指定类型的数据
     async function loadDataByType(type) {
       console.log('加载数据类型:', type);
@@ -564,6 +912,13 @@
       
       // 重置为第一页并渲染数据
       renderIndexData(transformedData, 1);
+      
+      // 重置排序图标为默认降序状态
+      const sortIcon = document.getElementById('sortIcon');
+      if (sortIcon) {
+        sortOrder = 'desc';
+        sortIcon.textContent = '↑';
+      }
     }
     
     // 为期数选择按钮添加事件监听
@@ -657,7 +1012,12 @@
           const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
           loadDataByType(type);
         }
-      })
+      });
+      
+      // 为更新按钮添加点击事件
+      document.getElementById('updateBtn')?.addEventListener('click', function() {
+        updateLotteryData();
+      });
       
       // 页面加载完成后，默认加载最近10期数据
       loadDataByType('10');

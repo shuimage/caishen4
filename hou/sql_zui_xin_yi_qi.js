@@ -47,7 +47,7 @@ async function getLastDatabaseIssue() {
  * 接口功能: 获取数据库中存储的最新一期大乐透开奖期号，结果会被缓存
  * 
  * 请求示例:
- * GET http://localhost:18890/zui_xin_yi_qi
+ * GET http://localhost:18890/sql_zui_xin_yi_qi
  * 
  * 响应格式说明:
  * 成功响应:
@@ -69,7 +69,7 @@ async function getLastDatabaseIssue() {
  *   "message": "获取数据失败"
  * }
  */
-app.get('/zui_xin_yi_qi', async (req, res) => {
+app.get('/sql_zui_xin_yi_qi', async (req, res) => {
   try {
     const result = await getLastDatabaseIssue();
     res.json(result);
@@ -82,7 +82,7 @@ app.get('/zui_xin_yi_qi', async (req, res) => {
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`最新期号服务运行在 http://localhost:${PORT}`);
-  console.log(`获取最后一期接口: http://localhost:${PORT}/zui_xin_yi_qi`);
+  console.log(`获取最后一期接口: http://localhost:${PORT}/sql_zui_xin_yi_qi`);
 });
 
 module.exports = app;
