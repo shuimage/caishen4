@@ -1,7 +1,7 @@
 // 数据库配置文件
 const mysql = require('mysql2/promise');
-// 尝试从不同位置加载.env文件
-require('dotenv').config({ path: '/home/work/caishen2/.env' });
+// 尝试加载本地.env文件
+require('dotenv').config();
 console.log('DB Config:', {
   host: process.env.DB_HOST,
   user: process.env.DB_USER,

@@ -1,4 +1,4 @@
-// shuang_sha_xiang_qing.js - 组合统计分析接口
+// zu_he_xiang_qing.js - 组合详情接口
 // 功能: 统计指定号码组合在历史开奖数据中的出现情况及下一期关联信息
 // 作者: AI Assistant
 // 创建日期: 2024
@@ -14,7 +14,7 @@ const router = express.Router();
  * 组合统计分析接口
  * 接口功能: 统计指定号码组合在历史开奖数据中的出现情况及下一期关联信息
  * 
- * 请求路径: POST /api/combination-statistics
+ * 请求路径: POST /zu_he_xiang_qing
  * 
  * 请求参数:
  * - latest_period: string, 必填, 最新一期开奖期号（格式: YYYYMMDD或纯数字）
@@ -46,7 +46,7 @@ const router = express.Router();
  * }
  */
 /**
- * 组合统计分析接口 - POST /api/combination-statistics
+ * 组合详情接口 - POST /zu_he_xiang_qing
  * 
  * 主要功能：
  * 1. 接收客户端请求参数并进行全面验证
@@ -55,8 +55,8 @@ const router = express.Router();
  * 4. 关联下一期开奖信息
  * 5. 返回格式化的统计结果
  */
-router.post('/combination-statistics', async (req, res) => {
-  console.log('收到组合统计请求！请求方法:', req.method, '请求路径:', req.path);
+router.post('/zu_he_xiang_qing', async (req, res) => {
+  console.log('收到组合详情请求！请求方法:', req.method, '请求路径:', req.path);
   console.log('请求体内容:', req.body);
   
   try {
@@ -138,13 +138,14 @@ router.post('/combination-statistics', async (req, res) => {
     }
     
     // 记录日志 - 便于问题排查和监控
-    console.log('开始组合统计分析，参数:', { latest_period, type, combinations, stats_range, target_ball });
+    console.log('开始组合详情分析，参数:', { latest_period, type, combinations, stats_range, target_ball });
     
     // 2. 数据查询阶段 - 查询指定范围的历史开奖数据
       // SQL查询语句 - 按期号降序排列，确保最新的记录在前面
       const querySql = `
         SELECT
           issue AS period,
+          bian_hao,
           draw_date,
           red,
           blue
@@ -154,8 +155,8 @@ router.post('/combination-statistics', async (req, res) => {
         LIMIT ?
       `;
     
-    // 执行数据库查询 - 使用参数化查询防止SQL注入
-    const historyResults = await query(querySql, [latest_period, stats_range]);
+    // 执行数据库查询 - 使用参数化查询防止SQL注入，确保参数类型正确
+    const historyResults = await query(querySql, [latest_period.toString(), stats_range.toString()]);
     
     // 检查查询结果 - 如果没有找到数据，返回404错误
     if (!historyResults || historyResults.length === 0) {
@@ -199,15 +200,31 @@ router.post('/combination-statistics', async (req, res) => {
           let nextPeriod = null;     // 下一期期号
           let nextDrawInfo = null;   // 下一期开奖号码
           
-          // 计算下一期期号（当前期号+1）
-          const currentPeriodNum = parseInt(record.period, 10);
-          const expectedNextPeriod = String(currentPeriodNum + 1);
+          // 添加调试日志 - 查看当前记录的bian_hao值
+          console.log(`当前记录期号:${record.period}, bian_hao:${record.bian_hao}`);
           
-          // 在历史数据中查找下一期的记录
-          const nextPeriodRecord = historyResults.find(item => item.period === expectedNextPeriod);
-          
-          // 如果找到下一期数据，提取相关信息
-          if (nextPeriodRecord) {
+          // 正确处理字符串格式的bian_hao字段
+          // 提取前缀（LT）和数字部分
+          const prefixMatch = record.bian_hao.match(/^([A-Z]+)(\d+)$/);
+          if (prefixMatch) {
+            const prefix = prefixMatch[1]; // LT前缀
+            const numStr = prefixMatch[2]; // 数字部分字符串
+            const num = parseInt(numStr, 10); // 转换为数字
+            const nextNum = num + 1; // 下一期数字
+            // 格式化为5位数字并拼接前缀
+            const nextBianHao = prefix + String(nextNum).padStart(5, '0');
+            
+            // 添加调试日志 - 查看要查询的下一期bian_hao值
+            console.log(`查询下一期bian_hao:${nextBianHao}`);
+            
+            // 在历史数据中查找下一期的记录（通过bian_hao）
+            const nextPeriodRecord = historyResults.find(item => item.bian_hao === nextBianHao);
+            
+            // 添加调试日志 - 查看查询结果
+            console.log(`下一期查询结果:${nextPeriodRecord ? nextPeriodRecord.period : '未找到'}`);
+            
+            // 如果找到下一期数据，提取相关信息
+            if (nextPeriodRecord) {
             nextPeriod = nextPeriodRecord.period;
             // 根据类型获取下一期对应区域的号码
             if (type === 'front') {
@@ -218,19 +235,24 @@ router.post('/combination-statistics', async (req, res) => {
           }
           
                 // 如果指定了目标球号，则只添加下一期开奖信息中包含该球号的记录
-          if (!targetBallNumber || (nextDrawInfo && nextDrawInfo.includes(targetBallNumber))) {
-            // 构建结果对象并添加到结果列表
-            resultList.push({
-              index: index++,        // 结果序号（递增）
-              period: record.period, // 当前匹配的期号
-              combination: combination, // 匹配的号码组合
-              draw_info: balls,      // 当前期开奖号码
-              next_period: nextPeriod,  // 下一期期号
-              next_draw_info: nextDrawInfo // 下一期开奖号码
-            });
-          } else {
-            console.log(`跳过不包含目标球号${targetBallNumber}的记录，期号:${record.period}`);
-          }
+                // 这是正确的需求：只显示下一期包含目标球号的组合记录
+                if (!targetBallNumber || (nextDrawInfo && nextDrawInfo.includes(targetBallNumber))) {
+                  // 构建结果对象并添加到结果列表
+                  resultList.push({
+                    index: index++,        // 结果序号（递增）
+                    period: record.period, // 当前匹配的期号
+                    combination: combination, // 匹配的号码组合
+                    draw_info: balls,      // 当前期开奖号码
+                    next_period: nextPeriod,  // 下一期期号
+                    next_draw_info: nextDrawInfo // 下一期开奖号码
+                  });
+                } else {
+                console.log(`跳过不包含目标球号${targetBallNumber}的记录，期号:${record.period}`);
+              }
+            } else {
+              // 处理bian_hao格式不符合预期的情况
+              console.log(`bian_hao格式不符合预期: ${record.bian_hao}`);
+            }
         }
       }
     }
@@ -245,7 +267,7 @@ router.post('/combination-statistics', async (req, res) => {
     }
     
     // 记录处理完成的日志
-    console.log('组合统计分析完成，找到匹配记录:', resultList.length);
+    console.log('组合详情分析完成，找到匹配记录:', resultList.length);
     
     // 返回成功响应，包含匹配的结果列表
     res.json({
@@ -255,7 +277,7 @@ router.post('/combination-statistics', async (req, res) => {
     
   } catch (error) {
     // 异常处理 - 捕获并记录所有可能的错误
-    console.error('组合统计分析失败:', error);
+    console.error('组合详情分析失败:', error);
     // 返回服务器错误响应
     res.status(500).json({
       code: 500,

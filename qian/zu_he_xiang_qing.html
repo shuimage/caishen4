@@ -11,7 +11,7 @@
     <div style="display: flex; justify-content: space-between; align-items: center;">
       <h1 class="page-title">组合详情</h1>
       <!-- 返回按钮 -->
-      <button class="btn back-btn" onclick="window.location.href='sha_hao_fen_xi.html'">返回</button>
+      <button class="btn back-btn" onclick="window.history.back()">返回</button>
     </div>
     
     <!-- 最新开奖信息 -->
@@ -50,40 +50,128 @@
         <a href="#" class="active">1</a>
         <a href="#">2</a>
         <a href="#">下一页</a>
-        <span style="margin-left: 20px;">共 10 条记录，每页 5 条</span>
+        <span style="margin-left: 20px;">共 10 条记录，每页 15 条</span>
       </div>
     </div>
   </div>
 
   <script src="js/data.js"></script>
   <script>
-    // 获取选中的组合和类型
+    // 获取选中的组合和类型以及统计期数
     function getSelectedCombination() {
       const urlParams = new URLSearchParams(window.location.search);
       const combination = urlParams.get('combination') || localStorage.getItem('selectedCombination') || '11-13';
-      const type = urlParams.get('type') || 'first'; // 默认前区
-      return { combination, type };
+      // 获取类型并确保格式正确
+      let type = urlParams.get('type') || localStorage.getItem('combinationType') || 'first';
+      // 获取统计期数，默认100期
+      let statsRange = parseInt(urlParams.get('stats_range')) || 100;
+      // 确保组合格式为两位数字，例如将'1-3'转换为'01-03'
+      const formattedCombination = combination.split('-')
+        .map(num => String(num).padStart(2, '0'))
+        .join('-');
+      return { combination: formattedCombination, type, statsRange };
+    }
+    
+    // 从接口获取最新开奖信息
+    async function huo_qu_zui_xin_kai_jiang() {
+      try {
+        const response = await fetch('http://localhost:8085/sql_zui_xin_yi_qi');
+        const result = await response.json();
+        
+        if (result.success) {
+          return result.latestDraw;
+        } else {
+          throw new Error('获取最新开奖信息失败');
+        }
+      } catch (error) {
+        console.error('获取最新开奖信息失败:', error);
+        alert('接口失败');
+        return null;
+      }
+    }
+    
+    // 从接口获取组合详情数据
+    async function huo_qu_zu_he_xiang_qing(combination, type, latestPeriod, statsRange) {
+      try {
+        // 解析组合，确保每个数字都是两位格式
+        const comboParts = combination.split('-');
+        // 确保所有数字都是两位格式
+        const formattedParts = comboParts.map(num => String(parseInt(num)).padStart(2, '0'));
+        // 提取前两个球作为组合
+        const twoBallCombo = formattedParts.slice(0, 2).join('-');
+        // 获取目标球号
+        const targetBall = comboParts.length > 2 ? parseInt(comboParts[2]) : null;
+        
+        // 构建请求参数
+        const requestData = {
+          latest_period: latestPeriod,
+          type: type === 'first' ? 'front' : 'back',
+          combinations: [twoBallCombo],
+          stats_range: statsRange, // 使用从URL参数获取的统计期数
+          target_ball: targetBall
+        };
+        
+        console.log('格式化后的请求数据:', requestData);
+        
+        const response = await fetch('http://localhost:8085/zuhe/zu_he_xiang_qing', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestData)
+        });
+        
+        const result = await response.json();
+        
+        if (result.code === 200) {
+          return result.data;
+        } else if (result.code === 404 && result.message === '在指定范围内未找到匹配的组合数据') {
+          // 这是正常的业务情况，表示没有找到匹配数据
+          return [];
+        } else {
+          throw new Error(`获取组合详情失败: ${result.message || '未知错误'}`);
+        }
+      } catch (error) {
+        console.error('获取组合详情数据失败:', error);
+        alert('接口失败');
+        return null;
+      }
+    }
+    
+    // 渲染最新开奖信息
+    function renderLatestDrawInfo(latestDraw) {
+      if (!latestDraw) return;
+      
+      const latestDrawInfo = document.getElementById('latestDrawInfo');
+      // 处理日期格式，只显示年月日
+      let formattedDate = latestDraw.drawDate || latestDraw.draw_date;
+      if (formattedDate && typeof formattedDate === 'string') {
+        // 处理ISO格式日期（如：2025-10-28T16:00:00.000Z）
+        if (formattedDate.includes('T')) {
+          formattedDate = formattedDate.split('T')[0];
+        }
+        // 处理包含空格的日期（如：2025-10-28 16:00:00）
+        else if (formattedDate.includes(' ')) {
+          formattedDate = formattedDate.split(' ')[0];
+        }
+      }
+      
+      // 获取前区和后区号码
+      const firstZoneNumbers = latestDraw.firstZoneNumbers || latestDraw.red || [];
+      const lastZoneNumbers = latestDraw.lastZoneNumbers || latestDraw.blue || [];
+      
+      latestDrawInfo.innerHTML = `
+        <p>期号：${latestDraw.period || latestDraw.issue} 开奖日期：${formattedDate} 前区号码：${Array.isArray(firstZoneNumbers) ? firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : firstZoneNumbers} 后区号码：${Array.isArray(lastZoneNumbers) ? lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : lastZoneNumbers}</p>
+      `;
     }
     
     // 渲染组合详情数据
-    function renderCombinationDetailData() {
-      const data = mockData.combinationDetailData;
-      const { combination, type } = getSelectedCombination();
-      
-      // 渲染最新开奖信息
-      const latestDrawInfo = document.getElementById('latestDrawInfo');
-      latestDrawInfo.innerHTML = `
-        <p>期号：${data.latestDraw.period} 开奖日期：${data.latestDraw.drawDate} 前区号码：${data.latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ')} 后区号码：${data.latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}</p>
-      `;
+    function renderCombinationData(combinationData, combination, type, statsRange) {
+      // 确保只显示两个球的组合，取前两个数字
+      const twoBallCombination = combination.split('-').slice(0, 2).join('和');
       
       // 渲染组合信息
       const combinationInfo = document.getElementById('combinationInfo');
-      // 确保只显示两个球的组合，取前两个数字
-      const twoBallCombination = combination.split('-').slice(0, 2).join('和');
-      combinationInfo.innerHTML = `
-        <strong>组合球：${twoBallCombination} | 统计期数:${data.combinationInfo.statPeriod}</strong>
-        <span style="float: right; color: #c00;">下一期出现的球：${data.combinationInfo.nextAppearBall} 共出现${data.combinationInfo.appearCount}次</span>
-      `;
       
       // 根据类型修改表头
       const tableHeader = document.getElementById('tableHeader');
@@ -97,33 +185,248 @@
         <th>${isLastZone ? '下一期后区开奖号' : '下一期前区开奖号'}</th>
       `;
       
+      // 检查数据是否为空
+      if (!combinationData || combinationData.length === 0) {
+        // 更新组合信息为友好提示
+        combinationInfo.innerHTML = `
+          <strong>组合球：${twoBallCombination} | 统计期数:${statsRange}</strong>
+          <span style="float: right; color: #666;">暂无匹配数据</span>
+        `;
+        
+        // 显示友好的空数据提示
+        document.getElementById('combinationRecords').innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 30px; color: #666; font-size: 14px;">在当前统计期数范围内，该组合暂无出现记录</td></tr>';
+        
+        // 更新分页信息为空数据状态
+        const pagination = document.querySelector('.pagination');
+        pagination.innerHTML = '';
+        
+        // 添加上一页按钮（禁用状态）
+        const prevButton = document.createElement('a');
+        prevButton.href = '#';
+        prevButton.textContent = '上一页';
+        prevButton.disabled = true;
+        pagination.appendChild(prevButton);
+        
+        // 添加页码1（禁用状态）
+        const pageButton = document.createElement('a');
+        pageButton.href = '#';
+        pageButton.textContent = '1';
+        pageButton.classList.add('active');
+        pageButton.disabled = true;
+        pagination.appendChild(pageButton);
+        
+        // 添加下一页按钮（禁用状态）
+        const nextButton = document.createElement('a');
+        nextButton.href = '#';
+        nextButton.textContent = '下一页';
+        nextButton.disabled = true;
+        pagination.appendChild(nextButton);
+        
+        // 添加分页信息
+        const pageInfo = document.createElement('span');
+        pageInfo.textContent = '共 0 条记录，每页 15 条';
+        pagination.appendChild(pageInfo);
+        
+        return;
+      }
+      
+      // 有数据时的正常渲染
+      // 获取目标球号（如果存在）
+      const comboParts = combination.split('-');
+      const targetBall = comboParts.length > 2 ? parseInt(comboParts[2]) : null;
+      // 获取组合球号用于突出显示
+      const comboBalls = comboParts.slice(0, 2).map(num => parseInt(num));
+      
+      // 高亮显示组合球号的函数
+      function highlightComboBalls(numbers, comboNumbers, isNextDraw = false, targetBall = null) {
+        if (!numbers) return '暂无数据';
+        
+        // 如果是字符串，按空格分割
+        let numbersArray;
+        if (typeof numbers === 'string') {
+          numbersArray = numbers.split(' ').filter(n => n.trim());
+        } else if (Array.isArray(numbers)) {
+          numbersArray = numbers.map(n => String(n));
+        } else {
+          return String(numbers);
+        }
+        
+        // 构建带有高亮标记的HTML
+        return numbersArray.map(num => {
+          const numInt = parseInt(num);
+          
+          // 下一期数据的特殊处理
+          if (isNextDraw) {
+            // 下一期中的目标球使用紫色样式
+            if (targetBall !== null && numInt === targetBall) {
+              return `<span style="background-color: #A462F8; color: white; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); margin: 0 2px;">${num}</span>`;
+            }
+            // 下一期中的非目标球使用红色样式
+            else {
+              return `<span style="background-color: #DF2220; color: white; width: 24px; height: 24px; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; font-size: 12px; font-weight: 600; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25); margin: 0 2px;">${num}</span>`;
+            }
+          }
+          
+          // 当前期数据的处理
+          if (comboNumbers.includes(numInt)) {
+            // 组合球使用特殊样式
+            return `<span class="combo-ball">${num}</span>`;
+          } else {
+            // 非组合球使用red-ball样式
+            return `<span class="red-ball">${num}</span>`;
+          }
+        }).join(' ');
+      }
+      
+      combinationInfo.innerHTML = `
+        <strong>组合球：${twoBallCombination} | 统计期数:${statsRange}</strong>
+        <span style="float: right; color: #c00;">${targetBall ? `目标球：${targetBall}，` : ''}共出现${combinationData.length}次</span>
+      `;
+      
       // 渲染记录表格
       const combinationRecords = document.getElementById('combinationRecords');
-      data.records.forEach(record => {
+      combinationRecords.innerHTML = '';
+      
+      combinationData.forEach(record => {
         const tr = document.createElement('tr');
         
-        // 根据类型显示不同的数据
-        const drawNumbers = isLastZone ? 
-          (record.lastZoneDrawNumbers || '02 08') : // 模拟后区数据
-          record.firstZoneDrawNumbers;
-          
-        const nextDrawNumbers = isLastZone ? 
-          (record.nextLastZoneDrawNumbers || '02 08') : // 模拟后区数据
-          record.nextFirstZoneDrawNumbers;
+        // 根据类型显示不同的数据，突出显示组合球号
+        const drawNumbers = highlightComboBalls(record.draw_info, comboBalls);
+        // 传递targetBall参数给下一期开奖号的渲染函数
+        const nextDrawNumbers = highlightComboBalls(record.next_draw_info, comboBalls, true, targetBall) || '暂无数据';
         
         tr.innerHTML = `
-          <td>${record.id}</td>
-          <td>${record.combinationPeriod}</td>
+          <td>${record.index}</td>
+          <td>${record.period}</td>
           <td>${drawNumbers}</td>
-          <td>${record.nextPeriod}</td>
+          <td>${record.next_period || '暂无数据'}</td>
           <td>${nextDrawNumbers}</td>
         `;
         combinationRecords.appendChild(tr);
       });
+      
+      // 实现分页功能
+      const pageSize = 15; // 每页显示15条
+      const totalItems = combinationData.length;
+      const totalPages = Math.ceil(totalItems / pageSize);
+      let currentPage = 1;
+      
+      // 渲染分页内容
+      function renderPagination() {
+        const pagination = document.querySelector('.pagination');
+        pagination.innerHTML = '';
+        
+        // 添加上一页按钮
+        const prevButton = document.createElement('a');
+        prevButton.href = '#';
+        prevButton.textContent = '上一页';
+        prevButton.disabled = currentPage === 1;
+        prevButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (currentPage > 1) {
+            currentPage--;
+            renderTableData();
+            renderPagination();
+          }
+        });
+        pagination.appendChild(prevButton);
+        
+        // 添加页码按钮
+        for (let i = 1; i <= totalPages; i++) {
+          const pageButton = document.createElement('a');
+          pageButton.href = '#';
+          pageButton.textContent = i;
+          if (i === currentPage) {
+            pageButton.classList.add('active');
+          }
+          pageButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            currentPage = i;
+            renderTableData();
+            renderPagination();
+          });
+          pagination.appendChild(pageButton);
+        }
+        
+        // 添加下一页按钮
+        const nextButton = document.createElement('a');
+        nextButton.href = '#';
+        nextButton.textContent = '下一页';
+        nextButton.disabled = currentPage === totalPages;
+        nextButton.addEventListener('click', function(e) {
+          e.preventDefault();
+          if (currentPage < totalPages) {
+            currentPage++;
+            renderTableData();
+            renderPagination();
+          }
+        });
+        pagination.appendChild(nextButton);
+        
+        // 添加分页信息
+        const pageInfo = document.createElement('span');
+        pageInfo.textContent = `共 ${totalItems} 条记录，每页 ${pageSize} 条`;
+        pagination.appendChild(pageInfo);
+      }
+      
+      // 渲染当前页的数据
+      function renderTableData() {
+        const combinationRecords = document.getElementById('combinationRecords');
+        combinationRecords.innerHTML = '';
+        
+        // 计算当前页的数据范围
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalItems);
+        const currentPageData = combinationData.slice(startIndex, endIndex);
+        
+        currentPageData.forEach((record, index) => {
+          const tr = document.createElement('tr');
+          
+          // 根据类型显示不同的数据，突出显示组合球号
+          const drawNumbers = highlightComboBalls(record.draw_info, comboBalls, false);
+          // 传递targetBall参数给下一期开奖号的渲染函数
+          const nextDrawNumbers = highlightComboBalls(record.next_draw_info, comboBalls, true, targetBall) || '暂无数据';
+          
+          tr.innerHTML = `
+            <td>${record.index}</td>
+            <td>${record.period}</td>
+            <td>${drawNumbers}</td>
+            <td>${record.next_period || '暂无数据'}</td>
+            <td>${nextDrawNumbers}</td>
+          `;
+          combinationRecords.appendChild(tr);
+        });
+      }
+      
+      // 渲染第一页数据和分页控件
+      renderTableData();
+      renderPagination();
+    }
+    
+    // 主函数，获取并渲染所有数据
+    async function renderAllData() {
+      const { combination, type, statsRange } = getSelectedCombination();
+      
+      // 1. 先获取最新开奖信息
+      const latestDraw = await huo_qu_zui_xin_kai_jiang();
+      if (!latestDraw) {
+        // 如果获取最新开奖信息失败，就不再继续
+        return;
+      }
+      
+      // 渲染最新开奖信息
+      renderLatestDrawInfo(latestDraw);
+      
+      // 2. 获取组合详情数据
+      const latestPeriod = latestDraw.period || latestDraw.issue;
+      const combinationData = await huo_qu_zu_he_xiang_qing(combination, type, latestPeriod, statsRange);
+      if (combinationData !== null) { // 只有当不是null时才渲染（如果是null表示接口失败已经提示过了）
+        renderCombinationData(combinationData, combination, type, statsRange);
+      }
     }
     
     // 页面加载完成后渲染数据
-    window.addEventListener('load', renderCombinationDetailData);
+    window.addEventListener('load', renderAllData);
   </script>
 </body>
 </html>

@@ -92,16 +92,26 @@
 
   <script>
     // 从后端API获取开奖数据
-    async function fetchLotteryData(type = '10') {
+    async function fetchLotteryData(type = '10', startIssue = null, endIssue = null) {
       try {
-        console.log('开始从API获取数据，类型:', type);
+        console.log('开始从API获取数据，类型:', type, '开始期号:', startIssue, '结束期号:', endIssue);
         
         // 添加超时处理
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 15000); // 15秒超时
         
+        let url = '';
+        
+        // 如果提供了开始期号和结束期号，使用期号范围查询接口
+        if (startIssue && endIssue) {
+          url = `http://localhost:18892/huo_qu_sql_shu_ju?startIssue=${startIssue}&endIssue=${endIssue}`;
+        } else {
+          // 否则使用原来的类型查询接口
+          url = `http://localhost:18892/huo_qu_sql_shu_ju?type=${type}`;
+        }
+        
         // 调用后端API - 使用正确的接口地址
-        const response = await fetch(`http://localhost:18892/huo_qu_sql_shu_ju?type=${type}`, {
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -129,7 +139,7 @@
         return resultData;
       } catch (error) {
         console.error('获取开奖数据失败:', error);
-        alert('接口调用失败');
+        alert('接口失败');
         return [];
       }
     }
@@ -332,7 +342,7 @@
     // 全局变量存储当前加载的所有数据
     let currentAllData = [];
     let currentPage = 1;
-    let pageSize = 10;
+    let pageSize = 15;
     let currentType = '10';
     let sortOrder = 'desc'; // 排序顺序：'asc'升序，'desc'降序
     
@@ -702,9 +712,22 @@
         const tr = document.createElement('tr');
         tr.style.backgroundColor = index % 2 === 0 ? '#fff' : '#f9f9f9';
         
+        // 处理日期格式，只显示年月日
+        let formattedDate = item.drawDate || '';
+        if (formattedDate && typeof formattedDate === 'string') {
+          // 处理ISO格式日期（如：2025-10-28T16:00:00.000Z）
+          if (formattedDate.includes('T')) {
+            formattedDate = formattedDate.split('T')[0];
+          }
+          // 处理包含空格的日期（如：2025-10-28 16:00:00）
+          else if (formattedDate.includes(' ')) {
+            formattedDate = formattedDate.split(' ')[0];
+          }
+        }
+        
         const dataCells = [
           item.issue || '',
-          item.drawDate || '',
+          formattedDate,
           item.weekday || '',
           Array.isArray(item.redBalls) ? item.redBalls.join(' ') : item.redBalls || '',
           Array.isArray(item.blueBalls) ? item.blueBalls.join(' ') : item.blueBalls || '',
@@ -785,7 +808,7 @@
       try {
         // 第一步：调用sql_zui_xin_yi_qi.js接口获取数据库中最新一期开奖期号
         console.log('第一步：获取数据库中最新一期开奖期号');
-        const lastIssueResponse = await fetch('http://localhost:18890/sql_zui_xin_yi_qi', {
+        const lastIssueResponse = await fetch('http://localhost:8085/sql_zui_xin_yi_qi', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -809,7 +832,7 @@
         
         // 第二步：调用huo_qu_xin_lang_shu_ju.js接口获取最新开奖数据
         console.log('第二步：获取最新开奖数据');
-        const response = await fetch('http://localhost:18891/huo_qu_xin_lang_shu_ju', {
+        const response = await fetch('http://localhost:8085/huo_qu_xin_lang_shu_ju', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -919,6 +942,13 @@
         sortOrder = 'desc';
         sortIcon.textContent = '↑';
       }
+      
+      // 更新当前显示范围提示
+      const currentRangeSpan = document.querySelector('.btn.btn-green + span');
+      if (currentRangeSpan) {
+        const displayText = type === 'all' ? '全部' : `最近${type}期`;
+        currentRangeSpan.textContent = `当前显示: ${displayText}`;
+      }
     }
     
     // 为期数选择按钮添加事件监听
@@ -1018,6 +1048,56 @@
       document.getElementById('updateBtn')?.addEventListener('click', function() {
         updateLotteryData();
       });
+      
+      // 为查看按钮添加点击事件
+      const viewBtn = document.querySelector('.btn.btn-green');
+      if (viewBtn) {
+        viewBtn.addEventListener('click', async function() {
+          // 获取开始期号和结束期号输入框
+          const startIssueInput = document.querySelector('input[type="text"]:nth-of-type(1)');
+          const endIssueInput = document.querySelector('input[type="text"]:nth-of-type(2)');
+          
+          // 验证输入
+          const startIssue = startIssueInput?.value.trim();
+          const endIssue = endIssueInput?.value.trim();
+          
+          if (!startIssue || !endIssue) {
+            alert('请输入开始期号和结束期号');
+            return;
+          }
+          
+          if (isNaN(startIssue) || isNaN(endIssue)) {
+            alert('期号必须是数字');
+            return;
+          }
+          
+          if (parseInt(startIssue) > parseInt(endIssue)) {
+            alert('开始期号不能大于结束期号');
+            return;
+          }
+          
+          console.log('开始按期号范围查询:', startIssue, '-', endIssue);
+          
+          // 显示加载中状态
+          const tbody = document.getElementById('drawResults');
+          tbody.innerHTML = '<tr><td colspan="80" style="text-align: center; padding: 20px;">加载中...</td></tr>';
+          
+          // 调用API获取数据
+          const apiData = await fetchLotteryData(null, startIssue, endIssue);
+          
+          // 转换数据格式
+          const transformedData = transformApiData(apiData);
+          
+          // 重置为第一页并渲染数据
+          renderIndexData(transformedData, 1);
+          
+          // 更新当前显示范围提示
+          const currentRangeSpan = document.querySelector('.btn.btn-green + span');
+          if (currentRangeSpan) {
+            currentRangeSpan.textContent = `当前显示: ${startIssue}-${endIssue}`;
+          }
+        });
+      }
       
       // 页面加载完成后，默认加载最近10期数据
       loadDataByType('10');
