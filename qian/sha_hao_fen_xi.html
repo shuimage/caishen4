@@ -21,7 +21,7 @@
           <ul>
             <li class="nav-item active">
               <span class="nav-icon">✕</span>
-              <span>双杀组合分析</span>
+              <span>双球组合分析</span>
             </li>
             <li class="nav-item">
               <span class="nav-icon">📊</span>
@@ -50,7 +50,6 @@
         <div class="period-selection" style="position: relative; top: -400px;">
           <h4 class="section-title">选择统计范围</h4>
           <select class="period-dropdown">
-            <option>自定义期数</option>
             <option selected>最近100期</option>
             <option>最近50期</option>
             <option>最近35期</option>
@@ -73,7 +72,7 @@
       <!-- 右侧主内容区 -->
       <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h1 class="page-title">双杀组合分析</h1>
+          <h1 class="page-title">双球组合分析</h1>
           <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
         </div>
     
@@ -106,10 +105,10 @@
       
       <!-- 前区两球组合统计 -->
       <div class="section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <h3 style="margin: 0;">前区两球组合统计</h3>
           <div style="color: #DF2220;">
-            共有10种前区两球组合，7种组合在历史下期出现过号码
+            <!-- 统计信息将通过JavaScript动态生成 -->
           </div>
         </div>
         <div style="overflow-x: auto;">
@@ -130,10 +129,10 @@
       
       <!-- 后区两球组合统计 -->
       <div class="section">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
           <h3 style="margin: 0;">后区两球组合统计</h3>
           <div style="color: #DF2220;">
-            最新开奖后区两球组合：02,08 历史下期出现过5次相关号码
+            <!-- 统计信息将通过JavaScript动态生成 -->
           </div>
         </div>
         <div style="overflow-x: auto;">
@@ -157,63 +156,108 @@
 
   <script src="js/data.js"></script>
   <script>
+    // 从接口获取最新开奖信息
+    async function huo_qu_zui_xin_kai_jiang() {
+      try {
+        const response = await fetch('http://localhost:8085/sql_zui_xin_yi_qi');
+        const result = await response.json();
+        
+        if (result.success) {
+          return result.latestDraw;
+        } else {
+          alert('接口失败');
+          return null;
+        }
+      } catch (error) {
+        console.error('获取最新开奖信息失败:', error);
+        alert('接口失败');
+        return null;
+      }
+    }
+    
+    // 从后端获取双杀分析数据
+    async function huo_qu_shuang_sha_fen_xi(period = '100') {
+      try {
+        const response = await fetch(`http://localhost:8085/shuangsha/shuang_sha_fen_xi?period=${period}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          return result.data;
+        } else {
+          alert('接口失败');
+          return null;
+        }
+      } catch (error) {
+        console.error('获取双杀分析数据失败:', error);
+        alert('接口失败');
+        return null;
+      }
+    }
+    
     // 渲染杀号分析数据
-    function renderKillAnalysisData() {
-      const data = mockData.killAnalysisData;
+    async function renderKillAnalysisData(period = '100') {
+      // 获取双杀分析数据
+      const analysisData = await huo_qu_shuang_sha_fen_xi(period);
       
-      // 渲染最新开奖信息 - 调整为两行显示
+      if (!analysisData) {
+        // 接口调用失败，不使用模拟数据
+        return;
+      }
+      
+      // 渲染最新开奖信息
+      const latestDraw = analysisData.latestDraw;
+      // 更新顶部快捷栏的期数显示
+      updateCurrentPeriod(latestDraw.issue);
+      // 处理日期格式，只显示年月日
+      let formattedDate = latestDraw.drawDate;
+      if (formattedDate && typeof formattedDate === 'string') {
+        // 处理ISO格式日期（如：2025-10-28T16:00:00.000Z）
+        if (formattedDate.includes('T')) {
+          formattedDate = formattedDate.split('T')[0];
+        }
+        // 处理包含空格的日期（如：2025-10-28 16:00:00）
+        else if (formattedDate.includes(' ')) {
+          formattedDate = formattedDate.split(' ')[0];
+        }
+      }
       const latestDrawInfo = document.getElementById('latestDrawInfo');
       latestDrawInfo.innerHTML = `
         <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
-          期号: ${data.latestDraw.period}
+          期号: ${latestDraw.issue}
         </div>
         <div>
-          开奖日期: ${data.latestDraw.drawDate}
+          开奖日期: ${formattedDate}
         </div>
         <div>
-          前区号码: ${data.latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ')}
+          前区号码: ${latestDraw.frontNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ')}
         </div>
         <div>
-          后区号码: ${data.latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}
+          后区号码: ${latestDraw.backNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}
         </div>
       `;
       
-      // 渲染前区推荐杀号
-      const firstZoneRecommendations = document.getElementById('firstZoneRecommendations');
-      data.recommendedNumbers.firstZone.forEach(num => {
-        const ball = document.createElement('span');
-        ball.className = 'red-ball';
-        ball.textContent = num;
-        firstZoneRecommendations.appendChild(ball);
-      });
-      
-      // 渲染后区推荐杀号
-      const lastZoneRecommendations = document.getElementById('lastZoneRecommendations');
-      data.recommendedNumbers.lastZone.forEach(num => {
-        const ball = document.createElement('span');
-        ball.className = 'blue-ball';
-        ball.textContent = num;
-        lastZoneRecommendations.appendChild(ball);
-      });
-      
       // 渲染前区两球组合统计
       const firstZoneCombinations = document.getElementById('firstZoneCombinations');
-      data.firstZoneCombinations.forEach(combo => {
+      firstZoneCombinations.innerHTML = ''; // 清空现有数据
+      
+      analysisData.frontCombinations.forEach(combo => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${combo.combination}</td>
-          <td class="count" style="background-color: #cce5ff;">${combo.count}</td>
+          <td class="count" style="background-color: #cce5ff;">${combo.nextDrawNumbers.length}</td>
         `;
         
-        // 添加35个单元格
-        for (let i = 0; i < 35; i++) {
+        // 添加35个单元格，对应前区号码1-35
+        for (let i = 1; i <= 35; i++) {
           const td = document.createElement('td');
-          // 随机添加一些统计数据（模拟）
-          if (Math.random() > 0.7) {
-            td.textContent = Math.floor(Math.random() * 3) + 1;
-            td.className = 'highlight';
-            td.onclick = () => goToCombinationDetail(`${combo.combination}-${String(i + 1).padStart(2, '0')}`);
-          }
+          const count = combo.numberCounts[i] || 0;
+          
+          if (count > 0) {
+              td.textContent = count;
+              td.className = 'highlight';
+              td.onclick = () => goToCombinationDetail(`${combo.combination}-${String(i).padStart(2, '0')}`, 'first', periodValue);
+            }
+          
           tr.appendChild(td);
         }
         
@@ -222,27 +266,83 @@
       
       // 渲染后区两球组合统计
       const lastZoneCombinations = document.getElementById('lastZoneCombinations');
-      data.lastZoneCombinations.forEach(combo => {
+      lastZoneCombinations.innerHTML = ''; // 清空现有数据
+      
+      analysisData.backCombinations.forEach(combo => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
           <td>${combo.combination}</td>
-          <td class="count" style="background-color: #cce5ff;">${combo.count}</td>
+          <td class="count" style="background-color: #cce5ff;">${combo.nextDrawNumbers.length}</td>
         `;
         
-        // 添加12个单元格
-        for (let i = 0; i < 12; i++) {
+        // 添加12个单元格，对应后区号码1-12
+        for (let i = 1; i <= 12; i++) {
           const td = document.createElement('td');
-          // 模拟数据
-          if (i === 0 || i === 6 || i === 7 || i === 11) {
-            td.textContent = Math.floor(Math.random() * 20) + 1;
-            td.className = 'highlight';
-            td.onclick = () => goToCombinationDetail(`${combo.combination}-${String(i + 1).padStart(2, '0')}`, 'last');
-          }
+          const count = combo.numberCounts[i] || 0;
+          
+          if (count > 0) {
+              td.textContent = count;
+              td.className = 'highlight';
+              td.onclick = () => goToCombinationDetail(`${combo.combination}-${String(i).padStart(2, '0')}`, 'last', periodValue);
+            }
+          
           tr.appendChild(td);
         }
         
         lastZoneCombinations.appendChild(tr);
       });
+      
+      // 渲染推荐杀号
+      const firstZoneRecommendations = document.getElementById('firstZoneRecommendations');
+      firstZoneRecommendations.innerHTML = '';
+      if (analysisData.recommendedFrontKillNumbers && analysisData.recommendedFrontKillNumbers.length > 0) {
+        analysisData.recommendedFrontKillNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'red-ball';
+          ball.textContent = num;
+          firstZoneRecommendations.appendChild(ball);
+        });
+      } else {
+        firstZoneRecommendations.textContent = '暂无推荐杀号';
+      }
+      
+      const lastZoneRecommendations = document.getElementById('lastZoneRecommendations');
+      lastZoneRecommendations.innerHTML = '';
+      if (analysisData.recommendedBackKillNumbers && analysisData.recommendedBackKillNumbers.length > 0) {
+        analysisData.recommendedBackKillNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'blue-ball';
+          ball.textContent = num;
+          lastZoneRecommendations.appendChild(ball);
+        });
+      } else {
+        lastZoneRecommendations.textContent = '暂无推荐杀号';
+      }
+      
+      // 更新统计信息
+      const firstZoneSection = document.querySelector('.section');
+      if (firstZoneSection && firstZoneSection.querySelector('.section-header')) {
+        firstZoneSection.querySelector('.section-header').innerHTML = `
+          <h3 style="margin: 0;">前区两球组合统计</h3>
+          <div style="color: #DF2220;">
+            共有${analysisData.frontCombinations.length}种前区两球组合，
+            ${analysisData.frontCombinations.filter(c => c.nextDrawNumbers.length > 0).length}种组合在历史下期出现过号码
+          </div>
+        `;
+      }
+      
+      if (analysisData.backCombinations.length > 0) {
+        const lastCombo = analysisData.backCombinations[0];
+        const backZoneSections = document.querySelectorAll('.section');
+        if (backZoneSections.length > 2 && backZoneSections[2].querySelector('.section-header')) {
+          backZoneSections[2].querySelector('.section-header').innerHTML = `
+            <h3 style="margin: 0;">后区两球组合统计</h3>
+            <div style="color: #DF2220;">
+              最新开奖后区两球组合：${lastCombo.combination} 历史下期出现过${lastCombo.nextDrawNumbers.length}次相关号码
+            </div>
+          `;
+        }
+      }
     }
     
     // 渲染表格头部
@@ -266,10 +366,103 @@
       }
     }
     
+    // 更新顶部快捷栏的期数显示
+    function updateCurrentPeriod(period) {
+      document.querySelector('.current-period').textContent = period;
+    }
+    
+    // 保存统计范围到localStorage
+    function savePeriodSelection(periodValue) {
+      try {
+        localStorage.setItem('selectedPeriodRange', periodValue);
+      } catch (e) {
+        console.error('保存统计范围失败:', e);
+      }
+    }
+    
+    // 从localStorage读取保存的统计范围
+    function getSavedPeriodSelection() {
+      try {
+        return localStorage.getItem('selectedPeriodRange') || '100';
+      } catch (e) {
+        console.error('读取统计范围失败:', e);
+        return '100';
+      }
+    }
+    
+    // 根据period值设置下拉框选中状态
+    function setPeriodDropdownSelection(periodValue) {
+      const periodDropdown = document.querySelector('.period-dropdown');
+      if (periodDropdown) {
+        if (periodValue === '100') periodDropdown.value = '最近100期';
+        else if (periodValue === '50') periodDropdown.value = '最近50期';
+        else if (periodValue === '35') periodDropdown.value = '最近35期';
+        else if (periodValue === '200') periodDropdown.value = '最近200期';
+        else if (periodValue === '300') periodDropdown.value = '最近300期';
+        else if (periodValue === '500') periodDropdown.value = '最近500期';
+        else if (periodValue === '1000') periodDropdown.value = '最近1000期';
+        else if (periodValue === 'all') periodDropdown.value = '全部期';
+      }
+    }
+    
+    // 定义全局变量用于存储当前选择的统计范围
+    let periodValue = '100'; // 默认值
+    
     // 页面加载完成后渲染数据
-    window.addEventListener('load', function() {
+    window.addEventListener('load', async function() {
       renderTableHeaders();
-      renderKillAnalysisData();
+      
+      // 获取保存的统计范围，如果没有则使用默认值100
+      periodValue = getSavedPeriodSelection();
+      
+      // 设置下拉框选中状态
+      setPeriodDropdownSelection(periodValue);
+      
+      // 使用保存的统计范围渲染数据
+      renderKillAnalysisData(periodValue);
+      
+      // 为统计范围下拉选择框添加事件监听器
+      const periodDropdown = document.querySelector('.period-dropdown');
+      if (periodDropdown) {
+        periodDropdown.addEventListener('change', function() {
+          const selectedText = this.value;
+          
+          // 根据选择的文本确定对应的period值
+          if (selectedText === '最近100期') periodValue = '100';
+          else if (selectedText === '最近50期') periodValue = '50';
+          else if (selectedText === '最近35期') periodValue = '35';
+          else if (selectedText === '最近200期') periodValue = '200';
+          else if (selectedText === '最近300期') periodValue = '300';
+          else if (selectedText === '最近500期') periodValue = '500';
+          else if (selectedText === '最近1000期') periodValue = '1000';
+          else if (selectedText === '全部期') periodValue = 'all';
+          // 自定义期数选项已移除
+          
+          // 保存选择的统计范围
+          savePeriodSelection(periodValue);
+          
+          // 根据选择的统计范围重新渲染数据
+          renderKillAnalysisData(periodValue);
+        });
+      }
+      
+      // 为快捷期数按钮添加事件监听器
+      const quickPeriodButtons = document.querySelectorAll('.quick-period-btn');
+      quickPeriodButtons.forEach(button => {
+        button.addEventListener('click', function() {
+          const buttonText = this.textContent;
+          
+          if (buttonText === '近5期') periodValue = '5';
+          else if (buttonText === '近10期') periodValue = '10';
+          else if (buttonText === '最新1期') periodValue = '1';
+          
+          // 保存选择的统计范围
+          savePeriodSelection(periodValue);
+          
+          // 根据点击的快捷按钮重新渲染数据
+          renderKillAnalysisData(periodValue);
+        });
+      });
     });
     
     // 移动端侧边栏切换

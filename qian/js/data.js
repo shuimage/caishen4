@@ -189,10 +189,41 @@ function goToKillAnalysis() {
   window.location.href = 'sha_hao_fen_xi.html';
 }
 
-function goToCombinationDetail(combination, type = 'first') {
+// 获取lottery_results表的总条数
+async function huo_qu_lottery_results_total() {
+  try {
+    const response = await fetch('http://localhost:8085/huo_qu_lottery_results_total');
+    const result = await response.json();
+    
+    if (result.success) {
+      return result.total;
+    } else {
+      alert('接口失败');
+      return null;
+    }
+  } catch (error) {
+    console.error('获取总条数失败:', error);
+    alert('接口失败');
+    return null;
+  }
+}
+
+async function goToCombinationDetail(combination, type = 'first', statsRange = '100') {
   // 保存选中的组合信息到localStorage
   localStorage.setItem('selectedCombination', combination);
-  window.location.href = `zu_he_xiang_qing.html?combination=${combination}&type=${type}`;
+  localStorage.setItem('combinationType', type);
+  localStorage.setItem('statsRange', statsRange);
+  
+  // 如果统计范围是'all'，获取lottery_results表的总条数
+  if (statsRange === 'all') {
+    const totalCount = await huo_qu_lottery_results_total();
+    if (totalCount !== null) {
+      statsRange = totalCount.toString();
+    }
+  }
+  
+  // 跳转到详情页，传递所有必要参数
+  window.location.href = `zu_he_xiang_qing.html?combination=${combination}&type=${type}&stats_range=${statsRange}`;
 }
 
 function goBack() {
