@@ -239,6 +239,23 @@ function getWeekdayFromDate(dateStr) {
   }
 }
 
+// 获取表中最大的bian_hao值，并返回数字部分
+async function getMaxBianHao(tableName) {
+  try {
+    const result = await query(`SELECT MAX(bian_hao) as max_bian_hao FROM ${tableName}`);
+    if (result && result[0].max_bian_hao) {
+      // 提取数字部分并转为整数
+      const numberStr = result[0].max_bian_hao.replace(/^LT/, '');
+      return parseInt(numberStr, 10);
+    }
+    // 如果没有数据，返回0
+    return 0;
+  } catch (error) {
+    console.error(`获取${tableName}表最大bian_hao值失败:`, error);
+    return 0;
+  }
+}
+
 /**
  * 同步数据到数据库
  * @param {Array} data 彩票数据数组
@@ -274,6 +291,14 @@ async function syncDataToDatabase(newData) {
     const existingIssuesResult = await query('SELECT issue FROM lottery_results');
     const existingIssues = new Set(existingIssuesResult.map(item => item.issue));
     
+    // 获取当前数据库中最大的bian_hao值，用于生成新的编号
+    let maxLotteryResultsBianHao = await getMaxBianHao('lottery_results');
+    let maxLetouBianHao = await getMaxBianHao('letou');
+    
+    // 初始化编号计数器
+    let lotteryResultsBianHaoCounter = maxLotteryResultsBianHao + 1;
+    let letouBianHaoCounter = maxLetouBianHao + 1;
+    
     console.log(`数据库中已有${existingIssues.size}期数据`);
     
     for (const item of sortedData) {
@@ -292,11 +317,19 @@ async function syncDataToDatabase(newData) {
           const blueStr = '[' + backArea.join(', ') + ']';
           
           try {
+            // 生成新的bian_hao值
+            const lotteryResultsBianHao = `LT${lotteryResultsBianHaoCounter.toString().padStart(5, '0')}`;
+            const letouBianHao = `LT${letouBianHaoCounter.toString().padStart(5, '0')}`;
+            
+            // 更新计数器
+            lotteryResultsBianHaoCounter++;
+            letouBianHaoCounter++;
+            
             // 使用事务确保数据一致性
             await transaction([
-              // 插入lottery_results表
+              // 插入lottery_results表，包含bian_hao字段
               {
-                sql: 'INSERT INTO lottery_results (issue, draw_date, week, red, blue, sum, span, area_ratio, odd_even_ratio) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                sql: 'INSERT INTO lottery_results (issue, draw_date, week, red, blue, sum, span, area_ratio, odd_even_ratio, bian_hao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 params: [
                   issue,
                   item.drawDate || new Date().toISOString().split('T')[0],
@@ -306,12 +339,13 @@ async function syncDataToDatabase(newData) {
                   parseInt(item.sum) || 0,
                   parseInt(item.span) || 0,
                   item.intervalRatio || '0:0:0',
-                  item.parityRatio || '0:0'
+                  item.parityRatio || '0:0',
+                  lotteryResultsBianHao
                 ]
               },
-              // 插入letou表
+              // 插入letou表，包含bian_hao字段
               {
-                sql: 'INSERT INTO letou (riqi, qihao, qian1, qian2, qian3, qian4, qian5, hou1, hou2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+                sql: 'INSERT INTO letou (riqi, qihao, qian1, qian2, qian3, qian4, qian5, hou1, hou2, bian_hao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
                 params: [
                   item.drawDate || new Date().toISOString().split('T')[0],
                   issue,
@@ -321,7 +355,8 @@ async function syncDataToDatabase(newData) {
                   frontArea[3] || 0,
                   frontArea[4] || 0,
                   backArea[0] || 0,
-                  backArea[1] || 0
+                  backArea[1] || 0,
+                  letouBianHao
                 ]
               }
             ]);

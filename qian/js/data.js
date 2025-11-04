@@ -192,7 +192,7 @@ function goToKillAnalysis() {
 // 获取lottery_results表的总条数
 async function huo_qu_lottery_results_total() {
   try {
-    const response = await fetch('http://localhost:8085/huo_qu_lottery_results_total');
+    const response = await fetch('http://localhost:18892/huo_qu_lottery_results_total');
     const result = await response.json();
     
     if (result.success) {
@@ -235,7 +235,7 @@ async function fetchLatestLotteryData() {
     try {
         // 从后端API获取最新数据
         console.log('正在请求数据...');
-        const response = await fetch('http://localhost:18889/getLatestData');
+        const response = await fetch('http://localhost:18892/getLatestData');
         
         // 检查响应是否成功
         if (!response.ok) {

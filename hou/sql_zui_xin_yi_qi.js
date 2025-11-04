@@ -2,17 +2,10 @@
 // 接口功能: 获取数据库中存储的最新一期大乐透开奖信息
 
 const express = require('express');
-const cors = require('cors');
 const { query } = require('./db.config');
 
-const app = express();
-const PORT = process.env.PORT || 18890;
-
-// 配置CORS，允许所有来源的请求
-app.use(cors());
-
-// 解析JSON请求体
-app.use(express.json());
+// 创建路由器而不是完整的应用
+const router = express.Router();
 
 /**
  * 获取数据库中的最新一期开奖信息
@@ -141,7 +134,8 @@ async function getLastDatabaseDrawInfo() {
  *   "message": "获取数据失败"
  * }
  */
-app.get('/sql_zui_xin_yi_qi', async (req, res) => {
+// 定义获取最新一期完整开奖信息的路由
+router.get('/sql_zui_xin_yi_qi', async (req, res) => {
   try {
     const result = await getLastDatabaseDrawInfo();
     res.json(result);
@@ -151,10 +145,5 @@ app.get('/sql_zui_xin_yi_qi', async (req, res) => {
   }
 });
 
-// 启动服务器
-app.listen(PORT, () => {
-  console.log(`最新开奖信息服务运行在 http://localhost:${PORT}`);
-  console.log(`获取最新一期完整开奖信息接口: http://localhost:${PORT}/sql_zui_xin_yi_qi`);
-});
-
-module.exports = app;
+// 导出路由器
+module.exports = router;

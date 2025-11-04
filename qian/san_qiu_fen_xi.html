@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大乐透统计分析 - 杀号分析</title>
+  <title>大乐透统计分析 - 三球组合分析</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -19,11 +19,11 @@
         <!-- 主导航区 -->
         <nav class="main-nav">
           <ul>
-            <li class="nav-item active">
+            <li class="nav-item">
               <span class="nav-icon">✕</span>
               <span>双球组合分析</span>
             </li>
-            <li class="nav-item">
+            <li class="nav-item active">
               <span class="nav-icon">🔺</span>
               <span>三球组合分析</span>
             </li>
@@ -70,13 +70,12 @@
           </div>
         </div>
         
-
       </div>
       
       <!-- 右侧主内容区 -->
       <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h1 class="page-title">双球组合分析</h1>
+          <h1 class="page-title">三球组合分析</h1>
           <div style="display: flex; gap: 10px; align-items: center;">
             <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
           </div>
@@ -99,20 +98,12 @@
             <!-- 数据将通过JavaScript动态生成 -->
           </div>
         </div>
-        
-        <!-- 后区推荐杀号 -->
-        <div class="section" style="flex: 0.5;">
-          <h3>后区推荐杀号：</h3>
-          <div id="lastZoneRecommendations" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
-            <!-- 数据将通过JavaScript动态生成 -->
-          </div>
-        </div>
       </div>
       
-      <!-- 前区两球组合统计 -->
+      <!-- 前区三球组合统计 -->
       <div class="section">
         <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <h3 style="margin: 0;">前区两球组合统计</h3>
+          <h3 style="margin: 0;">前区三球组合统计</h3>
           <div style="color: #DF2220;">
             <!-- 统计信息将通过JavaScript动态生成 -->
           </div>
@@ -132,32 +123,6 @@
           </table>
         </div>
       </div>
-      
-      <!-- 后区两球组合统计 -->
-      <div class="section">
-        <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <h3 style="margin: 0;">后区两球组合统计</h3>
-          <div style="color: #DF2220;">
-            <!-- 统计信息将通过JavaScript动态生成 -->
-          </div>
-        </div>
-        <div style="overflow-x: auto;">
-          <table class="combination-table">
-            <thead id="lastZoneTableHeader">
-              <tr>
-                <th>组合号</th>
-                <th>出现次数</th>
-                <!-- 后区号码1-12将通过JavaScript动态生成 -->
-              </tr>
-            </thead>
-            <tbody id="lastZoneCombinations">
-              <!-- 数据将通过JavaScript动态生成 -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-      
-      
       </div>
     </div>
   </div>
@@ -174,58 +139,38 @@
     });
   </script>
   <script>
-    // 从接口获取最新开奖信息
+    // 从sql_zui_xin_yi_qi接口获取最新一期开奖信息
     async function huo_qu_zui_xin_kai_jiang() {
       try {
         const response = await fetch('http://localhost:18892/sql_zui_xin_yi_qi');
         const result = await response.json();
         
-        if (result.success) {
+        // 确保正确处理后端返回的success和latestDraw结构
+        if (result && result.success && result.latestDraw) {
           return result.latestDraw;
         } else {
-          alert('接口失败');
+          console.error('接口返回数据格式不正确:', result);
+          alert('获取开奖数据失败');
           return null;
         }
       } catch (error) {
-        console.error('获取最新开奖信息失败:', error);
-        alert('接口失败');
+        console.error('获取开奖数据失败:', error);
+        alert('网络请求失败');
         return null;
       }
     }
     
-    // 从后端获取双杀分析数据
-    async function huo_qu_shuang_sha_fen_xi(period = '100') {
-      try {
-        const response = await fetch(`http://localhost:18892/shuangsha/shuang_sha_fen_xi?period=${period}`);
-        const result = await response.json();
-        
-        if (result.success) {
-          return result.data;
-        } else {
-          alert('接口失败');
-          return null;
-        }
-      } catch (error) {
-        console.error('获取双杀分析数据失败:', error);
-        alert('接口失败');
-        return null;
-      }
-    }
-    
-    // 渲染杀号分析数据
-    async function renderKillAnalysisData(period = '100') {
-      // 获取双杀分析数据
-      const analysisData = await huo_qu_shuang_sha_fen_xi(period);
+    // 渲染最新开奖信息
+    async function xuan_ran_zui_xin_kai_jiang() {
+      const latestDraw = await huo_qu_zui_xin_kai_jiang();
       
-      if (!analysisData) {
-        // 接口调用失败，不使用模拟数据
+      if (!latestDraw) {
         return;
       }
       
-      // 渲染最新开奖信息
-      const latestDraw = analysisData.latestDraw;
       // 更新顶部快捷栏的期数显示
-      updateCurrentPeriod(latestDraw.issue);
+      updateCurrentPeriod(latestDraw.period);
+      
       // 处理日期格式，只显示年月日
       let formattedDate = latestDraw.drawDate;
       if (formattedDate && typeof formattedDate === 'string') {
@@ -238,79 +183,154 @@
           formattedDate = formattedDate.split(' ')[0];
         }
       }
+      
       const latestDrawInfo = document.getElementById('latestDrawInfo');
       latestDrawInfo.innerHTML = `
         <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
-          期号: ${latestDraw.issue}
+          期号: ${latestDraw.period}
         </div>
         <div>
           开奖日期: ${formattedDate}
         </div>
         <div>
-          前区号码: ${latestDraw.frontNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ')}
+          前区号码: ${Array.isArray(latestDraw.firstZoneNumbers) ? latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
         </div>
         <div>
-          后区号码: ${latestDraw.backNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}
+          后区号码: ${Array.isArray(latestDraw.lastZoneNumbers) ? latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
         </div>
       `;
+    }
+  </script>
+  <script>
+    // 从后端获取三球组合分析数据
+    async function huo_qu_san_qiu_fen_xi(period = '100') {
+      try {
+        const response = await fetch(`http://localhost:18892/san_qiu_fen_xi?period=${period}`);
+        const result = await response.json();
+        
+        if (result.success) {
+          return result.data;
+        } else {
+          alert('接口失败');
+          return null;
+        }
+      } catch (error) {
+        console.error('获取三球组合分析数据失败:', error);
+        alert('接口失败');
+        return null;
+      }
+    }
+    
+    // 渲染三球组合分析数据
+    async function renderThreeBallAnalysisData(period = '100') {
+      // 获取三球组合分析数据
+      const analysisData = await huo_qu_san_qiu_fen_xi(period);
       
-      // 渲染前区两球组合统计
+      if (!analysisData) {
+        // 接口调用失败，不使用模拟数据
+        return;
+      }
+      
+      // 注意：最新开奖信息已通过专门的接口获取，这里不再重复设置
+      // 但仍然需要更新顶部期数显示，以保持一致性
+      if (analysisData.latestDraw && analysisData.latestDraw.issue) {
+        updateCurrentPeriod(analysisData.latestDraw.issue);
+      }
+      
+      // 渲染前区三球组合统计
       const firstZoneCombinations = document.getElementById('firstZoneCombinations');
       firstZoneCombinations.innerHTML = ''; // 清空现有数据
       
-      analysisData.frontCombinations.forEach(combo => {
+      console.log('渲染三球组合数据，共', analysisData.frontCombinations.length, '个组合');
+      console.log('第一个组合数据结构:', analysisData.frontCombinations[0]);
+      
+      // 为了更好的用户体验，先按照出现次数降序排序
+      const sortedCombinations = [...analysisData.frontCombinations].sort((a, b) => {
+        // 计算每个组合的总出现次数
+        const countA = Object.values(a.numberCounts || {}).reduce((sum, count) => sum + count, 0);
+        const countB = Object.values(b.numberCounts || {}).reduce((sum, count) => sum + count, 0);
+        return countB - countA;
+      });
+      
+      sortedCombinations.forEach(combo => {
+        // 计算总出现次数
+        const totalCount = Object.values(combo.numberCounts || {}).reduce((sum, count) => sum + count, 0);
+        
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td>${combo.combination}</td>
-          <td class="count" style="background-color: #cce5ff;">${combo.nextDrawNumbers.length}</td>
+          <td class="combination-cell" data-combination="${combo.combination}">${combo.combination}</td>
+          <td class="count">${totalCount}</td>
         `;
         
         // 添加35个单元格，对应前区号码1-35
         for (let i = 1; i <= 35; i++) {
           const td = document.createElement('td');
-          const count = combo.numberCounts[i] || 0;
+          const numStr = String(i); // 后端使用数字作为键，不需要补0
+          // 安全访问numberCounts属性
+          const count = combo.numberCounts[numStr] || 0;
           
+          // 当值为0时不显示，只显示大于0的统计值
+          td.textContent = count > 0 ? count : '';
+          
+          // 只有当count大于0时才高亮显示
           if (count > 0) {
-              td.textContent = count;
-              td.className = 'highlight';
-              td.onclick = () => goToCombinationDetail(`${combo.combination}-${String(i).padStart(2, '0')}`, 'first', periodValue);
-            }
+            td.className = 'highlight';
+            
+            // 添加一些视觉效果，根据count值设置不同的背景色深度
+            const opacity = 0.2 + (count * 0.1); // 基础透明度0.2，每增加1次出现增加0.1的不透明度
+            const clampedOpacity = Math.min(opacity, 0.9); // 最大不透明度为0.9
+            td.style.backgroundColor = `rgba(223, 34, 32, ${clampedOpacity})`;
+            td.style.color = '#fff';
+            td.style.cursor = 'pointer'; // 添加鼠标指针样式
+            td.style.transition = 'background-color 0.2s'; // 添加过渡效果
+            
+            // 为有统计值的单元格添加点击事件
+            td.addEventListener('click', function() {
+              const combination = combo.combination;
+              const selectedNumber = i;
+              console.log('点击组合统计值:', combination, selectedNumber);
+              // 跳转到三球组合详情页面，传递组合和号码参数
+              window.location.href = `san_qiu_zu_he_xiang_qing.html?combination=${combination}&number=${selectedNumber}`;
+            });
+            
+            // 添加鼠标悬停效果
+            td.addEventListener('mouseenter', function() {
+              this.style.backgroundColor = 'rgba(223, 34, 32, 1)';
+            });
+            
+            td.addEventListener('mouseleave', function() {
+              this.style.backgroundColor = `rgba(223, 34, 32, ${clampedOpacity})`;
+            });
+          }
           
           tr.appendChild(td);
         }
+        
+        // 为组合号单元格添加点击事件
+          const combinationCell = tr.querySelector('.combination-cell');
+          combinationCell.addEventListener('click', function() {
+            const combination = this.getAttribute('data-combination');
+            console.log('点击组合:', combination);
+            // 跳转到三球组合详情页面，传递组合参数
+            window.location.href = `san_qiu_zu_he_xiang_qing.html?combination=${combination}`;
+          });
         
         firstZoneCombinations.appendChild(tr);
       });
       
-      // 渲染后区两球组合统计
-      const lastZoneCombinations = document.getElementById('lastZoneCombinations');
-      lastZoneCombinations.innerHTML = ''; // 清空现有数据
-      
-      analysisData.backCombinations.forEach(combo => {
+      // 如果没有数据，显示提示信息
+      if (sortedCombinations.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${combo.combination}</td>
-          <td class="count" style="background-color: #cce5ff;">${combo.nextDrawNumbers.length}</td>
-        `;
-        
-        // 添加12个单元格，对应后区号码1-12
-        for (let i = 1; i <= 12; i++) {
-          const td = document.createElement('td');
-          const count = combo.numberCounts[i] || 0;
-          
-          if (count > 0) {
-              td.textContent = count;
-              td.className = 'highlight';
-              td.onclick = () => goToCombinationDetail(`${combo.combination}-${String(i).padStart(2, '0')}`, 'last', periodValue);
-            }
-          
-          tr.appendChild(td);
-        }
-        
-        lastZoneCombinations.appendChild(tr);
-      });
+        const td = document.createElement('td');
+        td.colSpan = 37; // 组合号 + 出现次数 + 35个号码
+        td.textContent = '暂无三球组合统计数据';
+        td.style.textAlign = 'center';
+        td.style.padding = '20px';
+        tr.appendChild(td);
+        firstZoneCombinations.appendChild(tr);
+      }
       
-      // 渲染推荐杀号
+      // 渲染推荐杀号（仅前区）
       const firstZoneRecommendations = document.getElementById('firstZoneRecommendations');
       firstZoneRecommendations.innerHTML = '';
       if (analysisData.recommendedFrontKillNumbers && analysisData.recommendedFrontKillNumbers.length > 0) {
@@ -324,43 +344,21 @@
         firstZoneRecommendations.textContent = '暂无推荐杀号';
       }
       
-      const lastZoneRecommendations = document.getElementById('lastZoneRecommendations');
-      lastZoneRecommendations.innerHTML = '';
-      if (analysisData.recommendedBackKillNumbers && analysisData.recommendedBackKillNumbers.length > 0) {
-        analysisData.recommendedBackKillNumbers.forEach(num => {
-          const ball = document.createElement('span');
-          ball.className = 'blue-ball';
-          ball.textContent = num;
-          lastZoneRecommendations.appendChild(ball);
-        });
-      } else {
-        lastZoneRecommendations.textContent = '暂无推荐杀号';
-      }
-      
       // 更新统计信息
-      const firstZoneSection = document.querySelector('.section');
-      if (firstZoneSection && firstZoneSection.querySelector('.section-header')) {
-        firstZoneSection.querySelector('.section-header').innerHTML = `
-          <h3 style="margin: 0;">前区两球组合统计</h3>
-          <div style="color: #DF2220;">
-            共有${analysisData.frontCombinations.length}种前区两球组合，
-            ${analysisData.frontCombinations.filter(c => c.nextDrawNumbers.length > 0).length}种组合在历史下期出现过号码
-          </div>
-        `;
-      }
-      
-      if (analysisData.backCombinations.length > 0) {
-        const lastCombo = analysisData.backCombinations[0];
-        const backZoneSections = document.querySelectorAll('.section');
-        if (backZoneSections.length > 2 && backZoneSections[2].querySelector('.section-header')) {
-          backZoneSections[2].querySelector('.section-header').innerHTML = `
-            <h3 style="margin: 0;">后区两球组合统计</h3>
+        const firstZoneSection = document.querySelector('.section:last-child');
+        if (firstZoneSection && firstZoneSection.querySelector('.section-header')) {
+          // 计算总出现次数
+          const totalOccurrences = analysisData.frontCombinations.reduce((sum, combo) => sum + combo.count, 0);
+          
+          firstZoneSection.querySelector('.section-header').innerHTML = `
+            <h3 style="margin: 0;">前区三球组合统计</h3>
             <div style="color: #DF2220;">
-              最新开奖后区两球组合：${lastCombo.combination} 历史下期出现过${lastCombo.nextDrawNumbers.length}次相关号码
+              共有${analysisData.frontCombinations.length}种前区三球组合，
+              总计出现${totalOccurrences}次，
+              数据范围：${period === 'all' ? '全部期' : `最近${period}期`}
             </div>
           `;
         }
-      }
     }
     
     // 渲染表格头部
@@ -372,15 +370,6 @@
         const th = document.createElement('th');
         th.textContent = String(i).padStart(2, '0');
         firstZoneRow.appendChild(th);
-      }
-      
-      // 渲染后区表格头部
-      const lastZoneHeader = document.getElementById('lastZoneTableHeader');
-      const lastZoneRow = lastZoneHeader.querySelector('tr');
-      for (let i = 1; i <= 12; i++) {
-        const th = document.createElement('th');
-        th.textContent = String(i).padStart(2, '0');
-        lastZoneRow.appendChild(th);
       }
     }
     
@@ -436,8 +425,11 @@
       // 设置下拉框选中状态
       setPeriodDropdownSelection(periodValue);
       
+      // 首先获取并显示最新开奖信息
+      await xuan_ran_zui_xin_kai_jiang();
+      
       // 使用保存的统计范围渲染数据
-      renderKillAnalysisData(periodValue);
+      renderThreeBallAnalysisData(periodValue);
       
       // 为统计范围下拉选择框添加事件监听器
       const periodDropdown = document.querySelector('.period-dropdown');
@@ -454,13 +446,12 @@
           else if (selectedText === '最近500期') periodValue = '500';
           else if (selectedText === '最近1000期') periodValue = '1000';
           else if (selectedText === '全部期') periodValue = 'all';
-          // 自定义期数选项已移除
           
           // 保存选择的统计范围
           savePeriodSelection(periodValue);
           
           // 根据选择的统计范围重新渲染数据
-          renderKillAnalysisData(periodValue);
+          renderThreeBallAnalysisData(periodValue);
         });
       }
       
@@ -478,7 +469,7 @@
           savePeriodSelection(periodValue);
           
           // 根据点击的快捷按钮重新渲染数据
-          renderKillAnalysisData(periodValue);
+          renderThreeBallAnalysisData(periodValue);
         });
       });
     });
@@ -504,12 +495,12 @@
         console.log('点击的导航项文本:', navText);
         
         // 使用更宽松的匹配方式，只要文本中包含关键词即可
-        if (navText.includes('三球') || navText.includes('三区')) {
-          console.log('跳转到三球组合分析页面');
-          window.location.href = 'san_qiu_fen_xi.html';
-        } else if (navText.includes('双球')) {
+        if (navText.includes('双球')) {
           console.log('跳转到双球组合分析页面');
           window.location.href = 'sha_hao_fen_xi.html';
+        } else if (navText.includes('三球') || navText.includes('三区')) {
+          console.log('跳转到三球组合分析页面');
+          window.location.href = 'san_qiu_fen_xi.html';
         }
         
         // 在移动端点击导航后关闭侧边栏

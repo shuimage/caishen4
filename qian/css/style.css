@@ -47,6 +47,286 @@
   --sidebar-divider: #F2F2F2; /* 分割线颜色 */
 }
 
+/* 主题切换按钮样式 */
+.theme-toggle {
+  background: none;
+  border: 1px solid #ddd;
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: #fff;
+  color: #333;
+  outline: none;
+}
+
+.theme-toggle:hover {
+  background-color: #f0f0f0;
+  transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 黑色主题变量与样式优化 */
+body.dark-theme {
+  --primary-color: #FF4500;
+  --secondary-color: #9933CC;
+  --success-color: #32CD32;
+  --warning-color: #FFA500;
+  --error-color: #FF6347;
+  --text-primary: #FFFFFF;
+  --text-secondary: #CCCCCC;
+  --text-light: #999999;
+  --border-color: #444444;
+  --border-hover: #555555;
+  --background-light: #121212;
+  --background-white: #1E1E1E;
+  --hover-background: #2D2D2D;
+  --surface-variant: #252525;
+  --highlight-bg: rgba(255, 69, 0, 0.1);
+  --card-bg: #222222;
+  
+  /* 杀号分析页面专用颜色 - 黑色主题 */
+  --sidebar-bg: #1E1E1E;
+  --sidebar-primary: #FF4500; /* 亮红色主色 */
+  --sidebar-accent: #FFA500; /* 亮橙色辅助色 */
+  --sidebar-divider: #333333; /* 分割线颜色 */
+  
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* 深色主题下的主题切换图标变化 */
+body.dark-theme .theme-toggle svg {
+  color: #FFD700; /* 金色 */
+}
+
+/* 深色主题下保持开奖球号颜色不变 */
+body.dark-theme .red-ball {
+  background-color: #DF2220 !important; /* 使用原始红色 */
+  color: white !important;
+}
+
+body.dark-theme .blue-ball {
+  background-color: #A462F8 !important; /* 使用原始蓝色 */
+  color: white !important;
+}
+
+/* 深色主题下的表格样式优化 */
+body.dark-theme table {
+  border-color: var(--border-color);
+  background-color: var(--surface-variant);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+body.dark-theme th {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+body.dark-theme th,
+body.dark-theme td {
+  border-color: var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+body.dark-theme tr:hover td {
+  background-color: var(--highlight-bg);
+  transform: translateX(2px);
+}
+
+body.dark-theme tr:nth-child(even) {
+  background-color: rgba(255, 255, 255, 0.02);
+}
+
+/* 深色主题下的按钮样式优化 - 保持原有颜色 */
+body.dark-theme .btn {
+  /* 移除深色主题下的背景颜色覆盖，使用默认样式 */
+  border-color: var(--border-color);
+  transition: all 0.3s ease;
+  border-radius: 6px;
+}
+
+body.dark-theme .btn:hover {
+  /* 保持原有的悬停效果 */
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 确保激活按钮保持原有颜色 */
+body.dark-theme .btn.active {
+  color: #fff;
+}
+
+body.dark-theme .btn:active {
+  transform: translateY(0);
+}
+
+/* 深色主题下的输入框样式优化 */
+body.dark-theme input[type="text"] {
+  background-color: var(--background-white);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  transition: border-color 0.3s ease;
+  outline: none;
+}
+
+body.dark-theme input[type="text"]:focus {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(255, 69, 0, 0.2);
+}
+
+/* 深色主题下的主题切换按钮优化 */
+body.dark-theme .theme-toggle {
+  background-color: var(--card-bg);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+}
+
+body.dark-theme .theme-toggle:hover {
+  background-color: var(--border-hover);
+  box-shadow: 0 2px 8px rgba(255, 69, 0, 0.3);
+}
+
+/* 分页样式优化 */
+body.dark-theme .pagination {
+  background-color: var(--surface-variant);
+  border-color: var(--border-color);
+}
+
+body.dark-theme .pagination a {
+  color: var(--text-secondary);
+  transition: all 0.3s ease;
+}
+
+body.dark-theme .pagination a:hover:not(.active) {
+  color: var(--primary-color);
+  background-color: var(--border-hover);
+}
+
+body.dark-theme .pagination a.active {
+  background-color: var(--primary-color);
+  color: #fff;
+  font-weight: 600;
+  border-radius: 4px;
+}
+
+/* 卡片和区块样式优化 */
+body.dark-theme .section {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+  /* 黑色主题下组合信息区域优化 */
+body.dark-theme #combinationInfo {
+  background-color: #1a1a1a !important;
+  border: 1px solid #333;
+  color: white;
+}
+
+/* 白色主题下组合信息区域优化 */
+#combinationInfo {
+  background-color: #f5f7fa !important;
+  border: 1px solid #e8e8e8;
+  color: #333;
+  padding: 15px;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+  
+  /* 深色主题下组合分析页统计列表色块样式优化 */
+body.dark-theme .combination-table .count {
+  background-color: transparent !important;
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+body.dark-theme .combination-table .highlight {
+  background-color: #3a5a7a;
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+body.dark-theme .combination-table .highlight:hover {
+  background-color: #4a6a8a;
+  transform: scale(1.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* 导航栏样式优化 */
+body.dark-theme .left-sidebar {
+  background-color: var(--surface-variant);
+  border-right: 1px solid var(--border-color);
+  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.2);
+}
+
+body.dark-theme .nav-item {
+  border-color: var(--border-color);
+  transition: all 0.3s ease;
+}
+
+body.dark-theme .nav-item:hover {
+  background-color: var(--border-hover);
+  border-left-color: var(--primary-color);
+}
+
+body.dark-theme .nav-item.active {
+  background-color: var(--highlight-bg);
+  border-left-color: var(--primary-color);
+  color: var(--primary-color);
+}
+
+/* 期数选择器样式优化 */
+body.dark-theme .period-selection {
+  background-color: var(--card-bg);
+  border-color: var(--border-color);
+}
+
+body.dark-theme .period-dropdown {
+  background-color: var(--surface-variant);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  outline: none;
+  transition: border-color 0.3s ease;
+}
+
+body.dark-theme .period-dropdown:focus {
+  border-color: var(--primary-color);
+}
+
+body.dark-theme .quick-period-btn {
+  background-color: var(--surface-variant);
+  color: var(--text-primary);
+  border-color: var(--border-color);
+  transition: all 0.3s ease;
+}
+
+body.dark-theme .quick-period-btn:hover {
+  background-color: var(--border-hover);
+  border-color: var(--primary-color);
+}
+
+/* 复选框样式优化 */
+body.dark-theme input[type="checkbox"] {
+  accent-color: var(--primary-color);
+}
+
+/* 标题样式优化 */
+body.dark-theme .page-title,
+body.dark-theme h1 {
+  color: var(--primary-color);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+}
+
 body {
   font-family: 'Microsoft YaHei', '思源黑体', Arial, sans-serif;
   background-color: var(--background-light);
@@ -654,6 +934,47 @@ table td.stat-data {
 .red-ball:hover {
   transform: scale(1.2);
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* 目标球高亮样式 */
+.target-ball {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  line-height: 1;
+  text-align: center;
+  background-color: #FFD700; /* 金色背景 */
+  color: #333;
+  border-radius: 50%;
+  margin: 0 2px;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(255, 215, 0, 0.5);
+  border: 2px solid #FFA500;
+  transition: all 0.3s ease;
+  animation: pulse 2s infinite;
+}
+
+.target-ball:hover {
+  transform: scale(1.3);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3), 0 0 0 3px rgba(255, 215, 0, 0.7);
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(255, 215, 0, 0.5);
+  }
+  50% {
+    transform: scale(1.1);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2), 0 0 0 3px rgba(255, 215, 0, 0.7);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.2), 0 0 0 2px rgba(255, 215, 0, 0.5);
+  }
 }
 
 .blue-ball {

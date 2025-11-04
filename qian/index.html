@@ -8,7 +8,14 @@
 </head>
 <body class="index-page">
   <div class="container">
-    <h1 class="page-title">首页</h1>
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+        <h1 class="page-title">首页</h1>
+        <button id="themeToggle" class="theme-toggle" title="切换主题">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+        </button>
+    </div>
     
     <!-- 工具栏 -->
     <div class="section">
@@ -91,6 +98,26 @@
   </div>
 
   <script>
+    // 主题切换功能
+    document.addEventListener('DOMContentLoaded', function() {
+      // 检查localStorage中的主题偏好
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (savedTheme === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-theme');
+      }
+      
+      // 主题切换按钮事件监听
+      const themeToggle = document.getElementById('themeToggle');
+      if (themeToggle) {
+        themeToggle.addEventListener('click', function() {
+          document.body.classList.toggle('dark-theme');
+          // 保存主题偏好到localStorage
+          const isDarkTheme = document.body.classList.contains('dark-theme');
+          localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
+        });
+      }
+    });
+    
     // 从后端API获取开奖数据
     async function fetchLotteryData(type = '10', startIssue = null, endIssue = null) {
       try {
@@ -641,6 +668,10 @@
         existingModal.remove();
       }
       
+      // 检测当前是否为黑色主题
+      const isDarkTheme = document.body.classList.contains('dark-theme') || 
+                         document.documentElement.classList.contains('dark-theme');
+      
       // 创建弹窗容器
       const modal = document.createElement('div');
       modal.id = 'dataPreviewModal';
@@ -650,7 +681,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background-color: rgba(0, 0, 0, 0.5);
+        background-color: rgba(0, 0, 0, 0.7);
         display: flex;
         justify-content: center;
         align-items: center;
@@ -661,26 +692,28 @@
       // 创建弹窗内容
       const modalContent = document.createElement('div');
       modalContent.style.cssText = `
-        background-color: white;
+        background-color: ${isDarkTheme ? '#2d2d2d' : 'white'};
+        color: ${isDarkTheme ? '#ffffff' : '#333333'};
         padding: 20px;
         border-radius: 8px;
         width: 80%;
         max-width: 800px;
         max-height: 80vh;
         overflow-y: auto;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
       `;
       
       // 弹窗标题
       const modalTitle = document.createElement('h3');
       modalTitle.textContent = '数据预览';
       modalTitle.style.marginTop = '0';
+      modalTitle.style.color = isDarkTheme ? '#ffffff' : '#333333';
       modalContent.appendChild(modalTitle);
       
       // 数据信息
       const infoDiv = document.createElement('div');
       infoDiv.style.marginBottom = '15px';
-      infoDiv.innerHTML = `<p>发现 ${data.latestResults.length} 条数据，最新期号：${data.lastIssue || '无'}</p>`;
+      infoDiv.innerHTML = `<p style="color: ${isDarkTheme ? '#cccccc' : '#333333'};">发现 ${data.latestResults.length} 条数据，最新期号：${data.lastIssue || '无'}</p>`;
       modalContent.appendChild(infoDiv);
       
       // 数据表格
@@ -692,15 +725,16 @@
       // 表格头部
       const thead = document.createElement('thead');
       const headerRow = document.createElement('tr');
-      headerRow.style.backgroundColor = '#f5f5f5';
+      headerRow.style.backgroundColor = isDarkTheme ? '#444444' : '#f5f5f5';
 
       const headers = ['期号', '日期', '星期', '前区', '后区', '和值', '跨度'];
       headers.forEach(headerText => {
         const th = document.createElement('th');
         th.textContent = headerText;
-        th.style.border = '1px solid #ddd';
+        th.style.border = `1px solid ${isDarkTheme ? '#555555' : '#ddd'}`;
         th.style.padding = '8px';
         th.style.textAlign = 'left';
+        th.style.color = isDarkTheme ? '#ffffff' : '#333333';
         headerRow.appendChild(th);
       });
       thead.appendChild(headerRow);
@@ -710,7 +744,9 @@
       const tbody = document.createElement('tbody');
       data.latestResults.forEach((item, index) => {
         const tr = document.createElement('tr');
-        tr.style.backgroundColor = index % 2 === 0 ? '#fff' : '#f9f9f9';
+        tr.style.backgroundColor = isDarkTheme 
+          ? index % 2 === 0 ? '#3d3d3d' : '#4a4a4a' 
+          : index % 2 === 0 ? '#fff' : '#f9f9f9';
         
         // 处理日期格式，只显示年月日
         let formattedDate = item.drawDate || '';
@@ -738,8 +774,9 @@
         dataCells.forEach(cellData => {
           const td = document.createElement('td');
           td.textContent = cellData;
-          td.style.border = '1px solid #ddd';
+          td.style.border = `1px solid ${isDarkTheme ? '#555555' : '#ddd'}`;
           td.style.padding = '8px';
+          td.style.color = isDarkTheme ? '#e0e0e0' : '#333333';
           tr.appendChild(td);
         });
         
@@ -764,7 +801,14 @@
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        transition: background-color 0.3s;
       `;
+      cancelBtn.addEventListener('mouseover', () => {
+        cancelBtn.style.backgroundColor = '#c82333';
+      });
+      cancelBtn.addEventListener('mouseout', () => {
+        cancelBtn.style.backgroundColor = '#dc3545';
+      });
       cancelBtn.addEventListener('click', () => {
         modal.remove();
         pendingSyncData = null;
@@ -781,7 +825,14 @@
         border: none;
         border-radius: 4px;
         cursor: pointer;
+        transition: background-color 0.3s;
       `;
+      confirmBtn.addEventListener('mouseover', () => {
+        confirmBtn.style.backgroundColor = '#218838';
+      });
+      confirmBtn.addEventListener('mouseout', () => {
+        confirmBtn.style.backgroundColor = '#28a745';
+      });
       confirmBtn.addEventListener('click', async () => {
         modal.remove();
         await syncDataToDatabase();
@@ -808,7 +859,7 @@
       try {
         // 第一步：调用sql_zui_xin_yi_qi.js接口获取数据库中最新一期开奖期号
         console.log('第一步：获取数据库中最新一期开奖期号');
-        const lastIssueResponse = await fetch('http://localhost:8085/sql_zui_xin_yi_qi', {
+        const lastIssueResponse = await fetch('http://localhost:18892/sql_zui_xin_yi_qi', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -832,7 +883,7 @@
         
         // 第二步：调用huo_qu_xin_lang_shu_ju.js接口获取最新开奖数据
         console.log('第二步：获取最新开奖数据');
-        const response = await fetch('http://localhost:8085/huo_qu_xin_lang_shu_ju', {
+        const response = await fetch('http://localhost:18892/huo_qu_xin_lang_shu_ju', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -875,7 +926,7 @@
       
       try {
         // 调用geng_xin_kai_jiang.js提供的同步到数据库接口
-        const response = await fetch('http://localhost:18889/geng_xin_kai_jiang', {
+        const response = await fetch('http://localhost:18892/geng_xin_kai_jiang', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'

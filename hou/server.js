@@ -1,10 +1,16 @@
 const express = require('express');
 const cors = require('cors');
 const shuangShaRouter = require('./shuang_sha');
+const shuangShaAnalysisRouter = require('./shuang_sha_fen_xi');
 const lotteryResultsTotalRouter = require('./huo_qu_lottery_results_total');
 const { getLotteryResults } = require('./huo_qu_shu_ju');
 const { query } = require('./db.config');
-const zu_he_xiang_qing = require('./zu_he_xiang_qing');
+const zuHeXiangQingRouter = require('./zu_he_xiang_qing');
+const sanQiuFenXiRouter = require('./san_qiu_fen_xi');
+const sanQiuXiangQingRouter = require('./san_qiu_xiang_qing');
+const sanQiuZuHeXiangQingRouter = require('./san_qiu_zu_he_xiang_qing');
+const huoQuSqlShuJuRouter = require('./huo_qu_sql_shu_ju');
+const getLatestDataRouter = require('./sql_zui_xin_yi_qi');
 // 使用node-fetch代替axios以避免undici的File is not defined错误
 const fetch = require('node-fetch');
 
@@ -82,7 +88,7 @@ async function getLastDatabaseDrawInfo() {
 }
 
 const app = express();
-const PORT = 8085;
+const PORT = 18892;
 
 // 中间件配置
 app.use(cors({
@@ -124,28 +130,43 @@ app.get('/health', (req, res) => {
   });
 });
 
-// 挂载双杀分析路由
-app.use('/shuangsha', shuangShaRouter);
+// 注册路由前进行调试
+console.log('调试信息:');
+console.log('shuangShaRouter类型:', typeof shuangShaRouter, '是否函数:', typeof shuangShaRouter === 'function');
+console.log('shuangShaAnalysisRouter类型:', typeof shuangShaAnalysisRouter, '是否函数:', typeof shuangShaAnalysisRouter === 'function');
+console.log('lotteryResultsTotalRouter类型:', typeof lotteryResultsTotalRouter, '是否函数:', typeof lotteryResultsTotalRouter === 'function');
+console.log('getLatestDataRouter类型:', typeof getLatestDataRouter, '是否函数:', typeof getLatestDataRouter === 'function');
+console.log('zuHeXiangQingRouter类型:', typeof zuHeXiangQingRouter, '是否函数:', typeof zuHeXiangQingRouter === 'function');
+console.log('sanQiuXiangQingRouter类型:', typeof sanQiuXiangQingRouter, '是否函数:', typeof sanQiuXiangQingRouter === 'function');
+console.log('sanQiuZuHeXiangQingRouter类型:', typeof sanQiuZuHeXiangQingRouter, '是否函数:', typeof sanQiuZuHeXiangQingRouter === 'function');
+console.log('sanQiuFenXiRouter类型:', typeof sanQiuFenXiRouter, '是否函数:', typeof sanQiuFenXiRouter === 'function');
+console.log('huoQuSqlShuJuRouter类型:', typeof huoQuSqlShuJuRouter, '是否函数:', typeof huoQuSqlShuJuRouter === 'function');
 
-// 挂载获取lottery_results表总条数的路由
-app.use('/', lotteryResultsTotalRouter);
+// 注册路由
+if (shuangShaRouter && typeof shuangShaRouter === 'function') app.use('/shuangsha', shuangShaRouter);
+if (shuangShaAnalysisRouter && typeof shuangShaAnalysisRouter === 'function') app.use(shuangShaAnalysisRouter);
+if (lotteryResultsTotalRouter && typeof lotteryResultsTotalRouter === 'function') app.use('/', lotteryResultsTotalRouter);
 
 // 集成获取开奖数据的API接口
 app.get('/getLotteryResults', getLotteryResults);
 
-// 集成获取最新一期开奖信息的API接口
-app.get('/sql_zui_xin_yi_qi', async (req, res) => {
-  try {
-    const result = await getLastDatabaseDrawInfo();
-    res.json(result);
-  } catch (error) {
-    console.error('获取最新一期完整开奖数据失败:', error);
-    res.json({ success: false, message: '抓取数据失败' });
-  }
-});
+// 使用路由模块处理最新一期开奖信息
+if (getLatestDataRouter && typeof getLatestDataRouter === 'function') app.use('/', getLatestDataRouter);
 
-// 集成组合详情API接口
-app.use('/zuhe', zu_he_xiang_qing);
+// 使用路由模块处理组合详情
+if (zuHeXiangQingRouter && typeof zuHeXiangQingRouter === 'function') app.use('/zuhe', zuHeXiangQingRouter);
+
+// 使用路由模块处理三球组合详情
+if (sanQiuXiangQingRouter && typeof sanQiuXiangQingRouter === 'function') app.use('/san_qiu_xiang_qing', sanQiuXiangQingRouter);
+
+// 使用路由模块处理三球组合详情
+if (sanQiuZuHeXiangQingRouter && typeof sanQiuZuHeXiangQingRouter === 'function') app.use('/', sanQiuZuHeXiangQingRouter);
+
+// 使用路由模块处理三球组合分析
+if (sanQiuFenXiRouter && typeof sanQiuFenXiRouter === 'function') app.use('/', sanQiuFenXiRouter);
+
+// 使用路由模块处理SQL数据
+app.use('/', huoQuSqlShuJuRouter);
 
 /**
  * 从指定API获取最新大乐透数据
@@ -544,6 +565,23 @@ app.get('/gengxin', async (req, res) => {
     }
   }
   
+  // 获取表中最大的bian_hao值，并返回数字部分
+  async function getMaxBianHao(connection, tableName) {
+    try {
+      const [result] = await connection.execute(`SELECT MAX(bian_hao) as max_bian_hao FROM ${tableName}`);
+      if (result && result[0].max_bian_hao) {
+        // 提取数字部分并转为整数
+        const numberStr = result[0].max_bian_hao.replace(/^LT/, '');
+        return parseInt(numberStr, 10);
+      }
+      // 如果没有数据，返回0
+      return 0;
+    } catch (error) {
+      console.error(`获取${tableName}表最大bian_hao值失败:`, error);
+      return 0;
+    }
+  }
+
   // 同步数据到数据库
   async function syncDataToDatabase(newData) {
     let connection;
@@ -566,6 +604,14 @@ app.get('/gengxin', async (req, res) => {
       // 查询现有期号
       const [results] = await connection.execute('SELECT issue FROM lottery_results');
       const existingIssues = new Set(results.map(item => item.issue));
+      
+      // 获取当前数据库中最大的bian_hao值，用于生成新的编号
+      let maxLotteryResultsBianHao = await getMaxBianHao(connection, 'lottery_results');
+      let maxLetouBianHao = await getMaxBianHao(connection, 'letou');
+      
+      // 初始化编号计数器
+      let lotteryResultsBianHaoCounter = maxLotteryResultsBianHao + 1;
+      let letouBianHaoCounter = maxLetouBianHao + 1;
       console.log(`数据库中已有${existingIssues.size}期数据`);
       
       // 开始处理插入操作
@@ -581,24 +627,33 @@ app.get('/gengxin', async (req, res) => {
           const blueStr = '[' + backArea.join(', ') + ']';
           
           try {
+            // 生成新的bian_hao值
+            const lotteryResultsBianHao = `LT${lotteryResultsBianHaoCounter.toString().padStart(5, '0')}`;
+            const letouBianHao = `LT${letouBianHaoCounter.toString().padStart(5, '0')}`;
+            
+            // 更新计数器
+            lotteryResultsBianHaoCounter++;
+            letouBianHaoCounter++;
+            
             // 使用事务插入数据
             await connection.beginTransaction();
             
-            // 插入到lottery_results表
+            // 插入到lottery_results表，包含bian_hao字段
             await connection.execute(
-              'INSERT INTO lottery_results (issue, draw_date, week, red, blue) VALUES (?, ?, ?, ?, ?)',
+              'INSERT INTO lottery_results (issue, draw_date, week, red, blue, bian_hao) VALUES (?, ?, ?, ?, ?, ?)',
               [
                 issue,
                 item.drawDate || new Date().toISOString().split('T')[0],
                 item.weekday || '0',
                 redStr,
-                blueStr
+                blueStr,
+                lotteryResultsBianHao
               ]
             );
             
-            // 插入到letou表
+            // 插入到letou表，包含bian_hao字段
             await connection.execute(
-              'INSERT INTO letou (riqi, qihao, qian1, qian2, qian3, qian4, qian5, hou1, hou2) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+              'INSERT INTO letou (riqi, qihao, qian1, qian2, qian3, qian4, qian5, hou1, hou2, bian_hao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
               [
                 item.drawDate || new Date().toISOString().split('T')[0],
                 issue,
@@ -608,7 +663,8 @@ app.get('/gengxin', async (req, res) => {
                 frontArea[3] || 0,
                 frontArea[4] || 0,
                 backArea[0] || 0,
-                backArea[1] || 0
+                backArea[1] || 0,
+                letouBianHao
               ]
             );
             

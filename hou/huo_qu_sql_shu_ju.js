@@ -2,17 +2,9 @@
 // 接口功能: 从数据库查询指定期数的开奖数据
 
 const express = require('express');
-const cors = require('cors');
 const { query } = require('./db.config');
 
-const app = express();
-const PORT = process.env.PORT || 18892;
-
-// 配置CORS，允许所有来源的请求
-app.use(cors());
-
-// 解析JSON请求体
-app.use(express.json());
+const router = express.Router();
 
 /**
  * 获取开奖数据接口
@@ -272,12 +264,6 @@ async function huo_qu_sql_shu_ju(req, res) {
  *   "message": "获取开奖数据失败"
  * }
  */
-app.get('/huo_qu_sql_shu_ju', huo_qu_sql_shu_ju);
+router.get('/huo_qu_sql_shu_ju', huo_qu_sql_shu_ju);
 
-// 启动服务器
-app.listen(PORT, () => {
-  console.log(`数据库查询服务运行在 http://localhost:${PORT}`);
-  console.log(`获取数据库数据接口: http://localhost:${PORT}/huo_qu_sql_shu_ju`);
-});
-
-module.exports = app;
+module.exports = router;
