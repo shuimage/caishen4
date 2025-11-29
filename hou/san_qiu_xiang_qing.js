@@ -5,7 +5,7 @@
  */
 
 const express = require('express');
-const { query } = require('./db.config');
+const { query } = require('./数据库配置.js');
 
 const router = express.Router();
 

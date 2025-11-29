@@ -1,12 +1,7 @@
-// shuang_sha_xiang_qing_server.js - 组合统计分析接口服务器
-// 功能: 提供组合详情分析的API服务
-// 作者: AI Assistant
-// 创建日期: 2024
-
-// 双杀详情服务器 - 仅作为模块导出，不再单独启动服务器
+// 最新1期杀号分析服务器 - 仅作为模块导出，不再单独启动服务器
 const express = require('express');
 const cors = require('cors');
-const shuangShaXiangQingRouter = require('./双杀.js'); // 假设详情功能也使用双杀模块
+const zuiXin1QiShaHaoFenXiRouter = require('./最新1期杀号分析.js');
 
 const app = express();
 
@@ -17,13 +12,13 @@ app.use(cors());
 app.use(express.json());
 
 // 注册路由
-app.use('/shuang_sha_xiang_qing', shuangShaXiangQingRouter);
+app.use('/zui_xin_1_qi_sha_hao_fen_xi', zuiXin1QiShaHaoFenXiRouter);
 
 // 健康检查接口
 app.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
-    message: '双杀详情服务运行正常'
+    message: '最新1期杀号分析服务运行正常'
   });
 });
 
@@ -38,10 +33,10 @@ app.use((err, req, res, next) => {
 
 // 注释掉服务器启动代码，避免单独启动服务器
 /*
-const PORT = 18893;
+const PORT = 18898;
 app.listen(PORT, () => {
-  console.log(`双杀详情服务器已启动，监听端口 ${PORT}`);
-  console.log(`接口地址: http://localhost:${PORT}/shuang_sha_xiang_qing`);
+  console.log(`最新1期杀号分析服务器已启动，监听端口 ${PORT}`);
+  console.log(`接口地址: http://localhost:${PORT}/zui_xin_1_qi_sha_hao_fen_xi`);
   console.log(`健康检查: http://localhost:${PORT}/health`);
 });
 */

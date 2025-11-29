@@ -1,4 +1,5 @@
 // 临时端口转发服务，将18890端口的请求转发到18892端口
+// proxy_server.js - 仅作为模块导出，不再单独启动服务器
 const express = require('express');
 const cors = require('cors');
 const http = require('http');
@@ -109,8 +110,23 @@ app.post('*', async (req, res) => {
   }
 });
 
+// 健康检查接口
+app.get('/health', (req, res) => {
+  res.json({
+    success: true,
+    message: '代理服务运行正常',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// 注释掉服务器启动代码，避免单独启动服务器
+/*
 // 启动服务器
 app.listen(PORT, () => {
   console.log(`临时转发服务运行在 http://localhost:${PORT}`);
   console.log(`所有请求将被转发到 http://localhost:18892`);
 });
+*/
+
+// 导出app以便在主服务器中使用
+module.exports = app;

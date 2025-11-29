@@ -1,742 +1,267 @@
 const express = require('express');
-const cors = require('cors');
-const shuangShaRouter = require('./shuang_sha');
-const shuangShaAnalysisRouter = require('./shuang_sha_fen_xi');
-const lotteryResultsTotalRouter = require('./huo_qu_lottery_results_total');
-const { getLotteryResults } = require('./huo_qu_shu_ju');
-const { query } = require('./db.config');
-const zuHeXiangQingRouter = require('./zu_he_xiang_qing');
-const sanQiuFenXiRouter = require('./san_qiu_fen_xi');
-const sanQiuXiangQingRouter = require('./san_qiu_xiang_qing');
-const sanQiuZuHeXiangQingRouter = require('./san_qiu_zu_he_xiang_qing');
-const huoQuSqlShuJuRouter = require('./huo_qu_sql_shu_ju');
-const getLatestDataRouter = require('./sql_zui_xin_yi_qi');
-// 使用node-fetch代替axios以避免undici的File is not defined错误
-const fetch = require('node-fetch');
-
-// 导入获取最新一期开奖信息的功能
-async function getLastDatabaseDrawInfo() {
-  try {
-    console.log('执行数据库查询获取最新一期完整开奖数据');
-    // 查询最新一期的完整开奖信息，使用正确的字段名
-    const result = await query('SELECT issue, draw_date, red, blue FROM lottery_results ORDER BY draw_date DESC LIMIT 1');
-    let responseData;
-    
-    if (result && result.length > 0) {
-      const drawData = result[0];
-      
-      // 获取前区号码和后区号码
-      let firstZoneNumbers = drawData.red || [];
-      let lastZoneNumbers = drawData.blue || [];
-      
-      // 处理可能的字符串形式的号码数据
-      if (typeof firstZoneNumbers === 'string') {
-        if (firstZoneNumbers.includes(',')) {
-          firstZoneNumbers = firstZoneNumbers.split(',').map(num => num.trim());
-        } else if (firstZoneNumbers.includes(' ')) {
-          firstZoneNumbers = firstZoneNumbers.split(' ').filter(num => num.trim() !== '');
-        } else {
-          firstZoneNumbers = (firstZoneNumbers.match(/\d+/g) || []).map(num => num);
-        }
-      }
-      
-      if (typeof lastZoneNumbers === 'string') {
-        if (lastZoneNumbers.includes(',')) {
-          lastZoneNumbers = lastZoneNumbers.split(',').map(num => num.trim());
-        } else if (lastZoneNumbers.includes(' ')) {
-          lastZoneNumbers = lastZoneNumbers.split(' ').filter(num => num.trim() !== '');
-        } else {
-          lastZoneNumbers = (lastZoneNumbers.match(/\d+/g) || []).map(num => num);
-        }
-      }
-      
-      // 格式化日期
-      let formattedDate = drawData.draw_date;
-      if (formattedDate instanceof Date) {
-        formattedDate = formattedDate.toISOString().split('T')[0];
-      } else if (typeof formattedDate === 'string' && formattedDate.includes('T')) {
-        formattedDate = formattedDate.split('T')[0];
-      }
-      
-      responseData = {
-        success: true,
-        latestDraw: {
-          period: drawData.issue,
-          drawDate: formattedDate,
-          firstZoneNumbers: firstZoneNumbers,
-          lastZoneNumbers: lastZoneNumbers
-        }
-      };
-    } else {
-      responseData = {
-        success: true,
-        latestDraw: {
-          period: '暂无数据',
-          drawDate: '暂无数据',
-          firstZoneNumbers: [],
-          lastZoneNumbers: []
-        },
-        mock: true
-      };
-    }
-    
-    return responseData;
-  } catch (error) {
-    console.error('获取最新一期完整开奖数据失败:', error);
-    return { success: false, message: error.message };
-  }
-}
-
 const app = express();
-const PORT = 18892;
+const { query } = require('./数据库配置.js');
+const PORT = 18889;
 
-// 中间件配置
-app.use(cors({
-  origin: '*', // 允许所有来源的请求
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
+// 导入路由模块
+const huoQuSqlShuJuRouter = require('./获取SQL数据.js');
+const sqlZuiXinYiQiRouter = require('./SQL最新一期.js');
+const sqlDaoShu2QiRouter = require('./SQL倒数2期.js');
+const daoShu2QiTuiJianShaHaoRouter = require('./倒数2期推荐杀号.js');
+const huoQuTiCaiShuJuRouter = require('./获取体彩数据.js');
+const gengXinKaiJiangRouter = require('./更新开奖.js');
+const shuangShaRouter = require('./双杀.js'); // 导入双杀分析路由
+const daoShu2QiShuangShaFenXiRouter = require('./倒数2期双杀分析.js'); // 导入倒数2期双杀分析路由
+const sanQiuFenXiRouter = require('./三球分析.js'); // 导入三球分析路由
+const daoShu2QiLiangQiuZuHeRouter = require('./倒数2期两球组合.js'); // 导入倒数2期前区两球组合路由
+const daoShu2QiHouQuZuHeRouter = require('./倒数2期后区组合.js'); // 导入倒数2期后区两球组合路由
+const daoShu2QiHouQuLiangQiuZuHeRouter = require('./倒数2期后区两球组合.js'); // 导入倒数2期后区两球组合分析路由
+const zuHeXiangQingRouter = require('./组合详情.js');
+const sanQiuZuHeXiangQingRouter = require('./三球组合详情.js');
+const sanQiuXiangQingRouter = require('./san_qiu_xiang_qing.js');
 
-// 处理OPTIONS请求
-app.options('*', (req, res) => {
-  res.sendStatus(200);
-});
-
+// 设置中间件
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// 日志中间件
+// 启用CORS
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
-  console.log('====================================');
-  console.log('新请求到达！');
-  console.log('时间:', new Date().toISOString());
-  console.log('方法:', req.method);
-  console.log('路径:', req.path);
-  console.log('查询参数:', req.query);
-  console.log('原始URL:', req.originalUrl);
-  console.log('主机:', req.headers.host);
-  console.log('用户代理:', req.headers['user-agent']);
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
   next();
 });
 
 // 健康检查接口
 app.get('/health', (req, res) => {
-  res.status(200).json({
-    status: 'ok',
+  res.json({
     success: true,
     message: '服务器运行正常',
     timestamp: new Date().toISOString()
   });
 });
 
-// 注册路由前进行调试
-console.log('调试信息:');
-console.log('shuangShaRouter类型:', typeof shuangShaRouter, '是否函数:', typeof shuangShaRouter === 'function');
-console.log('shuangShaAnalysisRouter类型:', typeof shuangShaAnalysisRouter, '是否函数:', typeof shuangShaAnalysisRouter === 'function');
-console.log('lotteryResultsTotalRouter类型:', typeof lotteryResultsTotalRouter, '是否函数:', typeof lotteryResultsTotalRouter === 'function');
-console.log('getLatestDataRouter类型:', typeof getLatestDataRouter, '是否函数:', typeof getLatestDataRouter === 'function');
-console.log('zuHeXiangQingRouter类型:', typeof zuHeXiangQingRouter, '是否函数:', typeof zuHeXiangQingRouter === 'function');
-console.log('sanQiuXiangQingRouter类型:', typeof sanQiuXiangQingRouter, '是否函数:', typeof sanQiuXiangQingRouter === 'function');
-console.log('sanQiuZuHeXiangQingRouter类型:', typeof sanQiuZuHeXiangQingRouter, '是否函数:', typeof sanQiuZuHeXiangQingRouter === 'function');
-console.log('sanQiuFenXiRouter类型:', typeof sanQiuFenXiRouter, '是否函数:', typeof sanQiuFenXiRouter === 'function');
-console.log('huoQuSqlShuJuRouter类型:', typeof huoQuSqlShuJuRouter, '是否函数:', typeof huoQuSqlShuJuRouter === 'function');
-
 // 注册路由
-if (shuangShaRouter && typeof shuangShaRouter === 'function') app.use('/shuangsha', shuangShaRouter);
-if (shuangShaAnalysisRouter && typeof shuangShaAnalysisRouter === 'function') app.use(shuangShaAnalysisRouter);
-if (lotteryResultsTotalRouter && typeof lotteryResultsTotalRouter === 'function') app.use('/', lotteryResultsTotalRouter);
+app.use('/huo_qu_sql_shu_ju', huoQuSqlShuJuRouter);
+app.use('/sql_zui_xin_yi_qi', sqlZuiXinYiQiRouter);
+app.use('/sql_dao_shu_2_qi', sqlDaoShu2QiRouter);
+app.use('/dao_shu_2_qi_tui_jian_sha_hao', daoShu2QiTuiJianShaHaoRouter);
+app.use('/huo_qu_ti_cai_shu_ju', huoQuTiCaiShuJuRouter);
+app.use('/geng_xin_kai_jiang', gengXinKaiJiangRouter);
+app.use('/shuang_sha_fen_xi', shuangShaRouter); // 注册双杀分析路由
+app.use('/dao_shu_2_qi_shuang_sha_fen_xi', daoShu2QiShuangShaFenXiRouter); // 注册倒数2期双杀分析路由
+app.use('/san_qiu_fen_xi', sanQiuFenXiRouter); // 注册三球分析路由
+app.use('/dao_shu_2_qi_liang_qiu_zu_he', daoShu2QiLiangQiuZuHeRouter); // 注册倒数2期前区两球组合路由
+app.use('/dao_shu_2_qi_hou_qu_zu_he', daoShu2QiHouQuZuHeRouter); // 注册倒数2期后区两球组合路由
+app.use('/dao_shu_2_qi_hou_qu_liang_qiu_zu_he', daoShu2QiHouQuLiangQiuZuHeRouter); // 注册倒数2期后区两球组合分析路由
+const daoShu2QiSanQiuZuHeRouter = require('./dao_shu_2_qi_san_qiu_zu_he');
+app.use('/dao_shu_2_qi_san_qiu_zu_he', daoShu2QiSanQiuZuHeRouter); // 注册倒数2期前区三球组合路由
+const daoShu2QiSanQiuZuHeXiangQingRouter = require('./dao_shu_2_qi_san_qiu_zu_he_xiang_qing');
+app.use('/dao_shu_2_qi_san_qiu_zu_he_xiang_qing', daoShu2QiSanQiuZuHeXiangQingRouter); // 注册倒数2期前区三球组合详情路由
 
-// 集成获取开奖数据的API接口
-app.get('/getLotteryResults', getLotteryResults);
-
-// 使用路由模块处理最新一期开奖信息
-if (getLatestDataRouter && typeof getLatestDataRouter === 'function') app.use('/', getLatestDataRouter);
-
-// 使用路由模块处理组合详情
-if (zuHeXiangQingRouter && typeof zuHeXiangQingRouter === 'function') app.use('/zuhe', zuHeXiangQingRouter);
-
-// 使用路由模块处理三球组合详情
-if (sanQiuXiangQingRouter && typeof sanQiuXiangQingRouter === 'function') app.use('/san_qiu_xiang_qing', sanQiuXiangQingRouter);
-
-// 使用路由模块处理三球组合详情
-if (sanQiuZuHeXiangQingRouter && typeof sanQiuZuHeXiangQingRouter === 'function') app.use('/', sanQiuZuHeXiangQingRouter);
-
-// 使用路由模块处理三球组合分析
-if (sanQiuFenXiRouter && typeof sanQiuFenXiRouter === 'function') app.use('/', sanQiuFenXiRouter);
-
-// 使用路由模块处理SQL数据
-app.use('/', huoQuSqlShuJuRouter);
-
-/**
- * 从指定API获取最新大乐透数据
- * @returns {Promise<Array>} 彩票数据数组
- */
-async function fetchNewLotteryData(startIssue = null) {
+// 先注册直接路由，再注册中间件，避免中间件拦截
+app.post('/zuhe/dao_shu_2_qi_liang_qiu_zu_he_xiang_qing', async (req, res) => {
+  console.log('收到倒数2期两球组合详情请求，请求体:', req.body);
   try {
-    console.log('开始从sporttery.cn抓取大乐透数据...', startIssue ? `起始期号: ${startIssue}` : '获取全部最新数据');
-    // 增加获取的数据量，确保能获取到更多历史数据
-    const apiUrl = 'https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry?gameNo=85&provinceId=0&pageSize=50&isVerify=1&pageNo=1';
+    const { latest_period, type = 'front', combinations = [], stats_range = 100, target_ball = null } = req.body;
+    if (!latest_period) return res.status(400).json({ code: 400, message: '最新期号是必填参数' });
+    if (!Array.isArray(combinations) || combinations.length === 0) return res.status(400).json({ code: 400, message: '组合数组不能为空' });
+    if (!Number.isInteger(stats_range) || stats_range <= 0) return res.status(400).json({ code: 400, message: '统计范围必须是正整数' });
+    if (type !== 'front' && type !== 'back') return res.status(400).json({ code: 400, message: '类型只能是front或back' });
+    const periodPrefixMatch = latest_period.match(/[^0-9]+/);
+    const periodPrefix = periodPrefixMatch ? periodPrefixMatch[0] : '';
+    const periodNumber = parseInt(latest_period.replace(/[^0-9]/g, ''));
+    if (isNaN(periodNumber)) return res.status(400).json({ code: 400, message: '最新期号格式不正确' });
+    const daoShu2QiPeriodNumber = periodNumber - 2;
+    const daoShu2QiPeriod = periodPrefix + daoShu2QiPeriodNumber.toString().padStart(3, '0');
+    const daoShu2QiData = await query('SELECT * FROM lottery_results WHERE issue = ? LIMIT 1', [daoShu2QiPeriod]);
+    if (!daoShu2QiData || daoShu2QiData.length === 0) return res.status(404).json({ code: 404, message: '未找到倒数2期的开奖数据' });
+    const daoShu2QiResult = daoShu2QiData[0];
+    const drawField = type === 'front' ? 'red' : 'blue';
+    function __processBalls(balls) {
+      if (!balls) return [];
+      if (typeof balls === 'string') {
+        // 处理 [x, x, x] 格式的JSON字符串
+        if (balls.startsWith('[') && balls.endsWith(']')) {
+          try {
+            // 解析JSON字符串
+            const parsedBalls = JSON.parse(balls);
+            if (Array.isArray(parsedBalls)) {
+              return parsedBalls.map(ball => String(ball).padStart(2, '0'));
+            }
+          } catch (e) {
+            // JSON解析失败，尝试其他格式
+          }
+        }
+        // 处理空格分隔的字符串格式
+        return balls.split(' ').filter(ball => ball.trim() !== '').map(ball => String(ball).padStart(2, '0'));
+      } else if (Array.isArray(balls)) {
+        return balls.map(ball => String(ball).padStart(2, '0'));
+      }
+      return [];
+    }
+    // 查询近300期的所有记录，包括bian_hao字段
+    // 使用字符串拼接，避免参数化查询的类型匹配问题
+    const idValue = daoShu2QiResult.id;
+    const limitValue = stats_range;
+    let sql = `
+      SELECT 
+        id, 
+        issue, 
+        bian_hao,
+        ${drawField} as draw_info
+      FROM 
+        lottery_results 
+      WHERE 
+        id < ${idValue}
+      ORDER BY id ASC
+      LIMIT ${limitValue}
+    `;
+    console.log('SQL查询语句:', sql);
+    // 不使用参数数组，直接执行SQL语句
+    const rows = await query(sql);
     
-    // 设置超时
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+    // 创建bian_hao到数据的映射，方便快速查找下下期数据
+    const bianHaoToDataMap = new Map();
+    // 创建数字bian_hao到数据的映射，用于计算下下期
+    const numericBianHaoToDataMap = new Map();
     
-    const response = await fetch(apiUrl, {
-      method: 'GET',
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
-        'Accept': 'application/json, text/javascript, */*; q=0.01',
-        'Accept-Encoding': 'gzip, deflate, br, zstd',
-        'Accept-Language': 'zh-CN,zh;q=0.9',
-        'Cache-Control': 'no-cache',
-        'Origin': 'https://static.sporttery.cn',
-        'Pragma': 'no-cache',
-        'Referer': 'https://static.sporttery.cn/',
-        'Sec-Fetch-Dest': 'empty',
-        'Sec-Fetch-Mode': 'cors',
-        'Sec-Fetch-Site': 'same-site'
-      },
-      signal: controller.signal
+    rows.forEach(row => {
+      bianHaoToDataMap.set(row.bian_hao, row);
+      // 从bian_hao字符串中提取数字部分，比如从"LT00222"中提取"00222"，然后转换为数字222
+      const numericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
+      numericBianHaoToDataMap.set(numericBianHao, row);
     });
     
-    clearTimeout(timeoutId); // 清除超时定时器
+    let results = [];
     
-    if (!response.ok) {
-      throw new Error(`API请求失败，状态码: ${response.status}`);
-    }
-    
-    const data = await response.json();
-    
-    console.log('成功获取数据，开始解析...');
-    
-    // 检查响应是否成功
-    if (!data) {
-      console.error('API返回空数据');
-      throw new Error('API返回空数据');
-    }
-    
-    // 检查API是否返回了成功状态
-    if (data.success === false) {
-      console.error('API返回失败状态:', data.errorMessage || data.message);
-      throw new Error(data.errorMessage || 'API调用失败');
-    }
-    
-    // 尝试从不同可能的字段路径获取数据
-    let listData = null;
-    
-    // 检查可能的数据结构路径
-    if (data.value && data.value.list) {
-      listData = data.value.list;
-    } else if (data.result && data.result.list) {
-      listData = data.result.list;
-    } else if (Array.isArray(data.list)) {
-      listData = data.list;
-    } else if (Array.isArray(data)) {
-      listData = data;
-    }
-    
-    if (!listData || !Array.isArray(listData)) {
-      console.error('无法找到有效的数据列表:', data);
-      throw new Error('API返回数据格式不正确，无法找到有效的数据列表');
-    }
-    
-    console.log(`找到${listData.length}条数据记录`);
-    
-    // 格式化数据，并添加严格的错误检查
-    const formattedData = [];
-    
-    for (const item of listData) {
-      try {
-        // 检查必要字段是否存在
-        if (!item || typeof item !== 'object') {
-          console.warn('跳过无效记录:', item);
-          continue;
-        }
+    // 遍历所有记录，找出符合条件的记录
+    for (const row of rows) {
+      console.log('当前记录:', { id: row.id, issue: row.issue, bian_hao: row.bian_hao });
+      const currentDrawNumbers = __processBalls(row.draw_info);
+      const currentSet = new Set(currentDrawNumbers);
+      
+      // 检查当前期是否包含组合
+      const isMatch = combinations.some(combination => {
+        const comboParts = combination.split('-').map(part => part.trim()).map(part => part.padStart(2, '0'));
+        return comboParts.every(part => currentSet.has(part));
+      });
+      
+      if (isMatch) {
+        console.log('找到匹配组合的记录:', { id: row.id, issue: row.issue, bian_hao: row.bian_hao });
+        // 从当前bian_hao中提取数字部分
+        const currentNumericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
+        console.log('当前数字bian_hao:', currentNumericBianHao);
+        // 计算下下期的数字bian_hao
+        const nextNextNumericBianHao = currentNumericBianHao + 2;
+        console.log('计算下下期数字bian_hao:', nextNextNumericBianHao);
+        // 查找下下期数据
+        const nextNextData = numericBianHaoToDataMap.get(nextNextNumericBianHao);
         
-        if (!item.lotteryDrawNum) {
-          console.warn('记录缺少期号字段:', Object.keys(item));
-          continue;
-        }
-        
-        if (!item.lotteryDrawResult) {
-          console.warn('记录缺少开奖结果字段:', Object.keys(item));
-          continue;
-        }
-        
-        // 从lotteryDrawResult字段解析红球和蓝球
-        let redBalls = [];
-        let blueBalls = [];
-        
-        // 处理不同格式的开奖结果
-        if (typeof item.lotteryDrawResult === 'string') {
-          // 尝试不同的分隔符
-          const possibleSeparators = [',', ' ', '|', ';'];
-          let separatedNumbers = [];
+        if (nextNextData) {
+          console.log('找到下下期数据:', { id: nextNextData.id, issue: nextNextData.issue, bian_hao: nextNextData.bian_hao });
+          const nextNextDrawNumbers = __processBalls(nextNextData.draw_info);
           
-          for (const separator of possibleSeparators) {
-            const splitResult = item.lotteryDrawResult.split(separator).filter(num => num.trim());
-            if (splitResult.length > separatedNumbers.length) {
-              separatedNumbers = splitResult;
+          // 如果有目标球，检查目标球是否在下下期出现
+          if (target_ball !== null && target_ball !== undefined && target_ball !== '') {
+            const targetBallStr = String(target_ball).padStart(2, '0');
+            console.log('检查目标球是否在下下期出现:', { target_ball: targetBallStr, nextNextDrawNumbers: nextNextDrawNumbers });
+            if (nextNextDrawNumbers.includes(targetBallStr)) {
+              results.push({
+                index: 0, // 序号会在前端生成
+                period: row.issue,
+                draw_info: currentDrawNumbers,
+                next_period: nextNextData.issue,
+                next_draw_info: nextNextDrawNumbers
+              });
             }
+          } else {
+            // 没有目标球，直接添加结果
+            results.push({
+              index: 0, // 序号会在前端生成
+              period: row.issue,
+              draw_info: currentDrawNumbers,
+              next_period: nextNextData.issue,
+              next_draw_info: nextNextDrawNumbers
+            });
           }
-          
-          // 根据中国体育彩票大乐透规则，前5个是前区号码，后2个是后区号码
-          if (separatedNumbers.length >= 7) {
-            redBalls = separatedNumbers.slice(0, 5).map(ball => ball.trim().padStart(2, '0'));
-            blueBalls = separatedNumbers.slice(5, 7).map(ball => ball.trim().padStart(2, '0'));
-          }
-        } 
-        // 如果是数组格式
-        else if (Array.isArray(item.lotteryDrawResult)) {
-          if (item.lotteryDrawResult.length >= 7) {
-            redBalls = item.lotteryDrawResult.slice(0, 5).map(ball => String(ball).trim().padStart(2, '0'));
-            blueBalls = item.lotteryDrawResult.slice(5, 7).map(ball => String(ball).trim().padStart(2, '0'));
-          }
+        } else {
+          console.log('未找到下下期数据，数字bian_hao:', nextNextNumericBianHao);
         }
-        
-        // 确保解析出了有效的球号
-        if (redBalls.length !== 5 || blueBalls.length !== 2) {
-          console.warn('未能解析出有效的球号数据，红球数量:', redBalls.length, '蓝球数量:', blueBalls.length);
-          continue;
-        }
-        
-        // 优先使用从日期计算的星期几
-        const calculatedWeekday = getWeekdayFromDate(item.lotteryDrawTime);
-        
-        formattedData.push({
-          issue: item.lotteryDrawNum,
-          drawDate: item.lotteryDrawTime || '',
-          weekday: item.week && item.week.toString() !== '0' ? item.week.toString() : calculatedWeekday,
-          redBalls: redBalls,
-          blueBalls: blueBalls,
-          sum: calculateSum(redBalls),
-          span: calculateSpan(redBalls),
-          intervalRatio: calculateIntervalRatio(redBalls),
-          parityRatio: calculateParityRatio(redBalls)
-        });
-      } catch (itemError) {
-        console.error('处理单条记录失败:', itemError.message);
-        // 跳过错误记录，继续处理下一条
-        continue;
       }
     }
     
-    console.log('成功解析的记录数量:', formattedData.length);
-    
-    // 如果没有解析到任何数据，抛出错误
-    if (formattedData.length === 0) {
-      throw new Error('未能解析到任何有效数据');
-    }
-    
-    // 如果指定了起始期号，过滤出比起始期号大的数据
-    if (startIssue && startIssue !== '暂无数据') {
-      const startIssueNum = parseInt(startIssue);
-      const filteredData = formattedData.filter(item => {
-        const itemIssueNum = parseInt(item.issue);
-        return itemIssueNum > startIssueNum;
-      });
-      console.log(`过滤后的数据数量: ${filteredData.length}条 (大于${startIssue}期的数据)`);
-      return filteredData;
-    }
-    
-    return formattedData;
-  } catch (error) {
-    console.error('抓取数据失败:', error);
-    throw error;
-  }
-}
-
-// 辅助函数：计算和值
-function calculateSum(balls) {
-  return balls.reduce((sum, ball) => sum + parseInt(ball), 0).toString();
-}
-
-// 辅助函数：计算跨度
-function calculateSpan(balls) {
-  const nums = balls.map(ball => parseInt(ball));
-  const min = Math.min(...nums);
-  const max = Math.max(...nums);
-  return (max - min).toString();
-}
-
-// 辅助函数：计算区间比
-function calculateIntervalRatio(balls) {
-  const nums = balls.map(ball => parseInt(ball));
-  const interval1 = nums.filter(num => num <= 12).length;
-  const interval2 = nums.filter(num => num >= 13 && num <= 24).length;
-  const interval3 = nums.filter(num => num >= 25).length;
-  return `${interval1}:${interval2}:${interval3}`;
-}
-
-// 辅助函数：计算奇偶比
-function calculateParityRatio(balls) {
-  const nums = balls.map(ball => parseInt(ball));
-  const odd = nums.filter(num => num % 2 === 1).length;
-  const even = nums.filter(num => num % 2 === 0).length;
-  return `${odd}:${even}`;
-}
-
-// 辅助函数：根据日期计算星期几
-function getWeekdayFromDate(dateStr) {
-  if (!dateStr) return '0';
-  
-  try {
-    const date = new Date(dateStr);
-    const weekday = date.getDay();
-    return weekday === 0 ? '7' : weekday.toString();
-  } catch (error) {
-    console.error('计算星期失败:', error);
-    return '0';
-  }
-}
-
-/**
- * 获取最新开奖数据但不同步接口
- * 接口功能: 从外部API获取最新大乐透开奖数据但不写入数据库
- */
-app.get('/huo_qu_xin_lang_shu_ju', async (req, res) => {
-  try {
-    console.log('========================================');
-    console.log('接收到huo_qu_xin_lang_shu_ju请求!');
-    console.log('请求时间:', new Date().toLocaleString());
-    console.log('请求来源:', req.headers.origin);
-    console.log('请求IP:', req.ip);
-    
-    // 设置响应超时
-    const timeoutId = setTimeout(() => {
-      console.error('响应超时');
-      res.json({
-        success: false,
-        message: '请求超时',
-        latestResults: []
-      });
-    }, 15000); // 15秒响应超时
-    
-    // 首先从本地数据库查询最近一期的期号
-    console.log('开始查询本地数据库中的最新期号...');
-    const lastIssueResult = await query('SELECT issue FROM lottery_results ORDER BY draw_date DESC LIMIT 1');
-    let startIssue = null;
-    
-    if (lastIssueResult && lastIssueResult.length > 0) {
-      startIssue = lastIssueResult[0].issue;
-      console.log(`本地数据库中最新期号: ${startIssue}`);
-    } else {
-      console.log('本地数据库中暂无数据或查询失败，获取全部最新数据');
-    }
-    
-    // 根据本地最新期号抓取远程API数据
-    console.log('开始获取最新开奖数据...');
-    const latestData = await fetchNewLotteryData(startIssue);
-    console.log('成功获取远程API数据:', latestData.length, '条', startIssue ? `(大于${startIssue}期的数据)` : '');
-    
-    // 清除超时定时器
-    clearTimeout(timeoutId);
-    
-    // 格式化数据
-    const formattedData = latestData.map(item => ({
-      issue: item.issue,
-      drawDate: item.drawDate,
-      weekday: item.weekday,
-      redBalls: item.redBalls,
-      blueBalls: item.blueBalls,
-      sum: item.sum,
-      span: item.span,
-      intervalRatio: item.intervalRatio,
-      parityRatio: item.parityRatio
+    // 生成序号
+    results = results.map((result, index) => ({
+      ...result,
+      index: index + 1
     }));
     
-    // 构建响应结果
-    const responseData = {
-      success: true,
-      latestResults: formattedData,
-      lastIssue: formattedData.length > 0 ? formattedData[0].issue : ''
-    };
-    
-    console.log(`成功获取并格式化${formattedData.length}条最新数据`);
-    
-    console.log('准备返回数据响应...');
-    res.json(responseData);
-    console.log('响应已发送成功!');
-    console.log('========================================');
+    res.json({ code: 200, message: 'success', data: results });
   } catch (error) {
-    console.error('========================================');
-    console.error('获取最新数据失败:', error);
-    console.error('错误堆栈:', error.stack);
-    console.error('========================================');
-    
-    // 返回错误信息，但不提供模拟数据
-    res.json({
-      success: false,
-      message: '抓取数据失败: ' + (error.message || '未知错误'),
-      latestResults: []
-    });
+    res.status(500).json({ code: 500, message: '服务器内部错误', error: error.message });
   }
 });
 
-// 数据更新接口 - 实现真实的数据抓取和同步功能
-app.get('/gengxin', async (req, res) => {
-  console.log('收到数据更新请求，开始执行真实数据更新流程');
-  
-  // 从网络获取最新大乐透数据
-  async function fetchNewLotteryData() {
-    try {
-      console.log('开始获取大乐透数据...');
-      
-      // 方案1: 使用node-fetch模块，这可能更适合服务器环境
-      const fetch = require('node-fetch');
-      const apiUrl = 'https://www.lottery.gov.cn/historykj/history.jspx?_ltype=dlt';
-      
-      console.log(`正在请求: ${apiUrl}`);
-      const response = await fetch(apiUrl, {
-        method: 'GET',
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
-          'Accept-Language': 'zh-CN,zh;q=0.8,zh-TW;q=0.7,zh-HK;q=0.5,en-US;q=0.3,en;q=0.2',
-          'Connection': 'keep-alive'
-        },
-        timeout: 15000
-      });
-      
-      console.log(`API响应状态码: ${response.status}`);
-      
-      // 如果方案1失败，提供一个备用的数据模拟方案
-      // 为了确保功能可用，我们直接返回模拟数据
-      console.log('使用模拟数据作为备用方案');
-      
-      // 生成一些模拟的大乐透数据
-      const mockData = [];
-      const currentYear = new Date().getFullYear() % 100; // 取后两位
-      
-      for (let i = 0; i < 10; i++) {
-        const issue = `${currentYear}${String(100 - i).slice(-3)}`; // 生成如25120, 25119这样的期号
-        
-        // 生成5个不重复的红球号码（1-35）
-        const redBalls = [];
-        while (redBalls.length < 5) {
-          const num = Math.floor(Math.random() * 35) + 1;
-          if (!redBalls.includes(num)) {
-            redBalls.push(num);
-          }
-        }
-        redBalls.sort((a, b) => a - b);
-        
-        // 生成2个不重复的蓝球号码（1-12）
-        const blueBalls = [];
-        while (blueBalls.length < 2) {
-          const num = Math.floor(Math.random() * 12) + 1;
-          if (!blueBalls.includes(num)) {
-            blueBalls.push(num);
-          }
-        }
-        blueBalls.sort((a, b) => a - b);
-        
-        // 格式化日期
-        const date = new Date();
-        date.setDate(date.getDate() - i * 3); // 每3天一期
-        const drawDate = date.toISOString().split('T')[0];
-        
-        mockData.push({
-          issue: issue,
-          drawDate: drawDate,
-          weekday: String(date.getDay()),
-          redBalls: redBalls.map(ball => String(ball).padStart(2, '0')),
-          blueBalls: blueBalls.map(ball => String(ball).padStart(2, '0'))
-        });
-      }
-      
-      console.log(`生成了${mockData.length}条模拟数据`);
-      return mockData;
-    } catch (error) {
-      console.error('获取数据失败:', error.message);
-      
-      // 即使发生错误，也返回一些模拟数据，确保功能可用
-      console.log('发生错误后返回最小化模拟数据');
-      
-      // 最小化的模拟数据，只包含一期
-      return [{
-        issue: '25122',
-        drawDate: new Date().toISOString().split('T')[0],
-        weekday: String(new Date().getDay()),
-        redBalls: ['01', '02', '03', '04', '05'],
-        blueBalls: ['01', '02']
-      }];
-    }
-  }
-  
-  // 获取表中最大的bian_hao值，并返回数字部分
-  async function getMaxBianHao(connection, tableName) {
-    try {
-      const [result] = await connection.execute(`SELECT MAX(bian_hao) as max_bian_hao FROM ${tableName}`);
-      if (result && result[0].max_bian_hao) {
-        // 提取数字部分并转为整数
-        const numberStr = result[0].max_bian_hao.replace(/^LT/, '');
-        return parseInt(numberStr, 10);
-      }
-      // 如果没有数据，返回0
-      return 0;
-    } catch (error) {
-      console.error(`获取${tableName}表最大bian_hao值失败:`, error);
-      return 0;
-    }
-  }
+// 注册中间件，放在直接路由之后
+app.use('/zuhe', zuHeXiangQingRouter);
+app.use('/', sanQiuZuHeXiangQingRouter);
+app.use('/', sanQiuXiangQingRouter);
 
-  // 同步数据到数据库
-  async function syncDataToDatabase(newData) {
-    let connection;
-    try {
-      console.log(`开始同步数据到数据库，共${newData.length}条数据`);
-      
-      let updatedCount = 0;
-      let lastIssue = '';
-      
-      // 按期号降序排序
-      const sortedData = [...newData].sort((a, b) => {
-        return parseInt(b.issue) - parseInt(a.issue);
-      });
-      
-      // 从连接池获取连接
-      connection = await pool.getConnection();
-      
-      console.log('成功获取数据库连接');
-      
-      // 查询现有期号
-      const [results] = await connection.execute('SELECT issue FROM lottery_results');
-      const existingIssues = new Set(results.map(item => item.issue));
-      
-      // 获取当前数据库中最大的bian_hao值，用于生成新的编号
-      let maxLotteryResultsBianHao = await getMaxBianHao(connection, 'lottery_results');
-      let maxLetouBianHao = await getMaxBianHao(connection, 'letou');
-      
-      // 初始化编号计数器
-      let lotteryResultsBianHaoCounter = maxLotteryResultsBianHao + 1;
-      let letouBianHaoCounter = maxLetouBianHao + 1;
-      console.log(`数据库中已有${existingIssues.size}期数据`);
-      
-      // 开始处理插入操作
-      for (const item of sortedData) {
-        const issue = item.issue.toString();
-        
-        // 只插入新数据
-        if (!existingIssues.has(issue)) {
-          const frontArea = item.redBalls.map(ball => parseInt(ball));
-          const backArea = item.blueBalls.map(ball => parseInt(ball));
-          
-          const redStr = '[' + frontArea.join(', ') + ']';
-          const blueStr = '[' + backArea.join(', ') + ']';
-          
-          try {
-            // 生成新的bian_hao值
-            const lotteryResultsBianHao = `LT${lotteryResultsBianHaoCounter.toString().padStart(5, '0')}`;
-            const letouBianHao = `LT${letouBianHaoCounter.toString().padStart(5, '0')}`;
-            
-            // 更新计数器
-            lotteryResultsBianHaoCounter++;
-            letouBianHaoCounter++;
-            
-            // 使用事务插入数据
-            await connection.beginTransaction();
-            
-            // 插入到lottery_results表，包含bian_hao字段
-            await connection.execute(
-              'INSERT INTO lottery_results (issue, draw_date, week, red, blue, bian_hao) VALUES (?, ?, ?, ?, ?, ?)',
-              [
-                issue,
-                item.drawDate || new Date().toISOString().split('T')[0],
-                item.weekday || '0',
-                redStr,
-                blueStr,
-                lotteryResultsBianHao
-              ]
-            );
-            
-            // 插入到letou表，包含bian_hao字段
-            await connection.execute(
-              'INSERT INTO letou (riqi, qihao, qian1, qian2, qian3, qian4, qian5, hou1, hou2, bian_hao) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
-              [
-                item.drawDate || new Date().toISOString().split('T')[0],
-                issue,
-                frontArea[0] || 0,
-                frontArea[1] || 0,
-                frontArea[2] || 0,
-                frontArea[3] || 0,
-                frontArea[4] || 0,
-                backArea[0] || 0,
-                backArea[1] || 0,
-                letouBianHao
-              ]
-            );
-            
-            // 提交事务
-            await connection.commit();
-            
-            console.log(`成功插入${issue}期数据`);
-            updatedCount++;
-            existingIssues.add(issue);
-            lastIssue = issue;
-          } catch (err) {
-            // 回滚事务
-            await connection.rollback();
-            console.error(`插入${issue}期数据失败:`, err.message);
-            // 继续处理下一条数据
-          }
-        }
-      }
-      
-      // 获取最新的几条记录
-      const [latestResults] = await connection.execute(
-        'SELECT issue, draw_date AS drawDate, week, red, blue FROM lottery_results ORDER BY CAST(issue AS UNSIGNED) DESC LIMIT 5'
-      );
-      
-      const formattedResults = latestResults.map(item => ({
-        issue: item.issue,
-        drawDate: item.drawDate,
-        weekday: item.week,
-        redBalls: typeof item.red === 'string' ? item.red.replace(/\[|\]/g, '').split(',').map(ball => ball.trim()) : [],
-        blueBalls: typeof item.blue === 'string' ? item.blue.replace(/\[|\]/g, '').split(',').map(ball => ball.trim()) : []
-      }));
-      
-      console.log(`数据同步完成，新增${updatedCount}条记录`);
-      return {
-        success: true,
-        message: updatedCount > 0 ? `成功更新了 ${updatedCount} 条新数据` : '数据库中已有最新数据',
-        updatedCount,
-        lastIssue,
-        latestResults: formattedResults
-      };
-    } catch (error) {
-      console.error('数据同步失败:', error.message);
-      throw error;
-    } finally {
-      // 释放连接回连接池
-      if (connection) {
-        connection.release();
-      }
-    }
-  }
-  
+// 获取lottery_results总条数
+app.get('/huo_qu_lottery_results_total', async (req, res) => {
   try {
-    // 执行真实的数据更新流程
-    const lotteryData = await fetchNewLotteryData();
-    const syncResult = await syncDataToDatabase(lotteryData);
-    
-    return res.json({
-      success: true,
-      message: syncResult.message,
-      updatedCount: syncResult.updatedCount,
-      lastIssue: syncResult.lastIssue,
-      latestResults: syncResult.latestResults
-    });
+    const rows = await query('SELECT COUNT(*) AS count FROM lottery_results');
+    const total = rows && rows.length ? rows[0].count : 0;
+    res.json({ success: true, total });
   } catch (error) {
-    console.error('数据更新失败:', error);
-    return res.json({
-      success: false,
-      message: '更新失败',
-      updatedCount: 0,
-      lastIssue: '',
-      latestResults: []
-    });
+    res.status(500).json({ success: false, message: '数据库查询失败' });
+  }
+});
+
+// 获取最新数据列表（与前端data.js兼容）
+app.get('/getLatestData', async (req, res) => {
+  try {
+    const rows = await query(`
+      SELECT issue, draw_date AS drawDate, week, red, blue, sum, span, area_ratio, odd_even_ratio 
+      FROM lottery_results 
+      ORDER BY CAST(issue AS UNSIGNED) DESC 
+      LIMIT 10
+    `);
+    const latestResults = rows.map(item => ({
+      issue: item.issue,
+      drawDate: item.drawDate,
+      week: item.week,
+      red: item.red,
+      blue: item.blue,
+      sum: item.sum,
+      span: item.span,
+      area_ratio: item.area_ratio,
+      odd_even_ratio: item.odd_even_ratio
+    }));
+    res.json({ success: true, latestResults, fromMock: false });
+  } catch (error) {
+    res.status(500).json({ success: false, message: '获取最新数据失败' });
+  }
+});
+
+// 推荐杀号占位接口（如需可替换为真实逻辑）
+app.get('/huo_qu_qian_qu_tui_jian_sha_hao', async (req, res) => {
+  try {
+    res.json({ success: true, killNumbers: [] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
+  }
+});
+
+app.get('/huo_qu_hou_qu_tui_jian_sha_hao', async (req, res) => {
+  try {
+    res.json({ success: true, killNumbers: [] });
+  } catch (error) {
+    res.status(500).json({ success: false, message: '服务器内部错误' });
   }
 });
 
@@ -767,9 +292,18 @@ function startServer() {
       console.log(`服务器已启动在端口 ${PORT}`);
       console.log(`服务器运行在 http://localhost:${PORT}`);
       console.log(`健康检查: http://localhost:${PORT}/health`);
-      console.log(`双杀分析API: http://localhost:${PORT}/shuangsha/shuang_sha_fen_xi`);
-      console.log(`API接口地址: http://localhost:${PORT}/getLotteryResults`);
-      console.log(`====================================`);
+      console.log(`获取SQL数据接口: http://localhost:${PORT}/huo_qu_sql_shu_ju`);
+      console.log(`获取最新期号接口: http://localhost:${PORT}/sql_zui_xin_yi_qi`);
+      console.log(`获取倒数第二期接口: http://localhost:${PORT}/sql_dao_shu_2_qi`);
+      console.log(`推荐杀号接口: http://localhost:${PORT}/dao_shu_2_qi_tui_jian_sha_hao`);
+      console.log(`获取体彩数据接口: http://localhost:${PORT}/huo_qu_ti_cai_shu_ju`);
+console.log(`更新开奖数据接口: http://localhost:${PORT}/geng_xin_kai_jiang`);
+console.log(`双杀分析接口: http://localhost:${PORT}/shuang_sha_fen_xi`);
+console.log(`倒数2期双杀分析接口: http://localhost:${PORT}/dao_shu_2_qi_shuang_sha_fen_xi`);
+console.log(`倒数2期前区两球组合接口: http://localhost:${PORT}/dao_shu_2_qi_liang_qiu_zu_he`);
+console.log(`倒数2期后区两球组合接口: http://localhost:${PORT}/dao_shu_2_qi_hou_qu_zu_he`);
+console.log(`倒数2期后区两球组合分析接口: http://localhost:${PORT}/dao_shu_2_qi_hou_qu_liang_qiu_zu_he`);
+console.log(`====================================`);
     });
   } catch (error) {
     console.error('服务器启动失败:', error);
