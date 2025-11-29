@@ -131,10 +131,10 @@
         
         // 如果提供了开始期号和结束期号，使用期号范围查询接口
         if (startIssue && endIssue) {
-          url = `http://localhost:18892/huo_qu_sql_shu_ju?startIssue=${startIssue}&endIssue=${endIssue}`;
+          url = `http://localhost:18889/huo_qu_sql_shu_ju?startIssue=${startIssue}&endIssue=${endIssue}`;
         } else {
           // 否则使用原来的类型查询接口
-          url = `http://localhost:18892/huo_qu_sql_shu_ju?type=${type}`;
+          url = `http://localhost:18889/huo_qu_sql_shu_ju?type=${type}`;
         }
         
         // 调用后端API - 使用正确的接口地址
@@ -859,7 +859,7 @@
       try {
         // 第一步：调用sql_zui_xin_yi_qi.js接口获取数据库中最新一期开奖期号
         console.log('第一步：获取数据库中最新一期开奖期号');
-        const lastIssueResponse = await fetch('http://localhost:18892/sql_zui_xin_yi_qi', {
+        const lastIssueResponse = await fetch('http://localhost:18889/sql_zui_xin_yi_qi', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -881,9 +881,9 @@
         // 更新按钮状态
         updateBtn.textContent = '获取开奖数据...';
         
-        // 第二步：调用huo_qu_xin_lang_shu_ju.js接口获取最新开奖数据
-        console.log('第二步：获取最新开奖数据');
-        const response = await fetch('http://localhost:18892/huo_qu_xin_lang_shu_ju', {
+        // 第二步：调用huo_qu_ti_cai_shu_ju接口获取最新开奖数据，并传递数据库最新期号作为startIssue参数
+        console.log('第二步：获取最新开奖数据，传递数据库最新期号:', lastIssueData.lastIssue);
+        const response = await fetch(`http://localhost:18889/huo_qu_ti_cai_shu_ju?startIssue=${lastIssueData.lastIssue}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -926,7 +926,7 @@
       
       try {
         // 调用geng_xin_kai_jiang.js提供的同步到数据库接口
-        const response = await fetch('http://localhost:18892/geng_xin_kai_jiang', {
+        const response = await fetch('http://localhost:18889/geng_xin_kai_jiang', {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -953,11 +953,11 @@
           }
         } else {
           console.error('同步失败:', data.message);
-          alert('同步失败');
+          alert('接口失败');
         }
       } catch (error) {
         console.error('同步数据失败:', error);
-        alert('同步失败');
+        alert('接口失败');
       } finally {
         // 恢复按钮状态
         updateBtn.disabled = false;

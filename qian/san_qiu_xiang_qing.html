@@ -155,13 +155,58 @@
 </head>
 <body>
   <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-      <h1 class="page-title">三球组合详情</h1>
-      <!-- 返回按钮 -->
-      <div style="display: flex; gap: 10px; align-items: center;">
-        <button class="btn back-btn" onclick="window.history.back()">返回</button>
+    <div class="main-layout">
+      <!-- 左侧导航栏 -->
+      <div class="left-sidebar">
+        <!-- 顶部快捷栏 -->
+        <div class="top-bar">
+          <div class="current-period">25120期</div>
+        </div>
+        
+        <!-- 主导航区 -->
+        <nav class="main-nav">
+          <ul>
+            <li class="nav-item">
+              <span class="nav-icon">✕</span>
+              <span onclick="window.location.href='zu_he_xiang_qing.html'">最新1期两球组合分析</span>
+            </li>
+            <li class="nav-item">
+              <span class="nav-icon">✖️</span>
+              <span onclick="window.location.href='dao_shu_2_qi_liang_qiu_zu_he.html'">倒数2期两球组合分析</span>
+            </li>
+            <li class="nav-item active">
+              <span class="nav-icon">🔺</span>
+              <span>最新1期三球组合分析</span>
+            </li>
+
+          </ul>
+        </nav>
+        
+        <!-- 期数选择区 -->
+        <div class="period-selection">
+          <h4 class="section-title">选择统计范围</h4>
+          <select class="period-dropdown">
+            <option selected>最近100期</option>
+            <option>最近50期</option>
+            <option>最近35期</option>
+            <option>最近200期</option>
+            <option>最近300期</option>
+            <option>最近500期</option>
+            <option>最近1000期</option>
+            <option>全部期</option>
+          </select>
+        </div>
       </div>
-    </div>
+      
+      <!-- 右侧主内容区 -->
+      <div class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+          <h1 class="page-title">三球组合详情</h1>
+          <!-- 返回按钮 -->
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn back-btn" onclick="window.history.back()">返回</button>
+          </div>
+        </div>
     
     <!-- 最新开奖信息 -->
     <div class="section">
@@ -198,6 +243,8 @@
         <!-- 分页控件将通过JavaScript动态生成 -->
       </div>
     </div>
+      </div>
+    </div>
   </div>
 
   <script>
@@ -227,7 +274,7 @@
     // 从接口获取三球组合详情数据
     async function huo_qu_san_qiu_xiang_qing(combination, statsRange) {
       try {
-        const response = await fetch(`http://localhost:3000/san_qiu_xiang_qing?combination=${combination}&period=${statsRange}`);
+        const response = await fetch(`http://localhost:18889/san_qiu_xiang_qing?combination=${combination}&period=${statsRange}`);
         const result = await response.json();
         
         if (result.success) {
@@ -245,7 +292,7 @@
     // 从接口获取最新开奖信息
     async function huo_qu_zui_xin_kai_jiang() {
       try {
-        const response = await fetch('http://localhost:18892/sql_zui_xin_yi_qi');
+        const response = await fetch('http://localhost:18889/sql_zui_xin_yi_qi');
         const result = await response.json();
         
         if (result.success) {

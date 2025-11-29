@@ -1,0 +1,850 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>倒数第2期两球组合分析</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/data.js"></script>
+    <style>
+        /* 全局样式 */
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background-color: #2d2d2d;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            color: #ff6600;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        h1, h2 {
+            color: #ff6600;
+            margin-top: 0;
+        }
+        
+        h3, h4 {
+            color: #4ecdc4;
+            margin-top: 20px;
+        }
+        
+        .nav-tabs {
+            display: flex;
+            border-bottom: 2px solid #333;
+            margin-bottom: 20px;
+        }
+        
+        .nav-tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            margin-right: 10px;
+            transition: all 0.3s ease;
+        }
+        
+        .nav-tab.active {
+            border-bottom-color: #ff6600;
+            color: #ff6600;
+        }
+        
+        .nav-tab:hover {
+            color: #4ecdc4;
+        }
+        
+        .info-cards {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .info-card {
+            background-color: #3a3a3a;
+            border-radius: 8px;
+            padding: 15px;
+            flex: 1;
+            margin: 10px;
+            min-width: 200px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .info-card h3 {
+            color: #4ecdc4;
+            margin-top: 0;
+            font-size: 18px;
+        }
+        
+        .info-item {
+            margin: 10px 0;
+        }
+        
+        .info-label {
+            font-weight: bold;
+            color: #999;
+        }
+        
+        .info-value {
+            color: #fff;
+        }
+        
+        .balls {
+            display: flex;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+        
+        .ball {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 2px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+        
+        .ball:hover {
+            transform: scale(1.1);
+            box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2);
+        }
+        
+        .red-ball {
+            background-color: #ff3b30;
+        }
+        
+        .red-ball:hover {
+            box-shadow: 0 2px 8px rgba(255, 59, 48, 0.5);
+        }
+        
+        .blue-ball {
+            background-color: #34c759;
+        }
+        
+        .blue-ball:hover {
+            box-shadow: 0 2px 8px rgba(52, 199, 89, 0.5);
+        }
+        
+        .period-selector {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .period-selector label {
+            margin-right: 10px;
+        }
+        
+        .period-selector select {
+            padding: 8px 15px;
+            background-color: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .period-selector select:hover {
+            background-color: #444;
+            border-color: #4ecdc4;
+        }
+        
+        .analysis-section {
+            background-color: #3a3a3a;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .analysis-section h2 {
+            color: #ff6600;
+            margin-top: 0;
+        }
+        
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            background-color: #3a3a3a;
+            border-radius: 6px;
+            overflow: hidden;
+        }
+        
+        .stats-table th,
+        .stats-table td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #444;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .stats-table th {
+            background-color: #4a4a4a;
+            color: #ff6600;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .stats-table tr:nth-child(even) {
+            background-color: #333;
+        }
+        
+        .stats-table tr:hover {
+            background-color: rgba(78, 205, 196, 0.1);
+        }
+        
+        .stats-table td:hover {
+            background-color: #4a4a4a;
+        }
+        
+        .hot-number {
+            background-color: #ff3b30;
+            color: white;
+            font-weight: bold;
+        }
+        
+        /* 交互样式 */
+        .selected-row {
+            background-color: rgba(78, 205, 196, 0.3) !important;
+            border: 2px solid #4ecdc4;
+        }
+        
+        .highlighted-number {
+            background-color: rgba(255, 235, 59, 0.4) !important;
+            color: #ffeb3b !important;
+            font-weight: bold;
+            font-size: 14px;
+            transform: scale(1.1);
+        }
+        
+        /* 详情和统计样式 */
+        .detail-section, .stats-section {
+            background-color: #3a3a3a;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 15px;
+            border-left: 4px solid #4ecdc4;
+        }
+        
+        .detail-section p, .stats-section p {
+            margin: 8px 0;
+            padding-left: 10px;
+            border-left: 2px solid #555;
+        }
+        
+        /* 动画效果 */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* 表格容器样式 */
+        .table-container {
+            overflow-x: auto;
+            margin-bottom: 15px;
+            border-radius: 6px;
+            border: 1px solid #444;
+            position: relative;
+        }
+        
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+        
+        .table-container::-webkit-scrollbar-track {
+            background: #2d2d2d;
+            border-radius: 10px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 10px;
+        }
+        
+        .table-container::-webkit-scrollbar-thumb:hover {
+            background: #666;
+        }
+        
+        /* 响应式设计 */
+        @media (max-width: 1200px) {
+            .stats-table {
+                font-size: 11px;
+            }
+            
+            .stats-table td {
+                padding: 6px 3px;
+            }
+            
+            .info-cards {
+                justify-content: space-around;
+            }
+            
+            .info-card {
+                min-width: 180px;
+                margin: 8px;
+            }
+        }
+        
+        @media (max-width: 768px) {
+            body {
+                padding: 5px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            h1 {
+                font-size: 1.6em;
+            }
+            
+            h2 {
+                font-size: 1.3em;
+            }
+            
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+            
+            .nav-tab {
+                padding: 8px 12px;
+                margin: 2px;
+                font-size: 0.9em;
+            }
+            
+            .info-cards {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .info-card {
+                min-width: 100%;
+                margin: 8px 0;
+            }
+            
+            .stats-table {
+                font-size: 10px;
+            }
+            
+            .stats-table th,
+            .stats-table td {
+                padding: 4px 2px;
+                min-width: 25px;
+            }
+            
+            .ball {
+                width: 25px;
+                height: 25px;
+                line-height: 25px;
+                font-size: 12px;
+            }
+            
+            .period-selector {
+                margin-bottom: 15px;
+            }
+            
+            .period-selector select {
+                padding: 6px 10px;
+                width: 150px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            h1 {
+                font-size: 1.4em;
+            }
+            
+            h2 {
+                font-size: 1.2em;
+            }
+            
+            .container {
+                padding: 8px;
+            }
+            
+            .analysis-section {
+                padding: 15px 10px;
+            }
+            
+            .stats-table th,
+            .stats-table td {
+                padding: 3px 1px;
+                font-size: 9px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>倒数第2期两球组合分析</h1>
+        
+        <div class="nav-tabs">
+            <div class="nav-tab" onclick="window.location.href='index.html'">最新1期两球组合分析</div>
+            <div class="nav-tab active">倒数2期两球组合分析</div>
+            <div class="nav-tab" onclick="window.location.href='dao_shu_3_qi_liang_qiu_zu_he.html'">最新第3期两球组合分析</div>
+            <div class="nav-tab" onclick="window.location.href='dao_shu_2_qi_san_qiu_zu_he.html'">倒数2期三球组合分析</div>
+        </div>
+        
+        <div class="period-selector">
+            <label for="period">统计周期：</label>
+            <select id="period" onchange="loadData()">
+                <option value="35">最近35期</option>
+                <option value="50">最近50期</option>
+                <option value="100" selected>最近100期</option>
+                <option value="200">最近200期</option>
+                <option value="300">最近300期</option>
+                <option value="500">最近500期</option>
+                <option value="1000">最近1000期</option>
+            </select>
+        </div>
+        
+        <div class="info-cards">
+            <div class="info-card">
+                <h3>最新开奖信息</h3>
+                <div class="info-item">
+                    <span class="info-label">期号：</span>
+                    <span class="info-value" id="latest-issue">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">前区号码：</span>
+                    <div class="info-value">
+                        <div class="balls" id="latest-front-balls"></div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">后区号码：</span>
+                    <div class="info-value">
+                        <div class="balls" id="latest-back-balls"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h3>倒数第2期开奖信息</h3>
+                <div class="info-item">
+                    <span class="info-label">期号：</span>
+                    <span class="info-value" id="second-last-issue">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">日期：</span>
+                    <span class="info-value" id="second-last-date">--</span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">前区号码：</span>
+                    <div class="info-value">
+                        <div class="balls" id="second-last-front-balls"></div>
+                    </div>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">后区号码：</span>
+                    <div class="info-value">
+                        <div class="balls" id="second-last-back-balls"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="info-card">
+                <h3>前区推荐杀号</h3>
+                <div class="info-value" id="recommended-front-kill-numbers">--</div>
+            </div>
+            
+            <div class="info-card">
+                <h3>后区推荐杀号</h3>
+                <div class="info-value" id="recommended-back-kill-numbers">--</div>
+            </div>
+        </div>
+        
+        <div class="analysis-section">
+            <h2>前区两球组合统计</h2>
+            <div id="front-combinations-container">
+                <div class="table-container">
+                    <table class="stats-table" id="front-combinations-table">
+                    <thead>
+                        <tr>
+                            <th>组合号</th>
+                            <th>出现次数</th>
+                            <!-- 动态生成1-35的列 -->
+                        </tr>
+                    </thead>
+                    <tbody id="front-combinations-body">
+                        <!-- 数据将通过JavaScript动态填充 -->
+                    </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        </div>
+        
+        <div class="analysis-section">
+            <h2>后区两球组合统计</h2>
+            <div id="back-combinations-container">
+                <div class="table-container">
+                    <table class="stats-table" id="back-combinations-table">
+                    <thead>
+                        <tr>
+                            <th>组合号</th>
+                            <th>出现次数</th>
+                            <!-- 动态生成1-12的列 -->
+                        </tr>
+                    </thead>
+                    <tbody id="back-combinations-body">
+                        <!-- 数据将通过JavaScript动态填充 -->
+                    </tbody>
+                    </table>
+                </div>
+              </div>
+    </div>
+    
+    <script>
+        // 初始化表格表头
+        function initTableHeaders() {
+            // 前区表头 (1-35)
+            const frontHeader = document.querySelector('#front-combinations-table thead tr');
+            for (let i = 1; i <= 35; i++) {
+                const th = document.createElement('th');
+                th.textContent = i.toString().padStart(2, '0');
+                frontHeader.appendChild(th);
+            }
+            
+            // 后区表头 (1-12)
+            const backHeader = document.querySelector('#back-combinations-table thead tr');
+            for (let i = 1; i <= 12; i++) {
+                const th = document.createElement('th');
+                th.textContent = i.toString().padStart(2, '0');
+                backHeader.appendChild(th);
+            }
+        }
+        
+        // 加载数据
+        async function loadData() {
+            const period = document.getElementById('period').value;
+            const apiUrl = `http://localhost:18889/dao_shu_2_qi_shuang_sha_fen_xi?period=${period}`;
+            
+            try {
+                // 显示加载状态
+                document.getElementById('front-combinations-body').innerHTML = '<tr><td colspan="37">加载中...</td></tr>';
+                document.getElementById('back-combinations-body').innerHTML = '<tr><td colspan="14">加载中...</td></tr>';
+                
+                const response = await fetch(apiUrl);
+                if (!response.ok) {
+                    throw new Error('接口失败');
+                }
+                
+                const data = await response.json();
+                
+                if (data.success && data.data) {
+                    updateUI(data.data);
+                } else {
+                    throw new Error('接口失败');
+                }
+            } catch (error) {
+                console.error('获取数据失败:', error);
+                console.log('使用本地模拟数据...');
+                // 使用本地模拟数据
+                const mockData = generateMockData();
+                updateUI(mockData);
+            }
+        }
+        
+        // 生成模拟数据
+        function generateMockData() {
+            // 前区组合
+            const frontCombinations = [];
+            const frontPairs = ['01-05', '01-07', '02-10', '03-15', '04-20', '06-25', '08-30', '09-35'];
+            
+            frontPairs.forEach(pair => {
+                const numberCounts = {};
+                // 为每个组合生成随机的号码统计
+                for (let i = 1; i <= 35; i++) {
+                    numberCounts[i] = Math.floor(Math.random() * 5);
+                }
+                
+                frontCombinations.push({
+                    combination: pair,
+                    nextNextDrawNumbers: [],
+                    numberCounts: numberCounts
+                });
+            });
+            
+            // 后区组合
+            const backCombinations = [];
+            const backPairs = ['01-06', '02-10', '03-12'];
+            
+            backPairs.forEach(pair => {
+                const numberCounts = {};
+                // 为每个组合生成随机的号码统计
+                for (let i = 1; i <= 12; i++) {
+                    numberCounts[i] = Math.floor(Math.random() * 3);
+                }
+                
+                backCombinations.push({
+                    combination: pair,
+                    nextNextDrawNumbers: [],
+                    numberCounts: numberCounts
+                });
+            });
+            
+            return {
+                secondLastDraw: {
+                    issue: '2024050',
+                    drawDate: '2024-05-20',
+                    frontNumbers: ['01', '05', '12', '18', '25', '30'],
+                    backNumbers: ['03', '08']
+                },
+                frontCombinations: frontCombinations,
+                backCombinations: backCombinations
+            };
+        }
+        
+        // 更新UI
+        function updateUI(data) {
+            // 更新倒数第2期信息
+            const secondLastDraw = data.secondLastDraw;
+            if (secondLastDraw) {
+                document.getElementById('second-last-issue').textContent = secondLastDraw.issue;
+                document.getElementById('second-last-date').textContent = secondLastDraw.drawDate;
+                
+                // 更新前区号码
+                updateBalls('second-last-front-balls', secondLastDraw.frontNumbers, 'red-ball');
+                
+                // 更新后区号码
+                updateBalls('second-last-back-balls', secondLastDraw.backNumbers, 'blue-ball');
+            }
+            
+            // 模拟最新开奖信息（实际应该从其他接口获取）
+            document.getElementById('latest-issue').textContent = '获取中...';
+            updateBalls('latest-front-balls', [], 'red-ball');
+            updateBalls('latest-back-balls', [], 'blue-ball');
+            
+            // 模拟推荐杀号
+            document.getElementById('recommended-front-kill-numbers').textContent = '16 20 07 12';
+            document.getElementById('recommended-back-kill-numbers').textContent = '02 08 10 12';
+            
+            // 更新前区组合统计
+            updateCombinationsTable('front-combinations-body', data.frontCombinations, 35, 'front');
+            
+            // 更新后区组合统计
+            updateCombinationsTable('back-combinations-body', data.backCombinations, 12, 'back');
+        }
+        
+        // 更新球的显示
+        function updateBalls(elementId, numbers, ballClass) {
+            const container = document.getElementById(elementId);
+            container.innerHTML = '';
+            
+            numbers.forEach(num => {
+                const ball = document.createElement('div');
+                ball.className = `ball ${ballClass}`;
+                ball.textContent = num;
+                // 添加点击事件
+                ball.addEventListener('click', () => {
+                    highlightNumber(num, ballClass === 'red-ball' ? 'front' : 'back');
+                });
+                container.appendChild(ball);
+            });
+        }
+        
+        // 更新组合统计表格
+        function updateCombinationsTable(elementId, combinations, maxNumber, type) {
+            const tbody = document.getElementById(elementId);
+            tbody.innerHTML = '';
+            
+            combinations.forEach(combination => {
+                const tr = document.createElement('tr');
+                tr.dataset.combination = combination.combination;
+                tr.dataset.type = type;
+                
+                // 添加点击事件处理
+                tr.addEventListener('click', function() {
+                    toggleRowSelection(this);
+                    showCombinationDetails(combination, type);
+                });
+                
+                // 组合号
+                const tdCombination = document.createElement('td');
+                tdCombination.textContent = combination.combination;
+                tr.appendChild(tdCombination);
+                
+                // 出现次数
+                const tdCount = document.createElement('td');
+                const totalCount = combination.nextNextDrawNumbers ? combination.nextNextDrawNumbers.length : 0;
+                tdCount.textContent = totalCount;
+                tr.appendChild(tdCount);
+                
+                // 号码统计
+                for (let i = 1; i <= maxNumber; i++) {
+                    const tdNumber = document.createElement('td');
+                    const count = combination.numberCounts ? (combination.numberCounts[i] || 0) : 0;
+                    tdNumber.textContent = count;
+                    tdNumber.dataset.number = i;
+                    
+                    // 添加点击事件
+                    tdNumber.addEventListener('click', (e) => {
+                        e.stopPropagation(); // 阻止事件冒泡
+                        highlightNumber(i, type);
+                    });
+                    
+                    // 如果出现次数大于0，标记为热点号码
+                    if (count > 0) {
+                        tdNumber.classList.add('hot-number');
+                    }
+                    
+                    tr.appendChild(tdNumber);
+                }
+                
+                tbody.appendChild(tr);
+            });
+        }
+        
+        // 切换行选中状态
+        function toggleRowSelection(row) {
+            const isSelected = row.classList.contains('selected-row');
+            
+            // 移除同类型表格中其他行的选中状态
+            const tableType = row.dataset.type;
+            const tableBody = tableType === 'front' ? 
+                document.getElementById('front-combinations-body') : 
+                document.getElementById('back-combinations-body');
+            
+            const rows = tableBody.querySelectorAll('tr');
+            rows.forEach(r => r.classList.remove('selected-row'));
+            
+            // 设置当前行的选中状态
+            if (!isSelected) {
+                row.classList.add('selected-row');
+            }
+        }
+        
+        // 高亮显示指定号码
+        function highlightNumber(number, type) {
+            // 转为字符串，确保格式一致
+            const numStr = String(number).padStart(2, '0');
+            
+            // 移除所有高亮状态
+            const allCells = document.querySelectorAll('td[data-number]');
+            allCells.forEach(cell => {
+                const cellNum = String(cell.dataset.number).padStart(2, '0');
+                if (cellNum === numStr) {
+                    cell.classList.toggle('highlighted-number');
+                }
+            });
+            
+            // 高亮显示选中号码的统计信息
+            showNumberStatistics(numStr, type);
+        }
+        
+        // 显示组合详情
+        function showCombinationDetails(combination, type) {
+            // 确保详情容器存在
+            let detailsElement = document.getElementById('combination-details');
+            if (!detailsElement) {
+                detailsElement = document.createElement('div');
+                detailsElement.id = 'combination-details';
+                detailsElement.className = 'analysis-section';
+                document.querySelector('.container').appendChild(detailsElement);
+            }
+            
+            // 计算最高出现频率的号码
+            const numberCounts = combination.numberCounts;
+            const maxFrequency = Math.max(...Object.values(numberCounts));
+            const hotNumbers = Object.entries(numberCounts)
+                .filter(([num, count]) => count === maxFrequency)
+                .map(([num]) => String(num).padStart(2, '0'));
+            
+            // 更新详情显示
+            detailsElement.innerHTML = `
+                <h2>组合详情</h2>
+                <div class="detail-section">
+                    <h4>组合号：${combination.combination}</h4>
+                    <p>类型：${type === 'front' ? '前区' : '后区'}</p>
+                    <p>最热门号码：${hotNumbers.join(', ')}</p>
+                    <p>热门频率：${maxFrequency}次</p>
+                </div>
+            `;
+        }
+        
+        // 显示号码统计信息
+        function showNumberStatistics(number, type) {
+            // 确保统计容器存在
+            let statsElement = document.getElementById('number-statistics');
+            if (!statsElement) {
+                statsElement = document.createElement('div');
+                statsElement.id = 'number-statistics';
+                statsElement.className = 'analysis-section';
+                document.querySelector('.container').appendChild(statsElement);
+            }
+            
+            // 统计该号码在所有组合中的出现次数
+            let totalCount = 0;
+            let combinationCount = 0;
+            const combinations = type === 'front' ? 
+                document.getElementById('front-combinations-body').querySelectorAll('tr') : 
+                document.getElementById('back-combinations-body').querySelectorAll('tr');
+            
+            combinations.forEach(row => {
+                const cells = row.querySelectorAll('td[data-number]');
+                cells.forEach(cell => {
+                    if (String(cell.dataset.number).padStart(2, '0') === number) {
+                        const count = parseInt(cell.textContent) || 0;
+                        if (count > 0) {
+                            totalCount += count;
+                            combinationCount++;
+                        }
+                    }
+                });
+            });
+            
+            // 更新统计信息显示
+            statsElement.innerHTML = `
+                <h2>号码统计</h2>
+                <div class="stats-section">
+                    <h4>号码：${number}</h4>
+                    <p>类型：${type === 'front' ? '前区' : '后区'}</p>
+                    <p>总出现次数：${totalCount}</p>
+                    <p>出现在 ${combinationCount} 个组合中</p>
+                </div>
+            `;
+        }
+        
+        // 页面加载完成后初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            initTableHeaders();
+            loadData();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "theme": "light",
+  "statsRange": 100,
+  "language": "zh-CN",
+  "pagination": {
+    "pageSize": 15,
+    "showPageNumbers": true
+  },
+  "visualization": {
+    "highlightCombinations": true,
+    "showBallColors": true
+  }
+}
