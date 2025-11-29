@@ -5,9 +5,17 @@ const express = require('express');
 const axios = require('axios');
 const cheerio = require('cheerio');
 const cors = require('cors');
-const { query, transaction } = require('./db.config');
-const { cacheGet, cacheSet, cacheDel } = require('./redis.config');
-const doubleKillRouter = require('./shuang_sha.js');
+const { query, transaction } = require('./数据库配置.js');
+const doubleKillRouter = require('./双杀.js');
+const huQuSqlShuJuRouter = require('./获取SQL数据.js');
+const shuangShaRouter = require('./双杀.js');
+const sqlZuiXinYiQiRouter = require('./SQL最新一期.js');
+const sanQiuFenXiRouter = require('./三球分析.js');
+const sqlDaoShu2QiRouter = require('./SQL倒数2期.js');
+const daoShu2QiTuiJianShaHaoRouter = require('./倒数2期推荐杀号.js');
+const daoShu2QiLiangQiuZuHeRouter = require('./倒数2期两球组合.js');
+const daoShu2QiHouQuLiangQiuZuHeRouter = require('./倒数2期后区两球组合.js');
+
 
 const app = express();
 const PORT = process.env.PORT || 18889;
@@ -480,21 +488,9 @@ async function syncDataToDatabase(newData) {
  */
 async function getLastDatabaseIssue() {
   try {
-    // 首先检查Redis缓存
-    const cacheKey = 'last_lottery_issue';
-    const cachedResult = await cacheGet(cacheKey);
-    
-    // 检查数据是否已更新（通过检查更新标记）
-    const updatedFlag = await cacheGet('lottery_data_updated_flag');
-    
-    if (cachedResult && !updatedFlag) {
-      console.log('从Redis缓存获取最后一期数据成功');
-      return cachedResult;
-    }
-    
-    console.log('Redis缓存未命中或数据已更新，执行数据库查询');
-    // 使用draw_date字段排序，而不是issue字段，确保获取实际最新的开奖数据
-    // 问题原因：issue字段格式不统一，导致CAST转换后的数值比较不准确
+    // 直接执行数据库查询获取最新期号
+    console.log('执行数据库查询获取最后一期数据');
+    // 使用draw_date字段排序，确保获取实际最新的开奖数据
     const result = await query('SELECT issue FROM lottery_results ORDER BY draw_date DESC LIMIT 1');
     let responseData;
     
@@ -504,12 +500,6 @@ async function getLastDatabaseIssue() {
       // 如果数据库中没有数据，返回一个默认值
       responseData = { success: true, lastIssue: '暂无数据', mock: true };
     }
-    
-    // 将结果存入Redis缓存，过期时间设置为10分钟
-    await cacheSet(cacheKey, responseData, 600);
-    // 设置更新标记，表示数据已缓存
-    await cacheSet('lottery_data_updated_flag', false, 3600);
-    console.log('最后一期数据已存入Redis缓存');
     
     return responseData;
   } catch (error) {
@@ -566,18 +556,9 @@ app.get('/gengxin', async (req, res) => {
     // 同步数据到数据库
     const syncResult = await syncDataToDatabase(lotteryData);
     
-    // 如果有新数据更新，清除相关的Redis缓存
+    // 数据已更新，无需缓存处理
     if (syncResult.updatedCount > 0) {
-      console.log('数据已更新，开始清除Redis缓存...');
-      // 这里我们可以使用通配符删除相关缓存，或者直接删除所有开奖数据缓存
-      try {
-        // 注意：Redis的del命令不支持通配符，但我们可以通过其他方式实现
-        // 这里我们简单地删除一个特殊的缓存键，前端可以通过检查这个键来决定是否重新获取数据
-        await cacheDel('lottery_data_updated_flag');
-        console.log('Redis缓存清除标记已设置');
-      } catch (error) {
-        console.error('清除Redis缓存失败:', error);
-      }
+      console.log(`数据已更新，共更新${syncResult.updatedCount}条记录`);
     }
     
     return res.json({
@@ -603,7 +584,7 @@ app.get('/gengxin', async (req, res) => {
 
 /**
  * 获取数据库最后一期开奖期号接口
- * 接口功能: 获取数据库中存储的最新一期大乐透开奖期号，结果会被Redis缓存
+ * 接口功能: 获取数据库中存储的最新一期大乐透开奖期号
  * 
  * 请求示例:
  * GET http://localhost:8083/getLastIssue
@@ -628,8 +609,7 @@ app.get('/gengxin', async (req, res) => {
  *   "message": "获取数据失败"
  * }
  * 
- * 缓存说明:
- * - 接口会将查询结果缓存到Redis，过期时间为10分钟
+ * 接口直接从数据库查询最新期号
  * - 当数据更新时，缓存会被标记为过期
  */
 app.get('/getLastIssue', async (req, res) => {
@@ -675,24 +655,13 @@ app.get('/getLastIssue', async (req, res) => {
  *   "latestResults": []
  * }
  * 
- * 缓存说明:
- * - 接口会将查询结果缓存到Redis，过期时间为1小时
+ * 接口直接从API获取最新数据
  */
 app.get('/getLatestData', async (req, res) => {
   try {
     console.log('开始获取最新开奖数据但不同步...');
     
-    // 首先检查Redis缓存
-    const cacheKey = 'latest_lottery_data';
-    const cachedResult = await cacheGet(cacheKey);
-    
-    if (cachedResult) {
-      console.log('从Redis缓存获取最新数据成功');
-      return res.json(cachedResult);
-    }
-    
-    console.log('Redis缓存未命中，执行API调用');
-    // 抓取最新大乐透数据但不同步
+    // 直接抓取最新大乐透数据
     const latestData = await fetchNewLotteryData();
     
     // 格式化数据
@@ -716,10 +685,6 @@ app.get('/getLatestData', async (req, res) => {
     
     console.log(`成功获取并格式化${formattedData.length}条最新数据`);
     
-    // 将结果存入Redis缓存，过期时间设置为1小时
-    await cacheSet(cacheKey, responseData, 3600);
-    console.log('最新数据已存入Redis缓存');
-    
     res.json(responseData);
   } catch (error) {
     console.error('获取最新数据失败:', error);
@@ -734,17 +699,103 @@ app.get('/getLatestData', async (req, res) => {
 });
 
 // 启动服务器
+// 注册获取SQL数据路由
+app.use('/huo_qu_sql_shu_ju', huQuSqlShuJuRouter);
+
+// 注册双杀分析路由
+// 引入获取数据的路由模块（注意：这个路由应该在其他具体路由之后挂载）
+const huoQuShuJuRouter = require('./huo_qu_shu_ju');
+
+// 先挂载具体的API路由
+app.use('/huo_qu_sql_shu_ju', huQuSqlShuJuRouter);
+app.use('/shuangsha', shuangShaRouter);
+app.use('/sql_zui_xin_yi_qi', sqlZuiXinYiQiRouter);
+app.use('/san_qiu_fen_xi', sanQiuFenXiRouter);
+app.use('/sql_dao_shu_2_qi', sqlDaoShu2QiRouter);
+app.use('/dao_shu_2_qi_tui_jian_sha_hao', daoShu2QiTuiJianShaHaoRouter);
+app.use('/dao_shu_2_qi_liang_qiu_zu_he', daoShu2QiLiangQiuZuHeRouter);
+app.use('/dao_shu_2_qi_hou_qu_liang_qiu_zu_he', daoShu2QiHouQuLiangQiuZuHeRouter);
+
+// 最后挂载根路径路由（用于处理静态文件或默认路由）
+app.use('/', huoQuShuJuRouter);
+
+// 启动服务器
+// 添加获取体彩数据接口
+app.get('/huo_qu_ti_cai_shu_ju', async (req, res) => {
+  try {
+    console.log('========================================');
+    console.log('接收到huo_qu_ti_cai_shu_ju请求!');
+    console.log('请求时间:', new Date().toLocaleString());
+    
+    // 调用获取数据的函数
+    const newData = await fetchNewLotteryData();
+    
+    if (newData && newData.length > 0) {
+      console.log('成功获取数据，开始解析...');
+      
+      // 增强的格式化返回数据，包含完整的开奖信息
+      const latestResults = newData.map(item => ({
+        period: item.period || item.issue,
+        date: item.date || item.drawDate,
+        issue: item.period || item.issue,
+        drawDate: item.date || item.drawDate,
+        redBalls: item.redBalls || item.frontNumbers,
+        blueBalls: item.blueBalls || item.backNumbers,
+        fullResult: item.fullResult || (item.redBalls ? `${item.redBalls.join(' ')} ${item.blueBalls.join(' ')}` : 
+                    (item.frontNumbers ? `${item.frontNumbers.join(' ')} ${item.backNumbers.join(' ')}` : '')),
+        sum: item.sum,
+        span: item.span,
+        intervalRatio: item.intervalRatio,
+        parityRatio: item.parityRatio,
+        poolAmount: item.poolAmount,
+        firstPrizeCount: item.firstPrizeCount,
+        firstPrizeAmount: item.firstPrizeAmount
+      }));
+      
+      console.log('响应准备完成，包含', latestResults.length, '条记录');
+      console.log('最新期号:', latestResults[0].period);
+      console.log('最新日期:', latestResults[0].date);
+      console.log('最新开奖号码:', latestResults[0].fullResult);
+      
+      res.status(200).json({
+        success: true,
+        latestResults: latestResults,
+        lastIssue: latestResults[0].period,
+        message: '获取数据成功'
+      });
+    } else {
+      res.status(200).json({
+        success: true,
+        latestResults: [],
+        message: '暂无新数据'
+      });
+    }
+  } catch (error) {
+    console.error('获取体彩数据失败:', error);
+    console.error('错误堆栈:', error.stack);
+    res.status(500).json({
+      success: false,
+      message: '获取数据失败: ' + error.message
+    });
+  } finally {
+    console.log('请求处理完成');
+    console.log('==================================================');
+  }
+});
+
+// 注释掉服务器启动代码，避免单独启动服务器
+/*
 app.listen(PORT, () => {
   console.log(`服务器运行在 http://localhost:${PORT}`);
   console.log(`数据更新接口: http://localhost:${PORT}/gengxin`);
   console.log(`获取最后一期接口: http://localhost:${PORT}/getLastIssue`);
   console.log(`获取最新数据接口: http://localhost:${PORT}/getLatestData`);
+  console.log(`获取开奖数据接口: http://localhost:${PORT}/huo_qu_sql_shu_ju`);
+  console.log(`双杀分析接口: http://localhost:${PORT}/shuangsha/shuang_sha_fen_xi`);
+  console.log(`最新一期数据接口: http://localhost:${PORT}/sql_zui_xin_yi_qi`);
+  console.log(`三球分析接口: http://localhost:${PORT}/san_qiu_fen_xi`);
+  console.log(`倒数2期两球组合分析接口: http://localhost:${PORT}/dao_shu_2_qi_liang_qiu_zu_he`);
 });
-
-// 引入获取数据的路由模块
-const huoQuShuJuRouter = require('./huo_qu_shu_ju');
-
-// 使用获取数据的路由模块
-app.use('/', huoQuShuJuRouter);
+*/
 
 module.exports = app;

@@ -11,11 +11,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
-// 导入双杀分析路由
-const shuangShaRouter = require('./shuang_sha');
+// 导入倒数2期双杀分析路由
+const shuangShaRouter = require('./dao_shu_2_qi_shuang_sha_fen_xi');
 
-// 使用路由
-app.use('/', shuangShaRouter);
+// 使用空字符串挂载，避免路径重复，使接口路径为/dao_shu_2_qi_shuang_sha_fen_xi
+app.use('', shuangShaRouter);
 
 // 启动服务器
 app.listen(PORT, () => {

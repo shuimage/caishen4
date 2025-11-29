@@ -1,5 +1,7 @@
 // 只需要数据库查询功能，不需要Redis缓存
-const { query } = require('./db.config');
+const express = require('express');
+const router = express.Router();
+const { query } = require('./数据库配置.js');
 
 /**
  * 获取开奖数据接口
@@ -127,4 +129,7 @@ async function getLotteryResults(req, res) {
 }
 
 // 导出接口函数
-module.exports = { getLotteryResults };
+// 设置路由
+router.get('/getLotteryResults', getLotteryResults);
+
+module.exports = router;
