@@ -11,8 +11,23 @@ console.log(`静态服务器根目录: ${PUBLIC_DIR}`);
 const server = http.createServer((req, res) => {
   // 简化URL处理 - 移除查询参数
   let cleanUrl = req.url.split('?')[0]; // 只保留路径部分，移除查询参数
+  
+  // 安全的URL规范化
+  // 防止路径遍历攻击和处理特殊字符
+  cleanUrl = cleanUrl.replace(/\/\.\./g, '/'); // 移除相对路径引用
+  
   let url = cleanUrl === '/' ? '/index.html' : cleanUrl;
-  let filePath = path.join(PUBLIC_DIR, url);
+  
+  // 确保路径拼接正确
+  let filePath = path.resolve(path.join(PUBLIC_DIR, url));
+  
+  // 安全检查：确保解析后的文件路径仍然在公共目录内
+  if (!filePath.startsWith(PUBLIC_DIR)) {
+    console.error(`访问被拒绝: ${filePath} (路径遍历尝试)`);
+    res.writeHead(403, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('访问被拒绝');
+    return;
+  }
   
   console.log(`请求URL: ${req.url}`);
   console.log(`解析文件路径: ${filePath}`);

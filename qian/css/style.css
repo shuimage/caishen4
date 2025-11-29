@@ -250,14 +250,14 @@ body.dark-theme .combination-table .count {
 }
 
 body.dark-theme .combination-table .highlight {
-  background-color: #3a5a7a;
+  background-color: #602727;
   color: #ffffff;
   cursor: pointer;
   font-weight: 500;
 }
 
 body.dark-theme .combination-table .highlight:hover {
-  background-color: #4a6a8a;
+  background-color: #803737;
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
@@ -550,7 +550,6 @@ body {
 .blue-ball.edge-number {
   color: #00008B !important;
   font-weight: bold;
-}
 }
 
 /* 连号样式 - 统一为黑色 */

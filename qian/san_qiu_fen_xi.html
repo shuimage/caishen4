@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大乐透统计分析 - 三球组合分析</title>
+  <title>大乐透统计分析 - 最新1期三球组合分析</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -21,31 +21,19 @@
           <ul>
             <li class="nav-item">
               <span class="nav-icon">✕</span>
-              <span>双球组合分析</span>
+              <a href="sha_hao_fen_xi.html" style="text-decoration: none; color: inherit;">最新1期两球组合分析</a>
+            </li>
+            <li class="nav-item">
+              <span class="nav-icon">✖️</span>
+              <a href="dao_shu_2_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数2期两球组合分析</a>
             </li>
             <li class="nav-item active">
               <span class="nav-icon">🔺</span>
-              <span>三球组合分析</span>
+              <span>最新1期三球组合分析</span>
             </li>
             <li class="nav-item">
-              <span class="nav-icon">📊</span>
-              <span>走势分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">📈</span>
-              <span>冷热分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">⏱️</span>
-              <span>遗漏分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">📋</span>
-              <span>统计分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">⚙️</span>
-              <span>算法杀号</span>
+              <span class="nav-icon">🔻</span>
+              <span onclick="window.location.href='dao_shu_2_qi_san_qiu_zu_he.html'">倒数2期三球组合分析</span>
             </li>
           </ul>
         </nav>
@@ -63,11 +51,7 @@
             <option>最近1000期</option>
             <option>全部期</option>
           </select>
-          <div class="quick-period-buttons">
-            <button class="quick-period-btn">近5期</button>
-            <button class="quick-period-btn">近10期</button>
-            <button class="quick-period-btn">最新1期</button>
-          </div>
+
         </div>
         
       </div>
@@ -75,7 +59,7 @@
       <!-- 右侧主内容区 -->
       <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h1 class="page-title">三球组合分析</h1>
+          <h1 class="page-title">最新1期三球组合分析</h1>
           <div style="display: flex; gap: 10px; align-items: center;">
             <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
           </div>
@@ -142,12 +126,19 @@
     // 从sql_zui_xin_yi_qi接口获取最新一期开奖信息
     async function huo_qu_zui_xin_kai_jiang() {
       try {
-        const response = await fetch('http://localhost:18892/sql_zui_xin_yi_qi');
+        const response = await fetch('http://localhost:18889/huo_qu_sql_shu_ju?type=10');
         const result = await response.json();
         
-        // 确保正确处理后端返回的success和latestDraw结构
-        if (result && result.success && result.latestDraw) {
-          return result.latestDraw;
+        // 处理新的数据格式
+        if (result && result.success && result.data && result.data.length > 0) {
+          // 获取最新一期数据并转换为前端期望的格式
+          const latestData = result.data[0];
+          return {
+            period: latestData.issue,
+            drawDate: new Date().toISOString().split('T')[0], // 使用当前日期作为开奖日期
+            firstZoneNumbers: latestData.redBalls,
+            lastZoneNumbers: latestData.blueBalls
+          };
         } else {
           console.error('接口返回数据格式不正确:', result);
           alert('获取开奖数据失败');
@@ -205,7 +196,7 @@
     // 从后端获取三球组合分析数据
     async function huo_qu_san_qiu_fen_xi(period = '100') {
       try {
-        const response = await fetch(`http://localhost:18892/san_qiu_fen_xi?period=${period}`);
+        const response = await fetch(`http://localhost:18889/san_qiu_fen_xi?period=${period}`);
         const result = await response.json();
         
         if (result.success) {
@@ -246,15 +237,13 @@
       
       // 为了更好的用户体验，先按照出现次数降序排序
       const sortedCombinations = [...analysisData.frontCombinations].sort((a, b) => {
-        // 计算每个组合的总出现次数
-        const countA = Object.values(a.numberCounts || {}).reduce((sum, count) => sum + count, 0);
-        const countB = Object.values(b.numberCounts || {}).reduce((sum, count) => sum + count, 0);
-        return countB - countA;
+        // 直接使用后端提供的count字段
+        return (b.count || 0) - (a.count || 0);
       });
       
       sortedCombinations.forEach(combo => {
-        // 计算总出现次数
-        const totalCount = Object.values(combo.numberCounts || {}).reduce((sum, count) => sum + count, 0);
+        // 直接使用后端提供的count字段
+        const totalCount = combo.count || 0;
         
         const tr = document.createElement('tr');
         tr.innerHTML = `
@@ -455,23 +444,8 @@
         });
       }
       
-      // 为快捷期数按钮添加事件监听器
-      const quickPeriodButtons = document.querySelectorAll('.quick-period-btn');
-      quickPeriodButtons.forEach(button => {
-        button.addEventListener('click', function() {
-          const buttonText = this.textContent;
-          
-          if (buttonText === '近5期') periodValue = '5';
-          else if (buttonText === '近10期') periodValue = '10';
-          else if (buttonText === '最新1期') periodValue = '1';
-          
-          // 保存选择的统计范围
-          savePeriodSelection(periodValue);
-          
-          // 根据点击的快捷按钮重新渲染数据
-          renderThreeBallAnalysisData(periodValue);
-        });
-      });
+      // 快捷期数按钮已隐藏，移除相关事件监听器
+      
     });
     
     // 移动端侧边栏切换
@@ -494,12 +468,34 @@
         const navText = this.textContent.trim();
         console.log('点击的导航项文本:', navText);
         
-        // 使用更宽松的匹配方式，只要文本中包含关键词即可
-        if (navText.includes('双球')) {
-          console.log('跳转到双球组合分析页面');
+        // 使用更精确的匹配，优先检查特定的导航项
+        let navTextContent;
+        const spanElement = this.querySelector('span:not(.nav-icon)');
+        const aElement = this.querySelector('a');
+        
+        if (spanElement) {
+          navTextContent = spanElement.textContent.trim();
+        } else if (aElement) {
+          navTextContent = aElement.textContent.trim();
+        } else {
+          navTextContent = this.textContent.trim();
+        }
+        console.log('点击的导航项文本:', navTextContent);
+        
+        if (navTextContent.includes('倒数2期两球')) {
+          console.log('跳转到倒数2期两球组合分析页面');
+          window.location.href = 'dao_shu_2_qi_liang_qiu_zu_he.html';
+        } else if (navTextContent.includes('倒数2期三球')) {
+          console.log('跳转到倒数2期三球组合分析页面');
+          window.location.href = 'dao_shu_2_qi_san_qiu_zu_he.html';
+        } else if (navTextContent.includes('两球组合分析')) {
+          console.log('跳转到最新1期两球组合分析页面');
+          window.location.href = 'zu_he_xiang_qing.html';
+        } else if (navTextContent.includes('两球') || navTextContent.includes('双球')) {
+          console.log('跳转到最新1期两球组合分析页面');
           window.location.href = 'sha_hao_fen_xi.html';
-        } else if (navText.includes('三球') || navText.includes('三区')) {
-          console.log('跳转到三球组合分析页面');
+        } else if (navTextContent.includes('三球')) {
+          console.log('跳转到最新1期三球组合分析页面');
           window.location.href = 'san_qiu_fen_xi.html';
         }
         
