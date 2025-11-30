@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大乐透统计分析 - 倒数2期两球组合分析</title>
+  <title>大乐透统计分析 - 倒数3期两球组合分析</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     /* 确保没有水平导航栏显示 */
@@ -45,13 +45,13 @@
               <span class="nav-icon">✕</span>
               <a href="sha_hao_fen_xi.html" style="text-decoration: none; color: inherit;">最新1期两球组合分析</a>
             </li>
-            <li class="nav-item active">
-              <span class="nav-icon">✖️</span>
-              <span>倒数2期两球组合分析</span>
-            </li>
             <li class="nav-item">
+              <span class="nav-icon">✖️</span>
+              <span onclick="window.location.href='dao_shu_2_qi_liang_qiu_zu_he.html'">倒数2期两球组合分析</span>
+            </li>
+            <li class="nav-item active">
               <span class="nav-icon">✗</span>
-              <a href="dao_shu_3_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期两球组合分析</a>
+              <span>倒数3期两球组合分析</span>
             </li>
             <li class="nav-item">
               <span class="nav-icon">🔺</span>
@@ -87,7 +87,7 @@
       <!-- 右侧主内容区 -->
       <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h1 class="page-title">倒数2期两球组合分析</h1>
+          <h1 class="page-title">倒数3期两球组合分析</h1>
           <div style="display: flex; gap: 10px; align-items: center;">
             <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
           </div>
@@ -128,10 +128,10 @@
             </div>
           </div>
 
-          <!-- 倒数第2期开奖信息 -->
+          <!-- 倒数第3期开奖信息 -->
           <div class="section" style="flex: 1; min-width: 200px;">
             <div class="section-header" style="margin-bottom: 10px;">
-              <h3 style="margin: 0;">倒数第2期开奖信息</h3>
+              <h3 style="margin: 0;">倒数第3期开奖信息</h3>
             </div>
             <div class="draw-info-container">
               <div class="draw-info-box" id="secondLastDrawInfoBox">
@@ -197,7 +197,7 @@
           </div>
         </div>
         
-        <!-- 倒数第 2 期开奖信息 -->
+        <!-- 倒数第 3 期开奖信息 -->
         <div class="section">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">后区两球组合统计</h3>
@@ -238,8 +238,8 @@
       }
       // 确保调用最新开奖信息函数
       xuan_ran_zui_xin_kai_jiang();
-      // 调用倒数第2期开奖信息函数
-      xuan_ran_dao_shu_2_qi_kai_jiang();
+      // 调用倒数第3期开奖信息函数
+      xuan_ran_dao_shu_3_qi_kai_jiang();
     });
   </script>
   <script>
@@ -270,11 +270,11 @@
       }
     }
     
-    // 从sql_dao_shu_2_qi接口获取倒数第2期开奖信息
-    async function huo_qu_sql_dao_shu_2_qi() {
+    // 从sql_dao_shu_3_qi接口获取倒数第3期开奖信息
+    async function huo_qu_sql_dao_shu_3_qi() {
       try {
-        // 调用d:\中啦\caishen4\hou\sql_dao_shu_2_qi.js对应的接口
-        const response = await fetch('http://localhost:18889/sql_dao_shu_2_qi');
+        // 调用d:\中啦\caishen4\hou\sql_dao_shu_3_qi.js对应的接口
+        const response = await fetch('http://localhost:18889/sql_dao_shu_3_qi');
         
         if (!response.ok) {
           console.error('接口请求失败，状态码:', response.status);
@@ -282,17 +282,17 @@
         }
         
         const result = await response.json();
-        console.log('sql_dao_shu_2_qi接口返回数据:', result);
+        console.log('sql_dao_shu_3_qi接口返回数据:', result);
         
         // 确保正确处理后端返回的success和secondLastDraw结构
-        if (result && result.success && result.secondLastDraw) {
-          return result.secondLastDraw;
+        if (result && result.success && result.thirdLastDraw) {
+          return result.thirdLastDraw;
         } else {
           console.error('接口返回数据格式不正确:', result);
           return null;
         }
       } catch (error) {
-        console.error('获取倒数第2期开奖数据失败:', error);
+        console.error('获取倒数第3期开奖数据失败:', error);
         return null;
       }
     }
@@ -342,20 +342,20 @@
       }
     }
     
-    // 渲染倒数第2期开奖信息到新增的区域
-    async function xuan_ran_sql_dao_shu_2_qi() {
-      const secondLastDraw = await huo_qu_sql_dao_shu_2_qi();
-      const secondLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
+    // 渲染倒数第3期开奖信息到新增的区域
+    async function xuan_ran_sql_dao_shu_3_qi() {
+      const thirdLastDraw = await huo_qu_sql_dao_shu_3_qi();
+      const thirdLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
       
-      if (!secondLastDraw) {
-        if (secondLastDrawInfoElement) {
-          secondLastDrawInfoElement.innerHTML = '<div>接口失败</div>';
+      if (!thirdLastDraw) {
+        if (thirdLastDrawInfoElement) {
+          thirdLastDrawInfoElement.innerHTML = '<div>接口失败</div>';
         }
         return;
       }
       
       // 处理日期格式，只显示年月日
-      let formattedDate = secondLastDraw.drawDate;
+      let formattedDate = thirdLastDraw.drawDate;
       if (formattedDate && typeof formattedDate === 'string') {
         // 处理ISO格式日期
         if (formattedDate.includes('T')) {
@@ -365,19 +365,19 @@
         }
       }
       
-      if (secondLastDrawInfoElement) {
-        secondLastDrawInfoElement.innerHTML = `
+      if (thirdLastDrawInfoElement) {
+        thirdLastDrawInfoElement.innerHTML = `
           <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
-            期号: ${secondLastDraw.period}
+            期号: ${thirdLastDraw.period}
           </div>
           <div>
             开奖日期: ${formattedDate}
           </div>
           <div>
-            前区号码: ${Array.isArray(secondLastDraw.firstZoneNumbers) ? secondLastDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
+            前区号码: ${Array.isArray(thirdLastDraw.firstZoneNumbers) ? thirdLastDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
           </div>
           <div>
-            后区号码: ${Array.isArray(secondLastDraw.lastZoneNumbers) ? secondLastDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
+            后区号码: ${Array.isArray(thirdLastDraw.lastZoneNumbers) ? thirdLastDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
           </div>
         `;
       }
@@ -413,22 +413,22 @@
       }
     }
     
-    // 从sql_dao_shu_2_qi接口获取倒数第2期开奖信息
-    async function huo_qu_dao_shu_2_qi_kai_jiang() {
+    // 从sql_dao_shu_3_qi接口获取倒数第3期开奖信息
+    async function huo_qu_dao_shu_3_qi_kai_jiang() {
       try {
-        const response = await fetch('http://localhost:18889/sql_dao_shu_2_qi');
+        const response = await fetch('http://localhost:18889/sql_dao_shu_3_qi');
         const result = await response.json();
         
-        // 确保正确处理后端返回的success和secondLastDraw结构
-        if (result && result.success && result.secondLastDraw) {
-          return result.secondLastDraw;
+        // 确保正确处理后端返回的success和thirdLastDraw结构
+        if (result && result.success && result.thirdLastDraw) {
+          return result.thirdLastDraw;
         } else {
           console.error('接口返回数据格式不正确:', result);
           alert('接口失败');
           return null;
         }
       } catch (error) {
-        console.error('获取倒数第2期开奖数据失败:', error);
+        console.error('获取倒数第3期开奖数据失败:', error);
         alert('接口失败');
         return null;
       }
@@ -512,23 +512,23 @@
       }
     }
     
-    // 渲染倒数第2期开奖信息
-    async function xuan_ran_dao_shu_2_qi_kai_jiang() {
-      console.log('开始获取并渲染倒数第2期开奖信息');
-      const secondLastDraw = await huo_qu_sql_dao_shu_2_qi();
+    // 渲染倒数第3期开奖信息
+    async function xuan_ran_dao_shu_3_qi_kai_jiang() {
+      console.log('开始获取并渲染倒数第3期开奖信息');
+      const thirdLastDraw = await huo_qu_sql_dao_shu_3_qi();
       
-      if (!secondLastDraw) {
-        console.warn('未获取到倒数第2期开奖信息');
-        const secondLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
-        if (secondLastDrawInfoElement) {
-          secondLastDrawInfoElement.innerHTML = '<div style="color: #DF2220;">接口失败</div>';
+      if (!thirdLastDraw) {
+        console.warn('未获取到倒数第3期开奖信息');
+        const thirdLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
+        if (thirdLastDrawInfoElement) {
+          thirdLastDrawInfoElement.innerHTML = '<div style="color: #DF2220;">接口失败</div>';
         }
         alert('接口失败');
         return;
       }
       
       // 处理日期格式，只显示年月日
-      let formattedDate = secondLastDraw.drawDate;
+      let formattedDate = thirdLastDraw.drawDate;
       if (formattedDate && typeof formattedDate === 'string') {
         if (formattedDate.includes('T')) {
           formattedDate = formattedDate.split('T')[0];
@@ -537,39 +537,39 @@
         }
       }
       
-      const secondLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
-      if (secondLastDrawInfoElement) {
-        secondLastDrawInfoElement.innerHTML = `
+      const thirdLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
+      if (thirdLastDrawInfoElement) {
+        thirdLastDrawInfoElement.innerHTML = `
         <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
-          期号: ${secondLastDraw.period}
+          期号: ${thirdLastDraw.period}
         </div>
         <div>
           开奖日期: ${formattedDate}
         </div>
         <div>
-          前区号码: ${Array.isArray(secondLastDraw.firstZoneNumbers) ? secondLastDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
+          前区号码: ${Array.isArray(thirdLastDraw.firstZoneNumbers) ? thirdLastDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
         </div>
         <div>
-          后区号码: ${Array.isArray(secondLastDraw.lastZoneNumbers) ? secondLastDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
+          后区号码: ${Array.isArray(thirdLastDraw.lastZoneNumbers) ? thirdLastDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
         </div>
         `;
       }
-      console.log('倒数第2期开奖信息渲染完成');
+      console.log('倒数第3期开奖信息渲染完成');
     }
   </script>
   <script>
     // 移除了推荐杀号接口相关的函数，现在完全依赖两球组合分析数据接口提供杀号信息
 
-    // 从后端获取倒数2期前区两球组合分析数据
-    async function huo_qu_dao_shu_2_qi_liang_qiu_zu_he(period = '100') {
+    // 从后端获取倒数3期前区两球组合分析数据
+    async function huo_qu_dao_shu_3_qi_liang_qiu_zu_he(period = '100') {
       try {
-        console.log(`获取倒数2期前区两球组合分析数据，周期：${period}`);
+        console.log(`获取倒数3期前区两球组合分析数据，周期：${period}`);
         
         // 使用简单的fetch调用，添加超时处理
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
         
-        const response = await fetch(`http://localhost:18889/dao_shu_2_qi_liang_qiu_zu_he?period=${period}`, {
+        const response = await fetch(`http://localhost:18889/dao_shu_3_qi_liang_qiu_zu_he?period=${period}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -596,23 +596,23 @@
           };
         }
       } catch (error) {
-        console.error('获取倒数2期前区两球组合分析数据失败:', error.name, error.message);
+        console.error('获取倒数3期前区两球组合分析数据失败:', error.name, error.message);
         // 显示错误提示
         alert('接口失败: ' + (error.message || '未知错误'));
         return null;
       }
     }
     
-    // 从后端获取倒数2期后区两球组合分析数据
-    async function huo_qu_dao_shu_2_qi_hou_qu_zu_he(period = '100') {
+    // 从后端获取倒数3期后区两球组合分析数据
+    async function huo_qu_dao_shu_3_qi_hou_qu_zu_he(period = '100') {
       try {
-        console.log(`获取倒数2期后区两球组合分析数据，周期：${period}`);
+        console.log(`获取倒数3期后区两球组合分析数据，周期：${period}`);
         
         // 使用简单的fetch调用，添加超时处理
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
         
-        const response = await fetch(`http://localhost:18889/dao_shu_2_qi_hou_qu_liang_qiu_zu_he?period=${period}`, {
+        const response = await fetch(`http://localhost:18889/dao_shu_3_qi_hou_qu_zu_he?period=${period}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json'
@@ -639,7 +639,7 @@
           };
         }
       } catch (error) {
-        console.error('获取倒数2期后区两球组合分析数据失败:', error.name, error.message);
+        console.error('获取倒数3期后区两球组合分析数据失败:', error.name, error.message);
         // 显示错误提示
         alert('接口失败: ' + (error.message || '未知错误'));
         return null;
@@ -649,7 +649,7 @@
     // 渲染前区两球组合分析数据
     async function renderFirstZoneAnalysisData(period = '100') {
       // 获取前区两球组合分析数据
-      const analysisData = await huo_qu_dao_shu_2_qi_liang_qiu_zu_he(period);
+      const analysisData = await huo_qu_dao_shu_3_qi_liang_qiu_zu_he(period);
       
       if (!analysisData) {
         // 接口调用失败，不使用模拟数据
@@ -748,7 +748,7 @@
               // 跳转到组合详情页面，传递组合和号码参数
               const type = 'first'; // 前区类型
               const formattedCombination = combination + '-' + selectedNumber; // 组合球-目标球格式
-              window.location.href = `dao_shu_2_qi_liang_qiu_zu_he_xiang_qing.html?combination=${formattedCombination}&type=${type}&stats_range=${period}`;
+              window.location.href = `dao_shu_3_qi_liang_qiu_zu_he_xiang_qing.html?combination=${formattedCombination}&type=${type}&stats_range=${period}`;
             });
             
             // 添加鼠标悬停效果
@@ -771,7 +771,7 @@
               console.log('点击组合:', combination);
               // 跳转到组合详情页面，传递组合参数
               const type = 'first'; // 前区类型
-              window.location.href = `dao_shu_2_qi_liang_qiu_zu_he_xiang_qing.html?combination=${combination}&type=${type}&stats_range=${period}`;
+              window.location.href = `dao_shu_3_qi_liang_qiu_zu_he_xiang_qing.html?combination=${combination}&type=${type}&stats_range=${period}`;
             });
         
         firstZoneCombinations.appendChild(tr);
@@ -820,7 +820,7 @@
     // 渲染后区两球组合分析数据
     async function renderSecondZoneAnalysisData(period = '100') {
       // 获取后区两球组合分析数据
-      const analysisData = await huo_qu_dao_shu_2_qi_hou_qu_zu_he(period);
+      const analysisData = await huo_qu_dao_shu_3_qi_hou_qu_zu_he(period);
       
       if (!analysisData || !analysisData.combinations) {
         // 接口调用失败，不使用模拟数据
@@ -931,7 +931,7 @@
               // 跳转到组合详情页面，传递组合和号码参数
               const type = 'last'; // 后区类型
               const formattedCombination = combination + '-' + selectedNumber; // 组合球-目标球格式
-              window.location.href = `dao_shu_2_qi_liang_qiu_zu_he_xiang_qing.html?combination=${formattedCombination}&type=${type}&stats_range=${period}`;
+              window.location.href = `dao_shu_3_qi_liang_qiu_zu_he_xiang_qing.html?combination=${formattedCombination}&type=${type}&stats_range=${period}`;
             });
             
             // 添加鼠标悬停效果
@@ -954,7 +954,7 @@
               console.log('点击组合:', combination);
               // 跳转到组合详情页面，传递组合参数
               const type = 'last'; // 后区类型
-              window.location.href = `dao_shu_2_qi_liang_qiu_zu_he_xiang_qing.html?combination=${combination}&type=${type}&stats_range=${period}`;
+              window.location.href = `dao_shu_3_qi_liang_qiu_zu_he_xiang_qing.html?combination=${combination}&type=${type}&stats_range=${period}`;
             });
         
         secondZoneCombinations.appendChild(tr);
@@ -979,7 +979,7 @@
         const totalOccurrences = analysisData.combinations.reduce((sum, combo) => sum + combo.count, 0);
         
         secondZoneSection.querySelector('.section-header').innerHTML = `
-          <h3 style="margin: 0;">倒数第2期开奖信息</h3>
+          <h3 style="margin: 0;">倒数第3期开奖信息</h3>
         `;
       }
     }
@@ -1094,8 +1094,8 @@
       // 设置下拉框选中状态
       setPeriodDropdownSelection(periodValue);
       
-      // 调用函数获取并显示倒数第2期开奖信息
-      await xuan_ran_dao_shu_2_qi_kai_jiang();
+      // 调用函数获取并显示倒数第3期开奖信息
+      await xuan_ran_dao_shu_3_qi_kai_jiang();
       
       // 使用保存的统计范围渲染数据
       await renderTwoBallAnalysisData(periodValue);
@@ -1103,9 +1103,9 @@
       console.log('页面初始化完成，所有数据已加载');
       console.log('使用的接口：');
       console.log('1. 最新一期数据: http://localhost:18889/sql_zui_xin_yi_qi');
-console.log('2. 倒数第2期数据: http://localhost:18889/sql_dao_shu_2_qi');
-console.log('3. 两球组合分析数据: http://localhost:18889/dao_shu_2_qi_liang_qiu_zu_he');
-console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_2_qi_hou_qu_zu_he');
+console.log('2. 倒数第3期数据: http://localhost:18889/sql_dao_shu_3_qi');
+console.log('3. 两球组合分析数据: http://localhost:18889/dao_shu_3_qi_liang_qiu_zu_he');
+console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_3_qi_hou_qu_zu_he');
       console.log('推荐杀号信息现在直接从两球组合分析数据接口获取并更新');
       
       // 为统计范围下拉选择框添加事件监听器
