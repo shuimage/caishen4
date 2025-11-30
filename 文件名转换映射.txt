@@ -1,0 +1,48 @@
+# 后端文件拼音转中文映射表
+
+## 核心配置文件
+- db.config.js -> 数据库配置.js
+- redis.config.js -> Redis配置.js
+
+## 数据获取相关
+- huo_qu_shu_ju.js -> 获取数据.js
+- huo_qu_sql_shu_ju.js -> 获取SQL数据.js
+- huo_qu_ti_cai_shu_ju.js -> 获取体彩数据.js
+- huo_qu_lottery_results_total.js -> 获取彩票结果总计.js
+
+## 统计分析相关
+- dao_shu_2_qi_hou_qu_liang_qiu_zu_he.js -> 倒数2期后区两球组合.js
+- dao_shu_2_qi_hou_qu_zu_he.js -> 倒数2期后区组合.js
+- dao_shu_2_qi_liang_qiu_zu_he.js -> 倒数2期两球组合.js
+- dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_server.js -> 倒数2期两球组合详情服务器.js
+- dao_shu_2_qi_shuang_sha_fen_xi.js -> 倒数2期双杀分析.js
+- dao_shu_2_qi_shuang_sha_fen_xi_server.js -> 倒数2期双杀分析服务器.js
+- dao_shu_2_qi_tui_jian_sha_hao.js -> 倒数2期推荐杀号.js
+- san_qiu_fen_xi.js -> 三球分析.js
+- san_qiu_xiang_qing.js -> 三球详情.js
+- san_qiu_zu_he_xiang_qing.js -> 三球组合详情.js
+- san_qiu_zu_he_xiang_qing_server.js -> 三球组合详情服务器.js
+- shuang_sha.js -> 双杀.js
+- shuang_sha_fen_xi.js -> 双杀分析.js
+- shuang_sha_xiang_qing_server.js -> 双杀详情服务器.js
+- zu_he_xiang_qing.js -> 组合详情.js
+- zu_he_xiang_qing_server.js -> 组合详情服务器.js
+
+## SQL操作相关
+- sql_dao_shu_2_qi.js -> SQL倒数2期.js
+- sql_zui_xin_yi_qi.js -> SQL最新一期.js
+- sql_zui_xin_yi_qi_server.js -> SQL最新一期服务器.js
+
+## 更新相关
+- geng_xin.js -> 更新.js
+- geng_xin_kai_jiang.js -> 更新开奖.js
+- zui_xin_yi_qi.js -> 最新一期.js
+
+## 其他工具文件
+- add_bian_hao_field.js -> 添加编号字段.js
+- check_table_structure.js -> 检查表结构.js
+- proxy_server.js -> 代理服务器.js
+- verify_bian_hao.js -> 验证编号.js
+
+## 主服务器文件
+- server.js -> 服务器.js

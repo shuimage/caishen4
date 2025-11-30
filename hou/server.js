@@ -7,6 +7,7 @@ const PORT = 18889;
 const huoQuSqlShuJuRouter = require('./获取SQL数据.js');
 const sqlZuiXinYiQiRouter = require('./SQL最新一期.js');
 const sqlDaoShu2QiRouter = require('./SQL倒数2期.js');
+const sqlDaoShu3QiRouter = require('./SQL倒数3期.js');
 const daoShu2QiTuiJianShaHaoRouter = require('./倒数2期推荐杀号.js');
 const huoQuTiCaiShuJuRouter = require('./获取体彩数据.js');
 const gengXinKaiJiangRouter = require('./更新开奖.js');
@@ -16,6 +17,8 @@ const sanQiuFenXiRouter = require('./三球分析.js'); // 导入三球分析路
 const daoShu2QiLiangQiuZuHeRouter = require('./倒数2期两球组合.js'); // 导入倒数2期前区两球组合路由
 const daoShu2QiHouQuZuHeRouter = require('./倒数2期后区组合.js'); // 导入倒数2期后区两球组合路由
 const daoShu2QiHouQuLiangQiuZuHeRouter = require('./倒数2期后区两球组合.js'); // 导入倒数2期后区两球组合分析路由
+const daoShu3QiLiangQiuZuHeRouter = require('./倒数3期两球组合前区.js'); // 导入倒数3期前区两球组合路由
+const daoShu3QiHouQuZuHeRouter = require('./倒数3期两球组合后区.js'); // 导入倒数3期后区两球组合路由
 const zuHeXiangQingRouter = require('./组合详情.js');
 const sanQiuZuHeXiangQingRouter = require('./三球组合详情.js');
 const sanQiuXiangQingRouter = require('./san_qiu_xiang_qing.js');
@@ -48,6 +51,7 @@ app.get('/health', (req, res) => {
 app.use('/huo_qu_sql_shu_ju', huoQuSqlShuJuRouter);
 app.use('/sql_zui_xin_yi_qi', sqlZuiXinYiQiRouter);
 app.use('/sql_dao_shu_2_qi', sqlDaoShu2QiRouter);
+app.use('/sql_dao_shu_3_qi', sqlDaoShu3QiRouter);
 app.use('/dao_shu_2_qi_tui_jian_sha_hao', daoShu2QiTuiJianShaHaoRouter);
 app.use('/huo_qu_ti_cai_shu_ju', huoQuTiCaiShuJuRouter);
 app.use('/geng_xin_kai_jiang', gengXinKaiJiangRouter);
@@ -57,10 +61,16 @@ app.use('/san_qiu_fen_xi', sanQiuFenXiRouter); // 注册三球分析路由
 app.use('/dao_shu_2_qi_liang_qiu_zu_he', daoShu2QiLiangQiuZuHeRouter); // 注册倒数2期前区两球组合路由
 app.use('/dao_shu_2_qi_hou_qu_zu_he', daoShu2QiHouQuZuHeRouter); // 注册倒数2期后区两球组合路由
 app.use('/dao_shu_2_qi_hou_qu_liang_qiu_zu_he', daoShu2QiHouQuLiangQiuZuHeRouter); // 注册倒数2期后区两球组合分析路由
+app.use('/dao_shu_3_qi_liang_qiu_zu_he', daoShu3QiLiangQiuZuHeRouter); // 注册倒数3期前区两球组合路由
+app.use('/dao_shu_3_qi_hou_qu_zu_he', daoShu3QiHouQuZuHeRouter); // 注册倒数3期后区两球组合路由
 const daoShu2QiSanQiuZuHeRouter = require('./dao_shu_2_qi_san_qiu_zu_he');
 app.use('/dao_shu_2_qi_san_qiu_zu_he', daoShu2QiSanQiuZuHeRouter); // 注册倒数2期前区三球组合路由
 const daoShu2QiSanQiuZuHeXiangQingRouter = require('./dao_shu_2_qi_san_qiu_zu_he_xiang_qing');
 app.use('/dao_shu_2_qi_san_qiu_zu_he_xiang_qing', daoShu2QiSanQiuZuHeXiangQingRouter); // 注册倒数2期前区三球组合详情路由
+const daoShu3QiSanQiuZuHeRouter = require('./倒数3期三球组合');
+app.use('/dao_shu_3_qi_san_qiu_zu_he', daoShu3QiSanQiuZuHeRouter); // 注册倒数3期前区三球组合路由
+const daoShu3QiSanQiuZuHeXiangQingRouter = require('./dao_shu_3_qi_san_qiu_zu_he_xiang_qing');
+app.use('/dao_shu_3_qi_san_qiu_zu_he_xiang_qing', daoShu3QiSanQiuZuHeXiangQingRouter); // 注册倒数3期前区三球组合详情路由
 
 // 先注册直接路由，再注册中间件，避免中间件拦截
 app.post('/zuhe/dao_shu_2_qi_liang_qiu_zu_he_xiang_qing', async (req, res) => {
@@ -206,6 +216,150 @@ app.post('/zuhe/dao_shu_2_qi_liang_qiu_zu_he_xiang_qing', async (req, res) => {
   }
 });
 
+// 倒数3期两球组合详情接口
+app.post('/dao_shu_3_qi_liang_qiu_zu_he_xiang_qing', async (req, res) => {
+  console.log('收到倒数3期两球组合详情请求，请求体:', req.body);
+  try {
+    const { latest_period, type = 'front', combinations = [], stats_range = 100, target_ball = null } = req.body;
+    if (!latest_period) return res.status(400).json({ code: 400, message: '最新期号是必填参数' });
+    if (!Array.isArray(combinations) || combinations.length === 0) return res.status(400).json({ code: 400, message: '组合数组不能为空' });
+    if (!Number.isInteger(stats_range) || stats_range <= 0) return res.status(400).json({ code: 400, message: '统计范围必须是正整数' });
+    if (type !== 'front' && type !== 'back') return res.status(400).json({ code: 400, message: '类型只能是front或back' });
+    const periodPrefixMatch = latest_period.match(/[^0-9]+/);
+    const periodPrefix = periodPrefixMatch ? periodPrefixMatch[0] : '';
+    const periodNumber = parseInt(latest_period.replace(/[^0-9]/g, ''));
+    if (isNaN(periodNumber)) return res.status(400).json({ code: 400, message: '最新期号格式不正确' });
+    const daoShu3QiPeriodNumber = periodNumber - 3;
+    const daoShu3QiPeriod = periodPrefix + daoShu3QiPeriodNumber.toString().padStart(3, '0');
+    const daoShu3QiData = await query('SELECT * FROM lottery_results WHERE issue = ? LIMIT 1', [daoShu3QiPeriod]);
+    if (!daoShu3QiData || daoShu3QiData.length === 0) return res.status(404).json({ code: 404, message: '未找到倒数3期的开奖数据' });
+    const daoShu3QiResult = daoShu3QiData[0];
+    const drawField = type === 'front' ? 'red' : 'blue';
+    function __processBalls(balls) {
+      if (!balls) return [];
+      if (typeof balls === 'string') {
+        // 处理 [x, x, x] 格式的JSON字符串
+        if (balls.startsWith('[') && balls.endsWith(']')) {
+          try {
+            // 解析JSON字符串
+            const parsedBalls = JSON.parse(balls);
+            if (Array.isArray(parsedBalls)) {
+              return parsedBalls.map(ball => String(ball).padStart(2, '0'));
+            }
+          } catch (e) {
+            // JSON解析失败，尝试其他格式
+          }
+        }
+        // 处理空格分隔的字符串格式
+        return balls.split(' ').filter(ball => ball.trim() !== '').map(ball => String(ball).padStart(2, '0'));
+      } else if (Array.isArray(balls)) {
+        return balls.map(ball => String(ball).padStart(2, '0'));
+      }
+      return [];
+    }
+    // 查询近300期的所有记录，包括bian_hao字段
+    // 使用字符串拼接，避免参数化查询的类型匹配问题
+    const idValue = daoShu3QiResult.id;
+    const limitValue = stats_range;
+    let sql = `
+      SELECT 
+        id, 
+        issue, 
+        bian_hao,
+        ${drawField} as draw_info
+      FROM 
+        lottery_results 
+      WHERE 
+        id < ${idValue}
+      ORDER BY id ASC
+      LIMIT ${limitValue}
+    `;
+    console.log('SQL查询语句:', sql);
+    // 不使用参数数组，直接执行SQL语句
+    const rows = await query(sql);
+    
+    // 创建bian_hao到数据的映射，方便快速查找下下下期数据
+    const bianHaoToDataMap = new Map();
+    // 创建数字bian_hao到数据的映射，用于计算下下下期
+    const numericBianHaoToDataMap = new Map();
+    
+    rows.forEach(row => {
+      bianHaoToDataMap.set(row.bian_hao, row);
+      // 从bian_hao字符串中提取数字部分，比如从"LT00222"中提取"00222"，然后转换为数字222
+      const numericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
+      numericBianHaoToDataMap.set(numericBianHao, row);
+    });
+    
+    let results = [];
+    
+    // 遍历所有记录，找出符合条件的记录
+    for (const row of rows) {
+      console.log('当前记录:', { id: row.id, issue: row.issue, bian_hao: row.bian_hao });
+      const currentDrawNumbers = __processBalls(row.draw_info);
+      const currentSet = new Set(currentDrawNumbers);
+      
+      // 检查当前期是否包含组合
+      const isMatch = combinations.some(combination => {
+        const comboParts = combination.split('-').map(part => part.trim()).map(part => part.padStart(2, '0'));
+        return comboParts.every(part => currentSet.has(part));
+      });
+      
+      if (isMatch) {
+        console.log('找到匹配组合的记录:', { id: row.id, issue: row.issue, bian_hao: row.bian_hao });
+        // 从当前bian_hao中提取数字部分
+        const currentNumericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
+        console.log('当前数字bian_hao:', currentNumericBianHao);
+        // 计算下下下期的数字bian_hao
+        const nextNextNextNumericBianHao = currentNumericBianHao + 3;
+        console.log('计算下下下期数字bian_hao:', nextNextNextNumericBianHao);
+        // 查找下下下期数据
+        const nextNextNextData = numericBianHaoToDataMap.get(nextNextNextNumericBianHao);
+        
+        if (nextNextNextData) {
+          console.log('找到下下下期数据:', { id: nextNextNextData.id, issue: nextNextNextData.issue, bian_hao: nextNextNextData.bian_hao });
+          const nextNextNextDrawNumbers = __processBalls(nextNextNextData.draw_info);
+          
+          // 如果有目标球，检查目标球是否在下下下期出现
+          if (target_ball !== null && target_ball !== undefined && target_ball !== '') {
+            const targetBallStr = String(target_ball).padStart(2, '0');
+            console.log('检查目标球是否在下下下期出现:', { target_ball: targetBallStr, nextNextNextDrawNumbers: nextNextNextDrawNumbers });
+            if (nextNextNextDrawNumbers.includes(targetBallStr)) {
+              results.push({
+                index: 0, // 序号会在前端生成
+                period: row.issue,
+                draw_info: currentDrawNumbers,
+                next_next_next_period: nextNextNextData.issue,
+                next_next_next_draw_info: nextNextNextDrawNumbers
+              });
+            }
+          } else {
+            // 没有目标球，直接添加结果
+            results.push({
+              index: 0, // 序号会在前端生成
+              period: row.issue,
+              draw_info: currentDrawNumbers,
+              next_next_next_period: nextNextNextData.issue,
+              next_next_next_draw_info: nextNextNextDrawNumbers
+            });
+          }
+        } else {
+          console.log('未找到下下下期数据，数字bian_hao:', nextNextNextNumericBianHao);
+        }
+      }
+    }
+    
+    // 生成序号
+    results = results.map((result, index) => ({
+      ...result,
+      index: index + 1
+    }));
+    
+    res.json({ code: 200, message: 'success', data: results });
+  } catch (error) {
+    res.status(500).json({ code: 500, message: '服务器内部错误', error: error.message });
+  }
+});
+
 // 注册中间件，放在直接路由之后
 app.use('/zuhe', zuHeXiangQingRouter);
 app.use('/', sanQiuZuHeXiangQingRouter);
@@ -295,14 +449,17 @@ function startServer() {
       console.log(`获取SQL数据接口: http://localhost:${PORT}/huo_qu_sql_shu_ju`);
       console.log(`获取最新期号接口: http://localhost:${PORT}/sql_zui_xin_yi_qi`);
       console.log(`获取倒数第二期接口: http://localhost:${PORT}/sql_dao_shu_2_qi`);
+      console.log(`获取倒数第三期接口: http://localhost:${PORT}/sql_dao_shu_3_qi`);
       console.log(`推荐杀号接口: http://localhost:${PORT}/dao_shu_2_qi_tui_jian_sha_hao`);
       console.log(`获取体彩数据接口: http://localhost:${PORT}/huo_qu_ti_cai_shu_ju`);
-console.log(`更新开奖数据接口: http://localhost:${PORT}/geng_xin_kai_jiang`);
+      console.log(`更新开奖数据接口: http://localhost:${PORT}/geng_xin_kai_jiang`);
 console.log(`双杀分析接口: http://localhost:${PORT}/shuang_sha_fen_xi`);
 console.log(`倒数2期双杀分析接口: http://localhost:${PORT}/dao_shu_2_qi_shuang_sha_fen_xi`);
 console.log(`倒数2期前区两球组合接口: http://localhost:${PORT}/dao_shu_2_qi_liang_qiu_zu_he`);
 console.log(`倒数2期后区两球组合接口: http://localhost:${PORT}/dao_shu_2_qi_hou_qu_zu_he`);
 console.log(`倒数2期后区两球组合分析接口: http://localhost:${PORT}/dao_shu_2_qi_hou_qu_liang_qiu_zu_he`);
+console.log(`倒数3期前区两球组合接口: http://localhost:${PORT}/dao_shu_3_qi_liang_qiu_zu_he`);
+console.log(`倒数3期后区两球组合接口: http://localhost:${PORT}/dao_shu_3_qi_hou_qu_zu_he`);
 console.log(`====================================`);
     });
   } catch (error) {

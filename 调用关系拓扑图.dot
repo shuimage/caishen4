@@ -1,0 +1,86 @@
+digraph 前后端调用关系拓扑图 {
+    rankdir=TB;
+    
+    // 设置节点样式
+    node [shape=box, style=filled, color=lightblue, fontname="Microsoft YaHei"];
+    
+    // 前端节点
+    subgraph cluster_frontend {
+        label="前端页面 (qian目录)";
+        fontname="Microsoft YaHei";
+        style=filled;
+        color=lightgray;
+        
+        zu_he_xiang_qing_html [label="zu_he_xiang_qing.html"];
+        dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_html [label="dao_shu_2_qi_liang_qiu_zu_he_xiang_qing.html"];
+        san_qiu_zu_he_xiang_qing_html [label="san_qiu_zu_he_xiang_qing.html"];
+        dao_shu_2_qi_liang_qiu_zu_he_html [label="dao_shu_2_qi_liang_qiu_zu_he.html"];
+        dao_shu_2_qi_san_qiu_zu_he_html [label="dao_shu_2_qi_san_qiu_zu_he.html"];
+        san_qiu_xiang_qing_html [label="san_qiu_xiang_qing.html"];
+        san_qiu_fen_xi_html [label="san_qiu_fen_xi.html"];
+        index_html [label="index.html"];
+        sha_hao_fen_xi_html [label="sha_hao_fen_xi.html"];
+        data_js [label="js/data.js"];
+    }
+    
+    // 后端服务器节点
+    subgraph cluster_backend {
+        label="后端服务 (hou目录)";
+        fontname="Microsoft YaHei";
+        style=filled;
+        color=lightgray;
+        
+        server_js [label="server.js\n(端口18889)", shape=box, color=lightgreen];
+        zu_he_xiang_qing_server [label="zu_he_xiang_qing_server.js\n(端口18892)", shape=box, color=lightgreen];
+        dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_server [label="dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_server.js\n(端口18893)", shape=box, color=lightgreen];
+        san_qiu_zu_he_xiang_qing_server [label="san_qiu_zu_he_xiang_qing_server.js\n(端口18894)", shape=box, color=lightgreen];
+        zu_he_xiang_qing_js [label="zu_he_xiang_qing.js"];
+        dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_js [label="路由模块"];
+        san_qiu_zu_he_xiang_qing_js [label="san_qiu_zu_he_xiang_qing.js"];
+    }
+    
+    // 数据库节点
+    db [label="数据库", shape=cylinder, color=lightyellow];
+    
+    // 调用关系
+    // 连接前端到后端
+    zu_he_xiang_qing_html -> zu_he_xiang_qing_server [label="POST /zuhe/zu_he_xiang_qing"];
+    zu_he_xiang_qing_html -> zu_he_xiang_qing_server [label="GET /zu_he_xiang_qing"];
+    dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_html -> dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_server [label="POST /zuhe/dao_shu_2_qi_liang_qiu_zu_he_xiang_qing"];
+    san_qiu_zu_he_xiang_qing_html -> san_qiu_zu_he_xiang_qing_server [label="GET /san_qiu_zu_he_xiang_qing"];
+    
+    // 多个页面调用server.js的接口
+    zu_he_xiang_qing_html -> server_js [label="GET /sql_zui_xin_yi_qi"];
+    dao_shu_2_qi_liang_qiu_zu_he_html -> server_js [label="GET /sql_zui_xin_yi_qi"];
+    dao_shu_2_qi_liang_qiu_zu_he_html -> server_js [label="POST /dao_shu_2_qi_liang_qiu_zu_he"];
+    dao_shu_2_qi_san_qiu_zu_he_html -> server_js [label="GET /sql_zui_xin_yi_qi"];
+    san_qiu_xiang_qing_html -> server_js [label="GET /sql_zui_xin_yi_qi"];
+    san_qiu_fen_xi_html -> server_js [label="GET /sql_zui_xin_yi_qi"];
+    san_qiu_fen_xi_html -> server_js [label="GET /san_qiu_fen_xi"];
+    index_html -> server_js [label="多个接口调用"];
+    sha_hao_fen_xi_html -> server_js [label="GET /sql_zui_xin_yi_qi"];
+    sha_hao_fen_xi_html -> server_js [label="GET /dao_shu_2_qi_shuang_sha_fen_xi"];
+    
+    // 后端服务器与路由模块的关系
+    zu_he_xiang_qing_server -> zu_he_xiang_qing_js [label="导入并使用"];
+    dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_server -> dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_js [label="包含路由逻辑"];
+    san_qiu_zu_he_xiang_qing_server -> san_qiu_zu_he_xiang_qing_js [label="导入并使用"];
+    
+    // 后端服务连接数据库
+    server_js -> db [label="查询"];
+    zu_he_xiang_qing_js -> db [label="查询"];
+    dao_shu_2_qi_liang_qiu_zu_he_xiang_qing_js -> db [label="查询"];
+    san_qiu_zu_he_xiang_qing_js -> db [label="查询"];
+    
+    // 添加图例
+    subgraph cluster_legend {
+        label="图例";
+        fontname="Microsoft YaHei";
+        style=dashed;
+        
+        frontend_legend [label="前端页面", shape=box, style=filled, color=lightblue];
+        backend_legend [label="后端服务", shape=box, style=filled, color=lightgreen];
+        db_legend [label="数据库", shape=cylinder, style=filled, color=lightyellow];
+        arrow_legend [label="API调用"];
+    }
+}

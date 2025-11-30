@@ -114,6 +114,11 @@ body.dark-theme .blue-ball {
   color: white !important;
 }
 
+body.dark-theme .combo-ball {
+  background-color: #A462F8 !important; /* 使用原始紫色 */
+  color: white !important;
+}
+
 /* 深色主题下的表格样式优化 */
 body.dark-theme table {
   border-color: var(--border-color);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大乐透统计分析 - 三球组合详情</title>
+  <title>大乐透统计分析 - 倒数3期三球组合详情</title>
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -31,19 +31,18 @@
               <span class="nav-icon">✗</span>
               <a href="dao_shu_3_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期两球组合分析</a>
             </li>
-            <li class="nav-item active">
+            <li class="nav-item">
               <span class="nav-icon">🔺</span>
-              <span>最新1期三球组合分析</span>
+              <span onclick="window.location.href='san_qiu_fen_xi.html'">最新1期三球组合分析</span>
             </li>
             <li class="nav-item">
               <span class="nav-icon">🔻</span>
               <span onclick="window.location.href='dao_shu_2_qi_san_qiu_zu_he.html'">倒数2期三球组合分析</span>
             </li>
-            <li class="nav-item">
+            <li class="nav-item active">
               <span class="nav-icon">🔹</span>
-              <a href="dao_shu_3_qi_san_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期三球组合分析</a>
+              <span onclick="window.location.href='dao_shu_3_qi_san_qiu_zu_he.html'">倒数3期三球组合分析</span>
             </li>
-
           </ul>
         </nav>
         
@@ -71,16 +70,16 @@
       <!-- 右侧主内容区 -->
       <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h1 class="page-title">最新1期三球组合详情</h1>
+          <h1 class="page-title">倒数3期三球组合详情</h1>
           <div style="display: flex; gap: 10px; align-items: center;">
             <button class="btn back-btn" onclick="window.history.back()">返回</button>
           </div>
         </div>
     
-        <!-- 最新开奖信息 -->
+        <!-- 倒数3期开奖信息 -->
         <div class="section">
-          <h3>最新开奖信息</h3>
-          <div id="latestDrawInfo">
+          <h3>倒数3期开奖信息</h3>
+          <div id="thirdLastDrawInfo">
             <!-- 数据将通过JavaScript动态生成 -->
           </div>
         </div>
@@ -99,8 +98,8 @@
                 <th>组合出现的期号</th>
                 <th>开奖日期</th>
                 <th>前区开奖号</th>
-                <th>下一期开奖期号</th>
-                <th>下一期前区开奖号</th>
+                <th>下下下期开奖期号</th>
+                <th>下下下期前区开奖号</th>
               </tr>
             </thead>
             <tbody id="combinationRecords">
@@ -150,41 +149,41 @@
       return { combination: formattedCombination, targetNumber, statsRange };
     }
     
-    // 从接口获取最新开奖信息
-    async function huo_qu_zui_xin_kai_jiang() {
+    // 从接口获取倒数3期开奖信息
+    async function huo_qu_dao_shu_3_qi_kai_jiang() {
       try {
-        const response = await fetch('http://localhost:18889/sql_zui_xin_yi_qi');
+        const response = await fetch('http://localhost:18889/sql_dao_shu_3_qi');
         const result = await response.json();
         
-        if (result && result.success && result.latestDraw) {
-          return result.latestDraw;
+        if (result && result.success && result.thirdLastDraw) {
+          return result.thirdLastDraw;
         } else {
           console.error('接口返回数据格式不正确:', result);
-          alert('获取开奖数据失败');
+          alert('获取倒数3期开奖数据失败');
           return null;
         }
       } catch (error) {
-        console.error('获取开奖数据失败:', error);
+        console.error('获取倒数3期开奖数据失败:', error);
         alert('接口失败');
         return null;
       }
     }
     
-    // 从接口获取三球组合详情数据
-    async function huo_qu_san_qiu_zu_he_xiang_qing(combination, statsRange) {
+    // 从接口获取倒数3期三球组合详情数据
+    async function huo_qu_dao_shu_3_qi_san_qiu_zu_he_xiang_qing(combination, statsRange, targetNumber) {
       try {
-        const response = await fetch(`http://localhost:18889/san_qiu_zu_he_xiang_qing?combination=${combination}&period=${statsRange}`);
+        const response = await fetch(`http://localhost:18889/dao_shu_3_qi_san_qiu_zu_he_xiang_qing?combination=${combination}&number=${targetNumber}&period=${statsRange}`);
         const result = await response.json();
         
         if (result && result.success) {
           return result.data;
         } else {
-          alert('接口失败');
+          alert('获取三球组合详情数据失败：' + result.message);
           return null;
         }
       } catch (error) {
         console.error('获取三球组合详情数据失败:', error);
-        alert('接口失败');
+        alert('获取三球组合详情数据失败');
         return null;
       }
     }
@@ -194,30 +193,29 @@
       document.querySelector('.current-period').textContent = period;
     }
     
-    // 渲染最新开奖信息
-    function renderLatestDrawInfo(latestDraw) {
-      if (!latestDraw) return;
+    // 渲染倒数3期开奖信息
+    function renderThirdLastDrawInfo(thirdLastDraw) {
+      if (!thirdLastDraw) return;
       
-      const latestDrawInfo = document.getElementById('latestDrawInfo');
+      const thirdLastDrawInfo = document.getElementById('thirdLastDrawInfo');
+      
       // 处理日期格式，只显示年月日
-      let formattedDate = latestDraw.drawDate || latestDraw.draw_date;
+      let formattedDate = thirdLastDraw.drawDate || thirdLastDraw.draw_date;
       if (formattedDate && typeof formattedDate === 'string') {
         // 处理ISO格式日期
         if (formattedDate.includes('T')) {
           formattedDate = formattedDate.split('T')[0];
-        }
-        // 处理包含空格的日期
-        else if (formattedDate.includes(' ')) {
+        } else if (formattedDate.includes(' ')) {
           formattedDate = formattedDate.split(' ')[0];
         }
       }
       
       // 获取前区和后区号码
-      const firstZoneNumbers = latestDraw.firstZoneNumbers || latestDraw.red || [];
-      const lastZoneNumbers = latestDraw.lastZoneNumbers || latestDraw.blue || [];
+      const firstZoneNumbers = thirdLastDraw.firstZoneNumbers || thirdLastDraw.red || [];
+      const lastZoneNumbers = thirdLastDraw.lastZoneNumbers || thirdLastDraw.blue || [];
       
-      latestDrawInfo.innerHTML = `
-        <p>期号：${latestDraw.period || latestDraw.issue} 开奖日期：${formattedDate} 前区号码：${Array.isArray(firstZoneNumbers) ? firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : firstZoneNumbers} 后区号码：${Array.isArray(lastZoneNumbers) ? lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : lastZoneNumbers}</p>
+      thirdLastDrawInfo.innerHTML = `
+        <p>期号：${thirdLastDraw.period || thirdLastDraw.issue} 开奖日期：${formattedDate} 前区号码：${Array.isArray(firstZoneNumbers) ? firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : firstZoneNumbers} 后区号码：${Array.isArray(lastZoneNumbers) ? lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : lastZoneNumbers}</p>
       `;
     }
     
@@ -263,16 +261,23 @@
       // 组合显示格式
       const combinationDisplay = combination.split('-').join('、');
       
-      // 过滤数据：如果有目标球，只保留目标球在下一期前区开奖号中出现的记录
+      // 过滤数据：如果有目标球，只保留目标球在下下下期前区开奖号中出现的记录
+      // 但如果过滤后没有数据，显示所有记录
       let filteredData = combinationData && combinationData.occurrenceDetails ? combinationData.occurrenceDetails : [];
+      let originalData = [...filteredData]; // 保存原始数据
       if (targetNumber && targetNumber.trim() !== '') {
         const targetNum = parseInt(targetNumber);
         filteredData = filteredData.filter(record => {
-          if (record && record.nextPeriodFrontNumbers && Array.isArray(record.nextPeriodFrontNumbers)) {
-            return record.nextPeriodFrontNumbers.includes(targetNum);
+          if (record && record.nextNextNextFrontNumbers && Array.isArray(record.nextNextNextFrontNumbers)) {
+            return record.nextNextNextFrontNumbers.includes(targetNum);
           }
           return false;
         });
+        
+        // 如果过滤后没有数据，显示所有记录
+        if (filteredData.length === 0) {
+          filteredData = originalData;
+        }
       }
       
       // 检查数据是否为空
@@ -437,14 +442,9 @@
           // 高亮显示前区号码中的组合球
           const frontNumbers = highlightThreeBalls(record.frontNumbers, comboBalls);
           
-          // 后区号码显示
-          const backNumbers = record.backNumbers ? 
-            record.backNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : 
-            '暂无数据';
-          
-          // 处理下一期前区号码显示 - 确保正确突出显示目标球
-          const nextPeriodFrontNumbersDisplay = record.nextPeriodFrontNumbers ? 
-            highlightTargetBall(record.nextPeriodFrontNumbers, targetNumber) : 
+          // 处理下下下期前区号码显示 - 确保正确突出显示目标球
+          const nextNextNextFrontNumbersDisplay = record.nextNextNextFrontNumbers ? 
+            highlightTargetBall(record.nextNextNextFrontNumbers, targetNumber) : 
             '暂无数据';
           
           tr.innerHTML = `
@@ -452,8 +452,8 @@
             <td>${record.period}</td>
             <td>${formattedDate || '暂无数据'}</td>
             <td>${frontNumbers}</td>
-            <td>${record.nextPeriod || '暂无数据'}</td>
-            <td>${nextPeriodFrontNumbersDisplay}</td>
+            <td>${record.nextNextNextPeriod || '暂无数据'}</td>
+            <td>${nextNextNextFrontNumbersDisplay}</td>
           `;
           combinationRecords.appendChild(tr);
         });
@@ -474,21 +474,21 @@
         periodDropdown.value = statsRange;
       }
       
-      // 1. 先获取最新开奖信息
-      const latestDraw = await huo_qu_zui_xin_kai_jiang();
-      if (!latestDraw) {
-        // 如果获取最新开奖信息失败，就不再继续
+      // 1. 先获取倒数3期开奖信息
+      const thirdLastDraw = await huo_qu_dao_shu_3_qi_kai_jiang();
+      if (!thirdLastDraw) {
+        // 如果获取倒数3期开奖信息失败，就不再继续
         return;
       }
       
       // 更新顶部期数显示
-      updateCurrentPeriod(latestDraw.period || latestDraw.issue);
+      updateCurrentPeriod(thirdLastDraw.period || thirdLastDraw.issue);
       
-      // 渲染最新开奖信息
-      renderLatestDrawInfo(latestDraw);
+      // 渲染倒数3期开奖信息
+      renderThirdLastDrawInfo(thirdLastDraw);
       
       // 2. 获取三球组合详情数据
-      const combinationData = await huo_qu_san_qiu_zu_he_xiang_qing(combination, statsRange);
+      const combinationData = await huo_qu_dao_shu_3_qi_san_qiu_zu_he_xiang_qing(combination, statsRange, targetNumber);
       
       if (combinationData !== null) { // 只有当不是null时才渲染（如果是null表示接口失败已经提示过了）
         renderCombinationData(combinationData, combination, targetNumber, statsRange);
