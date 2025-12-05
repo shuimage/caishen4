@@ -6,14 +6,14 @@ const router = express.Router();
 
 /**
  * 获取前区三球组合下一期出现统计数据（已删除后区功能）
- * @param {string} period - 统计周期（35, 50, 100, 200, 300, 500, 1000）
+ * @param {string} stats_period - 统计周期（35, 50, 100, 200, 300, 500, 1000）
  * @returns {Promise<Object>} 包含最新开奖数据和三球组合统计的结果
  */
-async function getTripleKillAnalysis(period) { // 函数名可修改为更贴合三球的名称
+async function getTripleKillAnalysis(stats_period) { // 函数名可修改为更贴合三球的名称
   try {
     // 1. 参数验证（逻辑不变，仅删除后区相关验证）
-    if (period !== 'all' && (isNaN(period) || parseInt(period) <= 0)) {
-      throw new Error('无效的周期参数，必须是正整数或"all"');
+    if (stats_period !== 'all' && (isNaN(stats_period) || parseInt(stats_period) <= 0)) {
+      throw new Error('无效的统计周期参数，必须是正整数或"all"');
     }
 
     // 2. 获取最新一期开奖数据（仅保留前区逻辑）
@@ -57,8 +57,8 @@ async function getTripleKillAnalysis(period) { // 函数名可修改为更贴合
 
     // 4. 获取历史数据（逻辑不变，仅查询前区相关数据）
     let historyData;
-    console.log('准备查询历史数据，period:', period);
-    if (period === 'all') {
+    console.log('准备查询历史数据，stats_period:', stats_period);
+    if (stats_period === 'all') {
       const historySql = `
         SELECT * 
         FROM lottery_results 
@@ -67,7 +67,7 @@ async function getTripleKillAnalysis(period) { // 函数名可修改为更贴合
       `;
       historyData = await query(historySql);
     } else {
-      const limit = parseInt(period);
+      const limit = parseInt(stats_period);
       const historySql = `
         SELECT * 
         FROM lottery_results 
@@ -215,23 +215,23 @@ async function getTripleKillAnalysis(period) { // 函数名可修改为更贴合
  * 前区三球组合分析接口
  * @route GET /san_qiu_fen_xi
  * @group 数据分析 - 前区三球组合相关接口
- * @param {string} period.query.required - 统计周期 (35, 50, 100, 200, 300, 500, 1000)
+ * @param {string} stats_period.query.required - 统计周期 (35, 50, 100, 200, 300, 500, 1000)
  * @returns {object} 200 - 成功响应，包含最新开奖数据和三球组合统计
  * @returns {object} 400 - 参数错误
  * @returns {object} 500 - 服务器内部错误
  */
 router.get('/', async (req, res) => {
   try {
-    const { period } = req.query;
+    const { stats_period } = req.query;
     
-    if (!period) {
+    if (!stats_period) {
       return res.status(400).json({
         success: false,
-        message: '缺少必需参数：period'
+        message: '缺少必需参数：stats_period'
       });
     }
 
-    const result = await getTripleKillAnalysis(period);
+    const result = await getTripleKillAnalysis(stats_period);
     
     res.status(200).json({
       success: true,

@@ -155,6 +155,7 @@
                   加载中...
                 </div>
               </div>
+              <div style="margin-top: 10px; color: #DF2220; cursor: pointer; text-decoration: underline;" onclick="window.location.href='dao_shu_2_qi_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=' + periodValue">查看回测结果</div>
             </div>
           </div>
 
@@ -169,6 +170,7 @@
                   加载中...
                 </div>
               </div>
+              <div style="margin-top: 10px; color: #DF2220; cursor: pointer; text-decoration: underline;" onclick="goToBacktestHouPage()">查看回测结果</div>
             </div>
           </div>
         </div>
@@ -1140,8 +1142,19 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_2_qi_ho
       sidebar.classList.toggle('open');
     }
     
-    // 导航项点击事件
+    // 跳转到后区回测页面
+    function goToBacktestHouPage() {
+      window.location.href = `dao_shu_2_qi_hou_qu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
+    }
+    
+    // 导航项点击事件 - 只处理没有<a>标签的导航项，避免与默认<a>标签事件冲突
     document.querySelectorAll('.nav-item').forEach(item => {
+      // 检查当前导航项是否包含<a>标签，如果包含则跳过，使用<a>标签的默认行为
+      const hasLink = item.querySelector('a') !== null;
+      if (hasLink) {
+        return; // 跳过包含<a>标签的导航项
+      }
+      
       item.addEventListener('click', function() {
         // 移除所有导航项的活动状态
         document.querySelectorAll('.nav-item').forEach(navItem => {
@@ -1165,7 +1178,7 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_2_qi_ho
             window.location.href = 'dao_shu_3_qi_liang_qiu_zu_he.html';
           } else {
             console.log('跳转到最新1期两球组合分析页面');
-            window.location.href = 'zu_he_xiang_qing.html';
+            window.location.href = 'sha_hao_fen_xi.html';
           }
         } else if (navText.includes('三球') || navText.includes('三区')) {
           // 检查是否包含"倒数2期"或"倒数3期"以区分不同的三球组合分析页面

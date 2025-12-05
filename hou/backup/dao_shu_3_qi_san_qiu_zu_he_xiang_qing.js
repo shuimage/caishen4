@@ -4,13 +4,13 @@ const { query } = require('./数据库配置.js');
 const router = express.Router();
 
 /**
- * 获取最新1期三球组合详情数据
+ * 获取倒数3期三球组合详情数据
  * @param {string} combination - 三球组合（格式：1-2-3）
  * @param {string} targetNumber - 目标球
  * @param {string} period - 统计期数
  * @returns {Promise<Object>} 包含组合详情数据的响应
  */
-async function getSanQiuZuHeXiangQing(combination, targetNumber, period) {
+async function getDaoShu3QiSanQiuZuHeXiangQing(combination, targetNumber, period) {
   try {
     // 1. 参数验证
     if (!combination) {
@@ -40,7 +40,7 @@ async function getSanQiuZuHeXiangQing(combination, targetNumber, period) {
     const rows = await query(sql);
     console.log('历史数据查询完成，共获取', rows.length, '条记录');
     
-    // 4. 创建bian_hao到数据的映射，方便快速查找下一期数据
+    // 4. 创建bian_hao到数据的映射，方便快速查找下下下期数据
     const bianHaoToDataMap = new Map();
     const idToDataMap = new Map();
     
@@ -71,7 +71,7 @@ async function getSanQiuZuHeXiangQing(combination, targetNumber, period) {
       
       comboCount++;
       
-      // 使用bian_hao字段查找下一期数据
+      // 使用bian_hao字段查找下下下期数据
       // 从bian_hao中提取数字部分，比如"00005" -> 5
       const currentBianHao = row.bian_hao;
       if (!currentBianHao) {
@@ -84,33 +84,33 @@ async function getSanQiuZuHeXiangQing(combination, targetNumber, period) {
         return;
       }
       
-      // 转换为数字，加1，然后转换回字符串，保持相同的位数
+      // 转换为数字，加3，然后转换回字符串，保持相同的位数
       const currentNum = parseInt(numericPart);
-      const nextNum = currentNum + 1;
+      const nextNextNextNum = currentNum + 3;
       
       // 转换回字符串，保持相同的位数
-      const nextNumericPart = nextNum.toString().padStart(numericPart.length, '0');
+      const nextNextNextNumericPart = nextNextNextNum.toString().padStart(numericPart.length, '0');
       
-      // 构建下一期的bian_hao（保留原始前缀）
+      // 构建下下下期的bian_hao（保留原始前缀）
       const prefix = currentBianHao.replace(numericPart, '');
-      const nextBianHao = prefix + nextNumericPart;
+      const nextNextNextBianHao = prefix + nextNextNextNumericPart;
       
-      // 使用构建的下一期bian_hao查找数据
-      const nextData = bianHaoToDataMap.get(nextBianHao);
+      // 使用构建的下下下期bian_hao查找数据
+      const nextNextNextData = bianHaoToDataMap.get(nextNextNextBianHao);
       
-      // 如果找不到下一期数据，跳过
-      if (!nextData) {
+      // 如果找不到下下下期数据，跳过
+      if (!nextNextNextData) {
         return;
       }
       
-      // 解析下一期前区号码
-      let nextRedNumbers = [];
-      if (Array.isArray(nextData.red)) {
-        nextRedNumbers = nextData.red.map(num => typeof num === 'string' ? parseInt(num) : num);
-      } else if (typeof nextData.red === 'string') {
-        const numbers = nextData.red.match(/\d+/g);
+      // 解析下下下期前区号码
+      let nextNextNextRedNumbers = [];
+      if (Array.isArray(nextNextNextData.red)) {
+        nextNextNextRedNumbers = nextNextNextData.red.map(num => typeof num === 'string' ? parseInt(num) : num);
+      } else if (typeof nextNextNextData.red === 'string') {
+        const numbers = nextNextNextData.red.match(/\d+/g);
         if (numbers) {
-          nextRedNumbers = numbers.map(num => parseInt(num));
+          nextNextNextRedNumbers = numbers.map(num => parseInt(num));
         }
       }
       
@@ -119,16 +119,16 @@ async function getSanQiuZuHeXiangQing(combination, targetNumber, period) {
         period: row.issue,
         drawDate: row.draw_date,
         frontNumbers: currentRedNumbers,
-        nextPeriod: nextData.issue,
-        nextPeriodFrontNumbers: nextRedNumbers
+        nextNextNextPeriod: nextNextNextData.issue,
+        nextNextNextFrontNumbers: nextNextNextRedNumbers
       });
     });
     
     // 5. 计算统计数据
-    const nextNumberCounts = {};
+    const nextNextNextNumberCounts = {};
     comboOccurrences.forEach(record => {
-      record.nextPeriodFrontNumbers.forEach(num => {
-        nextNumberCounts[num] = (nextNumberCounts[num] || 0) + 1;
+      record.nextNextNextFrontNumbers.forEach(num => {
+        nextNextNextNumberCounts[num] = (nextNextNextNumberCounts[num] || 0) + 1;
       });
     });
     
@@ -140,23 +140,23 @@ async function getSanQiuZuHeXiangQing(combination, targetNumber, period) {
         targetBall: targetNumber,
         comboCount: comboCount,
         statsPeriod: statsPeriod,
-        nextNumberCounts: nextNumberCounts,
+        nextNextNextNumberCounts: nextNextNextNumberCounts,
         occurrenceDetails: comboOccurrences
       }
     };
     
-    console.log('最新1期三球组合详情数据处理完成');
+    console.log('倒数3期三球组合详情数据处理完成');
     return result;
   } catch (error) {
-    console.error('获取最新1期三球组合详情数据失败:', error);
+    console.error('获取倒数3期三球组合详情数据失败:', error);
     return { success: false, message: error.message };
   }
 }
 
 /**
- * 最新1期三球组合详情接口
- * @route GET /san_qiu_zu_he_xiang_qing
- * @group 数据分析 - 最新1期三球组合相关接口
+ * 倒数3期三球组合详情接口
+ * @route GET /dao_shu_3_qi_san_qiu_zu_he_xiang_qing
+ * @group 数据分析 - 倒数3期三球组合相关接口
  * @param {string} combination.query.required - 三球组合（格式：1-2-3）
  * @param {string} number.query - 目标球
  * @param {string} period.query - 统计期数 (35, 50, 100, 200, 300, 500, 1000, all)
@@ -175,7 +175,7 @@ router.get('/', async (req, res) => {
       });
     }
     
-    const result = await getSanQiuZuHeXiangQing(combination, number, period);
+    const result = await getDaoShu3QiSanQiuZuHeXiangQing(combination, number, period);
     
     res.status(200).json(result);
   } catch (error) {

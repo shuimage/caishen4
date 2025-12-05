@@ -130,8 +130,11 @@
 
           <!-- 前区推荐杀号 -->
           <div class="section" style="flex: 1; min-width: 200px;">
-            <div class="section-header" style="margin-bottom: 10px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
               <h3 style="margin: 0;">前区推荐杀号</h3>
+              <div>
+                <a href="dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=100" style="color: #1890ff; text-decoration: none;">查看回测结果</a>
+              </div>
             </div>
             <div class="kill-numbers-container" id="firstZoneKillNumbersContainer">
               <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
@@ -147,8 +150,11 @@
         <div class="section">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">前区三球组合统计</h3>
-            <div style="color: #DF2220;">
-              <!-- 统计信息将通过JavaScript动态生成 -->
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <div style="color: #DF2220;">
+                <!-- 统计信息将通过JavaScript动态生成 -->
+              </div>
+              <button class="btn back-btn" onclick="window.location.href='dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=100'">查看回测结果</button>
             </div>
           </div>
           <div style="overflow-x: auto;">
@@ -541,6 +547,42 @@
       }
     }
     
+    // 获取当前选择的统计范围期数
+    function getSelectedStatsRange() {
+      const periodDropdown = document.querySelector('.period-dropdown');
+      if (periodDropdown) {
+        const selectedText = periodDropdown.value;
+        if (selectedText === '最近100期') return '100';
+        else if (selectedText === '最近50期') return '50';
+        else if (selectedText === '最近35期') return '35';
+        else if (selectedText === '最近200期') return '200';
+        else if (selectedText === '最近300期') return '300';
+        else if (selectedText === '最近500期') return '500';
+        else if (selectedText === '最近1000期') return '1000';
+        else if (selectedText === '全部期') return 'all';
+      }
+      return '100'; // 默认值
+    }
+    
+    // 更新所有"查看回测结果"链接和按钮的参数
+    function updateBacktestLinks() {
+      const statsPeriod = getSelectedStatsRange();
+      
+      // 更新前区推荐杀号区域的"查看回测结果"链接
+      const backtestLink1 = document.querySelector('#firstZoneKillNumbersContainer + div a');
+      if (backtestLink1) {
+        backtestLink1.href = `dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
+      }
+      
+      // 更新前区三球组合统计区域的"查看回测结果"按钮
+      const backtestButton = document.querySelector('#firstZoneCombinations + div button');
+      if (backtestButton) {
+        backtestButton.onclick = function() {
+          window.location.href = `dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
+        };
+      }
+    }
+    
     // 页面加载完成后渲染数据
     window.addEventListener('load', async function() {
       renderTableHeaders();
@@ -562,6 +604,9 @@
       
       // 渲染倒数3期三球组合分析数据
       await renderDaoShu3QiSanQiuAnalysisData(periodValue);
+      
+      // 更新所有"查看回测结果"链接和按钮的参数
+      updateBacktestLinks();
       
       // 为统计范围下拉选择框添加事件监听器
       const periodDropdown = document.querySelector('.period-dropdown');
@@ -585,6 +630,9 @@
           
           // 根据选择的统计范围重新渲染数据
           renderDaoShu3QiSanQiuAnalysisData(periodValue);
+          
+          // 更新所有"查看回测结果"链接和按钮的参数
+          updateBacktestLinks();
         });
       }
     });
@@ -595,8 +643,14 @@
       sidebar.classList.toggle('open');
     }
     
-    // 导航项点击事件
+    // 导航项点击事件 - 只处理没有<a>标签的导航项，避免与默认<a>标签事件冲突
     document.querySelectorAll('.nav-item').forEach(item => {
+      // 检查当前导航项是否包含<a>标签，如果包含则跳过，使用<a>标签的默认行为
+      const hasLink = item.querySelector('a') !== null;
+      if (hasLink) {
+        return; // 跳过包含<a>标签的导航项
+      }
+      
       item.addEventListener('click', function() {
         // 移除所有导航项的活动状态
         document.querySelectorAll('.nav-item').forEach(navItem => {
@@ -620,7 +674,7 @@
             window.location.href = 'dao_shu_3_qi_liang_qiu_zu_he.html';
           } else {
             console.log('跳转到最新1期两球组合分析页面');
-            window.location.href = 'zu_he_xiang_qing.html';
+            window.location.href = 'sha_hao_fen_xi.html';
           }
         } else if (navText.includes('三球') || navText.includes('三区')) {
           // 检查是否包含"倒数2期"或"倒数3期"以区分不同的三球组合分析页面

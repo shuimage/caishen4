@@ -86,8 +86,24 @@
         <!-- 前区推荐杀号 -->
         <div class="section" style="flex: 0.5;">
           <h3>前区推荐杀号：</h3>
+          <!-- 回测期数下拉选项（隐藏） -->
+          <div style="margin-bottom: 10px; display: none;">
+            <label for="backtestPeriod" style="margin-right: 10px;">回测期数：</label>
+            <select id="backtestPeriod" class="period-dropdown">
+              <option value="50">50期</option>
+              <option value="100">100期</option>
+              <option value="200">200期</option>
+              <option value="300">300期</option>
+              <option value="500">500期</option>
+              <option value="1000">1000期</option>
+              <option value="all">全部期</option>
+            </select>
+          </div>
           <div id="firstZoneRecommendations" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
             <!-- 数据将通过JavaScript动态生成 -->
+          </div>
+          <div style="margin-top: 10px; text-align: center;">
+            <a href="san_qiu_sha_hao_hui_ce_xiang_qing.html" style="color: #1890ff; text-decoration: none;">查看回测结果</a>
           </div>
         </div>
       </div>
@@ -95,7 +111,22 @@
       <!-- 前区三球组合统计 -->
       <div class="section">
         <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-          <h3 style="margin: 0;">前区三球组合统计</h3>
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <h3 style="margin: 0;">前区三球组合统计</h3>
+            <!-- 统计期数下拉选项（隐藏） -->
+            <div style="display: flex; align-items: center; gap: 10px; display: none;">
+              <label for="statsPeriod">统计期数：</label>
+              <select id="statsPeriod" class="period-dropdown">
+                <option value="50">50期</option>
+                <option value="100" selected>100期</option>
+                <option value="200">200期</option>
+                <option value="300">300期</option>
+                <option value="500">500期</option>
+                <option value="1000">1000期</option>
+                <option value="all">全部期</option>
+              </select>
+            </div>
+          </div>
           <div style="color: #DF2220;">
             <!-- 统计信息将通过JavaScript动态生成 -->
           </div>
@@ -202,9 +233,9 @@
   </script>
   <script>
     // 从后端获取三球组合分析数据
-    async function huo_qu_san_qiu_fen_xi(period = '100') {
+    async function huo_qu_san_qiu_fen_xi(statsPeriod = '100') {
       try {
-        const response = await fetch(`http://localhost:18889/san_qiu_fen_xi?period=${period}`);
+        const response = await fetch(`http://localhost:18889/san_qiu_fen_xi?stats_period=${statsPeriod}`);
         const result = await response.json();
         
         if (result.success) {
@@ -221,9 +252,9 @@
     }
     
     // 渲染三球组合分析数据
-    async function renderThreeBallAnalysisData(period = '100') {
+    async function renderThreeBallAnalysisData(statsPeriod = '100') {
       // 获取三球组合分析数据
-      const analysisData = await huo_qu_san_qiu_fen_xi(period);
+      const analysisData = await huo_qu_san_qiu_fen_xi(statsPeriod);
       
       if (!analysisData) {
         // 接口调用失败，不使用模拟数据
@@ -348,14 +379,41 @@
           const totalOccurrences = analysisData.frontCombinations.reduce((sum, combo) => sum + combo.count, 0);
           
           firstZoneSection.querySelector('.section-header').innerHTML = `
-            <h3 style="margin: 0;">前区三球组合统计</h3>
+            <div style="display: flex; align-items: center; gap: 15px;">
+              <h3 style="margin: 0;">前区三球组合统计</h3>
+              <!-- 统计期数下拉选项 -->
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <label for="statsPeriod">统计期数：</label>
+                <select id="statsPeriod" class="period-dropdown">
+                  <option value="50" ${statsPeriod === '50' ? 'selected' : ''}>50期</option>
+                  <option value="100" ${statsPeriod === '100' ? 'selected' : ''}>100期</option>
+                  <option value="200" ${statsPeriod === '200' ? 'selected' : ''}>200期</option>
+                  <option value="300" ${statsPeriod === '300' ? 'selected' : ''}>300期</option>
+                  <option value="500" ${statsPeriod === '500' ? 'selected' : ''}>500期</option>
+                  <option value="1000" ${statsPeriod === '1000' ? 'selected' : ''}>1000期</option>
+                  <option value="all" ${statsPeriod === 'all' ? 'selected' : ''}>全部期</option>
+                </select>
+              </div>
+            </div>
             <div style="color: #DF2220;">
               共有${analysisData.frontCombinations.length}种前区三球组合，
               总计出现${totalOccurrences}次，
-              数据范围：${period === 'all' ? '全部期' : `最近${period}期`}
+              数据范围：${statsPeriod === 'all' ? '全部期' : `最近${statsPeriod}期`}
             </div>
           `;
         }
+        
+        // 更新查看回测结果链接
+        updateBacktestLink();
+    }
+    
+    // 更新查看回测结果链接
+    function updateBacktestLink() {
+      const statsPeriod = document.getElementById('statsPeriod').value;
+      const backtestLink = document.querySelector('a[href*="san_qiu_sha_hao_hui_ce_xiang_qing.html"]');
+      if (backtestLink) {
+        backtestLink.href = `san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
+      }
     }
     
     // 渲染表格头部
@@ -375,80 +433,99 @@
       document.querySelector('.current-period').textContent = period;
     }
     
-    // 保存统计范围到localStorage
-    function savePeriodSelection(periodValue) {
+    // 保存回测期数和统计期数到localStorage
+    function savePeriodSelection(backtestPeriod, statsPeriod) {
       try {
-        localStorage.setItem('selectedPeriodRange', periodValue);
+        localStorage.setItem('backtestPeriod', backtestPeriod);
+        localStorage.setItem('statsPeriod', statsPeriod);
       } catch (e) {
-        console.error('保存统计范围失败:', e);
+        console.error('保存期数设置失败:', e);
       }
     }
     
-    // 从localStorage读取保存的统计范围
+    // 从localStorage读取保存的回测期数和统计期数
     function getSavedPeriodSelection() {
       try {
-        return localStorage.getItem('selectedPeriodRange') || '100';
+        const backtestPeriod = localStorage.getItem('backtestPeriod') || '100';
+        const statsPeriod = localStorage.getItem('statsPeriod') || '100';
+        return { backtestPeriod, statsPeriod };
       } catch (e) {
-        console.error('读取统计范围失败:', e);
-        return '100';
+        console.error('读取期数设置失败:', e);
+        return { backtestPeriod: '100', statsPeriod: '100' };
       }
     }
-    
-    // 根据period值设置下拉框选中状态
-    function setPeriodDropdownSelection(periodValue) {
-      const periodDropdown = document.querySelector('.period-dropdown');
-      if (periodDropdown) {
-        if (periodValue === '100') periodDropdown.value = '最近100期';
-        else if (periodValue === '50') periodDropdown.value = '最近50期';
-        else if (periodValue === '35') periodDropdown.value = '最近35期';
-        else if (periodValue === '200') periodDropdown.value = '最近200期';
-        else if (periodValue === '300') periodDropdown.value = '最近300期';
-        else if (periodValue === '500') periodDropdown.value = '最近500期';
-        else if (periodValue === '1000') periodDropdown.value = '最近1000期';
-        else if (periodValue === 'all') periodDropdown.value = '全部期';
-      }
-    }
-    
-    // 定义全局变量用于存储当前选择的统计范围
-    let periodValue = '100'; // 默认值
     
     // 页面加载完成后渲染数据
     window.addEventListener('load', async function() {
       renderTableHeaders();
       
-      // 获取保存的统计范围，如果没有则使用默认值100
-      periodValue = getSavedPeriodSelection();
+      // 获取保存的统计期数
+      const { statsPeriod } = getSavedPeriodSelection();
       
-      // 设置下拉框选中状态
-      setPeriodDropdownSelection(periodValue);
+      // 获取下拉选项元素
+      const statsPeriodSelect = document.getElementById('statsPeriod');
+      // 获取左侧导航栏的选择统计范围下拉框元素
+      const sidebarPeriodSelect = document.querySelector('.period-selection .period-dropdown');
+      
+      // 设置下拉选项的初始值
+      statsPeriodSelect.value = statsPeriod;
       
       // 首先获取并显示最新开奖信息
       await xuan_ran_zui_xin_kai_jiang();
       
-      // 使用保存的统计范围渲染数据
-      renderThreeBallAnalysisData(periodValue);
+      // 使用保存的统计期数渲染数据
+      renderThreeBallAnalysisData(statsPeriod);
       
-      // 为统计范围下拉选择框添加事件监听器
-      const periodDropdown = document.querySelector('.period-dropdown');
-      if (periodDropdown) {
-        periodDropdown.addEventListener('change', function() {
+      // 为统计期数下拉选择框添加事件监听器
+      statsPeriodSelect.addEventListener('change', function() {
+        const newStatsPeriod = this.value;
+        // 保存选择的统计期数
+        savePeriodSelection('50', newStatsPeriod);
+        // 根据选择的统计期数重新渲染数据
+        renderThreeBallAnalysisData(newStatsPeriod);
+      });
+      
+      // 为左侧导航栏的选择统计范围下拉框添加事件监听器
+      if (sidebarPeriodSelect) {
+        sidebarPeriodSelect.addEventListener('change', function() {
+          // 将左侧导航栏的选择统计范围文本转换为右侧统计期数下拉框的值
           const selectedText = this.value;
+          let newStatsPeriod;
           
-          // 根据选择的文本确定对应的period值
-          if (selectedText === '最近100期') periodValue = '100';
-          else if (selectedText === '最近50期') periodValue = '50';
-          else if (selectedText === '最近35期') periodValue = '35';
-          else if (selectedText === '最近200期') periodValue = '200';
-          else if (selectedText === '最近300期') periodValue = '300';
-          else if (selectedText === '最近500期') periodValue = '500';
-          else if (selectedText === '最近1000期') periodValue = '1000';
-          else if (selectedText === '全部期') periodValue = 'all';
+          switch(selectedText) {
+            case '最近50期':
+              newStatsPeriod = '50';
+              break;
+            case '最近35期':
+              newStatsPeriod = '35';
+              break;
+            case '最近200期':
+              newStatsPeriod = '200';
+              break;
+            case '最近300期':
+              newStatsPeriod = '300';
+              break;
+            case '最近500期':
+              newStatsPeriod = '500';
+              break;
+            case '最近1000期':
+              newStatsPeriod = '1000';
+              break;
+            case '全部期':
+              newStatsPeriod = 'all';
+              break;
+            default:
+              newStatsPeriod = '100';
+          }
           
-          // 保存选择的统计范围
-          savePeriodSelection(periodValue);
+          // 更新右侧的统计期数下拉框的值
+          statsPeriodSelect.value = newStatsPeriod;
           
-          // 根据选择的统计范围重新渲染数据
-          renderThreeBallAnalysisData(periodValue);
+          // 保存选择的统计期数
+          savePeriodSelection('50', newStatsPeriod);
+          
+          // 根据选择的统计期数重新渲染数据
+          renderThreeBallAnalysisData(newStatsPeriod);
         });
       }
       
@@ -462,8 +539,14 @@
       sidebar.classList.toggle('open');
     }
     
-    // 导航项点击事件
+    // 导航项点击事件 - 只处理没有<a>标签的导航项，避免与默认<a>标签事件冲突
     document.querySelectorAll('.nav-item').forEach(item => {
+      // 检查当前导航项是否包含<a>标签，如果包含则跳过，使用<a>标签的默认行为
+      const hasLink = item.querySelector('a') !== null;
+      if (hasLink) {
+        return; // 跳过包含<a>标签的导航项
+      }
+      
       item.addEventListener('click', function() {
         // 移除所有导航项的活动状态
         document.querySelectorAll('.nav-item').forEach(navItem => {
@@ -479,12 +562,9 @@
         // 使用更精确的匹配，优先检查特定的导航项
         let navTextContent;
         const spanElement = this.querySelector('span:not(.nav-icon)');
-        const aElement = this.querySelector('a');
         
         if (spanElement) {
           navTextContent = spanElement.textContent.trim();
-        } else if (aElement) {
-          navTextContent = aElement.textContent.trim();
         } else {
           navTextContent = this.textContent.trim();
         }

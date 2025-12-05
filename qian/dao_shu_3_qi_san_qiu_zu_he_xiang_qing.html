@@ -541,8 +541,14 @@
       sidebar.classList.toggle('open');
     }
     
-    // 导航项点击事件
+    // 导航项点击事件 - 只处理没有<a>标签的导航项，避免与默认<a>标签事件冲突
     document.querySelectorAll('.nav-item').forEach(item => {
+      // 检查当前导航项是否包含<a>标签，如果包含则跳过，使用<a>标签的默认行为
+      const hasLink = item.querySelector('a') !== null;
+      if (hasLink) {
+        return; // 跳过包含<a>标签的导航项
+      }
+      
       item.addEventListener('click', function() {
         // 移除所有导航项的活动状态
         document.querySelectorAll('.nav-item').forEach(navItem => {
