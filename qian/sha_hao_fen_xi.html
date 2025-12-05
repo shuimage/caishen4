@@ -96,6 +96,7 @@
           <div id="firstZoneRecommendations" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
             <!-- 数据将通过JavaScript动态生成 -->
           </div>
+          <div style="margin-top: 10px; color: #DF2220; cursor: pointer; text-decoration: underline;" onclick="goToBacktestPage()">查看回测结果</div>
         </div>
         
         <!-- 后区推荐杀号 -->
@@ -104,6 +105,7 @@
           <div id="lastZoneRecommendations" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
             <!-- 数据将通过JavaScript动态生成 -->
           </div>
+          <div style="margin-top: 10px; color: #DF2220; cursor: pointer; text-decoration: underline;" onclick="goToBacktestHouPage()">查看回测结果</div>
         </div>
       </div>
       
@@ -154,7 +156,6 @@
           </table>
         </div>
       </div>
-      
       
       </div>
     </div>
@@ -469,14 +470,49 @@
       
     });
     
+    // 跳转到前区回测页面
+    function goToBacktestPage() {
+      const statsPeriod = getSelectedStatsRange();
+      window.location.href = `sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
+    }
+    
+    // 跳转到后区回测页面
+    function goToBacktestHouPage() {
+      const statsPeriod = getSelectedStatsRange();
+      window.location.href = `sha_hao_hui_ce_hou_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
+    }
+    
+    // 获取当前选择的统计范围期数
+    function getSelectedStatsRange() {
+      const periodDropdown = document.querySelector('.period-dropdown');
+      if (periodDropdown) {
+        const selectedText = periodDropdown.value;
+        if (selectedText === '最近100期') return '100';
+        else if (selectedText === '最近50期') return '50';
+        else if (selectedText === '最近35期') return '35';
+        else if (selectedText === '最近200期') return '200';
+        else if (selectedText === '最近300期') return '300';
+        else if (selectedText === '最近500期') return '500';
+        else if (selectedText === '最近1000期') return '1000';
+        else if (selectedText === '全部期') return 'all';
+      }
+      return '100'; // 默认值
+    }
+    
     // 移动端侧边栏切换
     function toggleSidebar() {
       const sidebar = document.querySelector('.left-sidebar');
       sidebar.classList.toggle('open');
     }
     
-    // 导航项点击事件
+    // 导航项点击事件 - 只处理没有<a>标签的导航项，避免与默认<a>标签事件冲突
     document.querySelectorAll('.nav-item').forEach(item => {
+      // 检查当前导航项是否包含<a>标签，如果包含则跳过，使用<a>标签的默认行为
+      const hasLink = item.querySelector('a') !== null;
+      if (hasLink) {
+        return; // 跳过包含<a>标签的导航项
+      }
+      
       item.addEventListener('click', function() {
         // 移除所有导航项的活动状态
         document.querySelectorAll('.nav-item').forEach(navItem => {
@@ -490,31 +526,28 @@
         console.log('点击的导航项文本:', navText);
         
         // 使用更精确的匹配，优先检查特定的导航项
-    const navTextContent = this.querySelector('span:not(.nav-icon)') ? this.querySelector('span:not(.nav-icon)').textContent.trim() : this.querySelector('a').textContent.trim();
-    console.log('点击的导航项文本:', navTextContent);
-    
-    if (navTextContent.includes('倒数3期两球')) {
-      console.log('跳转到倒数3期两球组合分析页面');
-      window.location.href = 'dao_shu_3_qi_liang_qiu_zu_he.html';
-    } else if (navTextContent.includes('倒数2期三球')) {
-      console.log('跳转到倒数2期三球组合分析页面');
-      window.location.href = 'dao_shu_2_qi_san_qiu_zu_he.html';
-    } else if (navTextContent.includes('倒数3期三球')) {
-      console.log('跳转到倒数3期三球组合分析页面');
-      window.location.href = 'dao_shu_3_qi_san_qiu_zu_he.html';
-    } else if (navTextContent.includes('三球')) {
-      console.log('跳转到最新1期三球组合分析页面');
-      window.location.href = 'san_qiu_fen_xi.html';
-    } else if (navTextContent.includes('倒数2期两球')) {
-      console.log('跳转到倒数2期两球组合分析页面');
-      window.location.href = 'dao_shu_2_qi_liang_qiu_zu_he.html';
-    } else if (navTextContent.includes('两球组合分析')) {
-      console.log('跳转到最新1期两球组合分析页面');
-      window.location.href = 'zu_he_xiang_qing.html';
-    } else if (navTextContent.includes('两球')) {
-      console.log('跳转到最新1期两球组合分析页面');
-      window.location.href = 'sha_hao_fen_xi.html';
-    }
+        const navTextContent = this.querySelector('span:not(.nav-icon)') ? this.querySelector('span:not(.nav-icon)').textContent.trim() : '';
+        console.log('点击的导航项文本:', navTextContent);
+        
+        if (navTextContent.includes('倒数3期两球')) {
+          console.log('跳转到倒数3期两球组合分析页面');
+          window.location.href = 'dao_shu_3_qi_liang_qiu_zu_he.html';
+        } else if (navTextContent.includes('倒数2期三球')) {
+          console.log('跳转到倒数2期三球组合分析页面');
+          window.location.href = 'dao_shu_2_qi_san_qiu_zu_he.html';
+        } else if (navTextContent.includes('倒数3期三球')) {
+          console.log('跳转到倒数3期三球组合分析页面');
+          window.location.href = 'dao_shu_3_qi_san_qiu_zu_he.html';
+        } else if (navTextContent.includes('三球')) {
+          console.log('跳转到最新1期三球组合分析页面');
+          window.location.href = 'san_qiu_fen_xi.html';
+        } else if (navTextContent.includes('倒数2期两球')) {
+          console.log('跳转到倒数2期两球组合分析页面');
+          window.location.href = 'dao_shu_2_qi_liang_qiu_zu_he.html';
+        } else if (navTextContent.includes('两球组合分析') || navTextContent.includes('两球')) {
+          console.log('跳转到最新1期两球组合分析页面');
+          window.location.href = 'sha_hao_fen_xi.html';
+        }
         
         // 在移动端点击导航后关闭侧边栏
         if (window.innerWidth <= 768) {

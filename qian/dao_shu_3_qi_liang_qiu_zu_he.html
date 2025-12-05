@@ -145,18 +145,24 @@
           </div>
 
           <!-- 前区推荐杀号 -->
-          <div class="section" style="flex: 1; min-width: 200px;">
-            <div class="section-header" style="margin-bottom: 10px;">
-              <h3 style="margin: 0;">前区推荐杀号</h3>
-            </div>
-            <div class="kill-numbers-container" id="firstZoneKillNumbersContainer">
-              <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
-                <div id="firstZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
-                  加载中...
-                </div>
+        <div class="section" style="flex: 1; min-width: 200px;">
+          <div class="section-header" style="margin-bottom: 10px;">
+            <h3 style="margin: 0;">前区推荐杀号</h3>
+          </div>
+          <div class="kill-numbers-container" id="firstZoneKillNumbersContainer">
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
+              <div id="firstZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
+                加载中...
               </div>
             </div>
+            <!-- 添加查看回测结果链接 -->
+            <div style="margin-top: 15px; text-align: center;">
+              <a href="#" onclick="window.location.href='dao_shu_3_qi_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=' + periodValue; return false;" style="color: #1890ff; text-decoration: none; font-size: 14px; font-weight: bold;">
+                查看回测结果
+              </a>
+            </div>
           </div>
+        </div>
 
           <!-- 后区推荐杀号 -->
           <div class="section" style="flex: 1; min-width: 200px;">
@@ -168,6 +174,11 @@
                 <div id="secondZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
                   加载中...
                 </div>
+              </div>
+              <div style="margin-top: 15px; text-align: center;">
+                <a href="#" onclick="goToBacktestHouPage(); return false;" style="color: #1890ff; text-decoration: none; font-size: 14px; font-weight: bold;">
+                  查看回测结果
+                </a>
               </div>
             </div>
           </div>
@@ -1134,14 +1145,25 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_3_qi_ho
       }
     });
     
+    // 跳转到后区回测页面
+    function goToBacktestHouPage() {
+      window.location.href = `dao_shu_3_qi_hou_qu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
+    }
+    
     // 移动端侧边栏切换
     function toggleSidebar() {
       const sidebar = document.querySelector('.left-sidebar');
       sidebar.classList.toggle('open');
     }
     
-    // 导航项点击事件
+    // 导航项点击事件 - 只处理没有<a>标签的导航项，避免与默认<a>标签事件冲突
     document.querySelectorAll('.nav-item').forEach(item => {
+      // 检查当前导航项是否包含<a>标签，如果包含则跳过，使用<a>标签的默认行为
+      const hasLink = item.querySelector('a') !== null;
+      if (hasLink) {
+        return; // 跳过包含<a>标签的导航项
+      }
+      
       item.addEventListener('click', function() {
         // 移除所有导航项的活动状态
         document.querySelectorAll('.nav-item').forEach(navItem => {
@@ -1165,7 +1187,7 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_3_qi_ho
             window.location.href = 'dao_shu_3_qi_liang_qiu_zu_he.html';
           } else {
             console.log('跳转到最新1期两球组合分析页面');
-            window.location.href = 'zu_he_xiang_qing.html';
+            window.location.href = 'sha_hao_fen_xi.html';
           }
         } else if (navText.includes('三球') || navText.includes('三区')) {
           // 检查是否包含"倒数2期"或"倒数3期"以区分不同的三球组合分析页面
