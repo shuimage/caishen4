@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>倒数3期三球组合前区杀号回测结果</title>
+  <title>倒数5期两球组合前区杀号回测结果</title>
   <link rel="stylesheet" href="css/style.css">
   <style>
     /* 为主题适配添加额外样式 */
@@ -52,11 +52,15 @@
             </li>
             <li class="nav-item">
               <span class="nav-icon">✗</span>
-              <a href="dao_shu_3_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期两球组合分析</a>
+              <span onclick="window.location.href='dao_shu_3_qi_liang_qiu_zu_he.html'">倒数3期两球组合分析</span>
             </li>
             <li class="nav-item">
               <span class="nav-icon">✘</span>
               <a href="dao_shu_4_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数4期两球组合分析</a>
+            </li>
+            <li class="nav-item">
+              <span class="nav-icon">✙</span>
+              <a href="dao_shu_5_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数5期两球组合分析</a>
             </li>
             <li class="nav-item">
               <span class="nav-icon">🔺</span>
@@ -66,9 +70,9 @@
               <span class="nav-icon">🔻</span>
               <span onclick="window.location.href='dao_shu_2_qi_san_qiu_zu_he.html'">倒数2期三球组合分析</span>
             </li>
-            <li class="nav-item active">
+            <li class="nav-item">
               <span class="nav-icon">🔹</span>
-              <span onclick="window.location.href='dao_shu_3_qi_san_qiu_zu_he.html'">倒数3期三球组合分析</span>
+              <a href="dao_shu_3_qi_san_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期三球组合分析</a>
             </li>
           </ul>
         </nav>
@@ -92,35 +96,37 @@
       <!-- 右侧主内容区 -->
       <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h1 class="page-title">倒数3期三球组合前区杀号回测结果</h1>
+          <h1 class="page-title">倒数5期两球组合前区杀号回测结果</h1>
           <div style="display: flex; gap: 10px; align-items: center;">
-            <button class="btn back-btn" onclick="window.location.href='dao_shu_3_qi_san_qiu_zu_he.html'">返回</button>
+            <button class="btn back-btn" onclick="window.location.href='dao_shu_5_qi_liang_qiu_zu_he.html'">返回</button>
           </div>
         </div>
 
-        <!-- 回测期数和统计期数下拉选项 -->
-        <div style="display: flex; gap: 20px; margin-bottom: 20px; align-items: center; flex-wrap: nowrap;">
-          <div style="display: flex; align-items: center; gap: 10px; white-space: nowrap;">
-            <label for="backtestPeriod">回测期数：</label>
-            <select id="backtestPeriod" class="period-dropdown">
-              <option value="50">50期</option>
-              <option value="100" selected>100期</option>
-              <option value="200">200期</option>
-              <option value="300">300期</option>
-              <option value="500">500期</option>
-              <option value="1000">1000期</option>
+        <!-- 回测期数和统计期数选择 -->
+        <div style="display: flex; gap: 20px; margin-bottom: 20px; align-items: center;">
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <span>回测期数：</span>
+            <select id="backtest-period" class="period-dropdown">
+              <option value="100">最近100期</option>
+              <option value="50">最近50期</option>
+              <option value="35">最近35期</option>
+              <option value="200">最近200期</option>
+              <option value="300">最近300期</option>
+              <option value="500">最近500期</option>
+              <option value="1000">最近1000期</option>
               <option value="all">全部期</option>
             </select>
           </div>
-          <div style="display: flex; align-items: center; gap: 10px; white-space: nowrap;">
-            <label for="statsPeriod">统计期数：</label>
-            <select id="statsPeriod" class="period-dropdown">
-              <option value="50">50期</option>
-              <option value="100" selected>100期</option>
-              <option value="200">200期</option>
-              <option value="300">300期</option>
-              <option value="500">500期</option>
-              <option value="1000">1000期</option>
+          <div style="display: flex; align-items: center; gap: 5px;">
+            <span>统计期数：</span>
+            <select id="stats-period" class="period-dropdown">
+              <option value="100">最近100期</option>
+              <option value="50">最近50期</option>
+              <option value="35">最近35期</option>
+              <option value="200">最近200期</option>
+              <option value="300">最近300期</option>
+              <option value="500">最近500期</option>
+              <option value="1000">最近1000期</option>
               <option value="all">全部期</option>
             </select>
           </div>
@@ -141,10 +147,10 @@
                   <th>序号</th>
                   <th>当前回测期号</th>
                   <th>前区推荐杀号</th>
-                  <th>下下下期开奖期号</th>
-                  <th>下下下期实际开奖前区</th>
-                  <th>正确杀号数量</th>
-                  <th>错误杀号数量</th>
+                  <th>下下下下下期开奖期号</th>
+                  <th>下下下下下期实际开奖前区</th>
+                  <th>前区正确杀号</th>
+                  <th>前区错误杀号</th>
                 </tr>
               </thead>
               <tbody id="backtestResults">
@@ -172,18 +178,27 @@
     });
   </script>
   <script>
-    // 从URL参数中获取回测期数和统计期数
+    // 获取URL参数
     function getURLParameters() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const backtestPeriod = urlParams.get('backtest_period') || '';
-      const statsPeriod = urlParams.get('stats_period') || '';
-      return { backtestPeriod, statsPeriod };
+      const params = {};
+      const search = window.location.search;
+      if (search) {
+        const queryString = search.substring(1);
+        const pairs = queryString.split('&');
+        pairs.forEach(pair => {
+          const [key, value] = pair.split('=');
+          if (key && value) {
+            params[decodeURIComponent(key)] = decodeURIComponent(value);
+          }
+        });
+      }
+      return params;
     }
-    
+
     // 从后端获取回测数据
-    async function huo_qu_dao_shu_3_qi_san_qiu_sha_hao_hui_ce(backtestPeriod = '100', statsPeriod = '100') {
+    async function huo_qu_dao_shu_5_qi_sha_hao_hui_ce(backtest_period = '100', stats_period = '100') {
       try {
-        const response = await fetch(`http://localhost:18889/dao_shu_3_qi_san_qiu_sha_hao_hui_ce?backtest_period=${backtestPeriod}&stats_period=${statsPeriod}`);
+        const response = await fetch(`http://localhost:18889/dao_shu_5_qi_sha_hao_hui_ce?backtest_period=${backtest_period}&stats_period=${stats_period}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -197,7 +212,7 @@
         }
       } catch (error) {
         console.error('获取回测数据失败:', error);
-        alert('接口失败');
+        alert('获取回测数据失败');
         return null;
       }
     }
@@ -214,16 +229,16 @@
       }
       
       // 计算平均正确率
-      let totalCorrectKill = 0;
-      let totalKillNumbers = 0;
+      let totalFrontCorrectKill = 0;
+      let totalFrontKillNumbers = 0;
       
       backtestData.backtestResults.forEach(result => {
-        totalCorrectKill += result.correctKillCount;
-        totalKillNumbers += result.recommendedKillNumbers.length;
+        totalFrontCorrectKill += result.frontCorrectKill;
+        totalFrontKillNumbers += result.frontKillNumbers.length;
       });
       
-      const averageCorrectRate = totalKillNumbers > 0 ? 
-        ((totalCorrectKill / totalKillNumbers) * 100).toFixed(2) : 0;
+      const averageCorrectRate = totalFrontKillNumbers > 0 ? 
+        ((totalFrontCorrectKill / totalFrontKillNumbers) * 100).toFixed(2) : 0;
       
       // 更新统计信息
       backtestStats.textContent = `共回测${backtestData.backtestResults.length}期，平均正确率：${averageCorrectRate}%`;
@@ -235,19 +250,19 @@
         const tr = document.createElement('tr');
         
         // 格式化前区推荐杀号
-        const recommendedKillNumbersStr = result.recommendedKillNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
+        const frontKillNumbersStr = result.frontKillNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
         
-        // 格式化下下下期实际开奖前区
-        const actualNextNextNextNumbersStr = result.actualNextNextNextNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
+        // 格式化下下下下下期实际开奖前区
+        const nextNextNextNextNextFrontNumbersStr = result.nextNextNextNextNextFrontNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
         
         tr.innerHTML = `
           <td>${index + 1}</td>
           <td>${result.currentIssue}</td>
-          <td>${recommendedKillNumbersStr}</td>
-          <td>${result.nextNextNextIssue}</td>
-          <td>${actualNextNextNextNumbersStr}</td>
-          <td style="color: green;">${result.correctKillCount}</td>
-          <td style="color: red;">${result.wrongKillCount}</td>
+          <td>${frontKillNumbersStr}</td>
+          <td>${result.nextNextNextNextNextIssue}</td>
+          <td>${nextNextNextNextNextFrontNumbersStr}</td>
+          <td style="color: green;">${result.frontCorrectKill}</td>
+          <td style="color: red;">${result.frontWrongKill}</td>
         `;
         
         backtestResults.appendChild(tr);
@@ -255,78 +270,87 @@
     }
     
     // 获取并渲染回测数据
-    async function fetchAndRenderBacktestData(backtestPeriod = '100', statsPeriod = '100') {
-      const backtestData = await huo_qu_dao_shu_3_qi_san_qiu_sha_hao_hui_ce(backtestPeriod, statsPeriod);
+    async function fetchAndRenderBacktestData(backtest_period = '100', stats_period = '100') {
+      const backtestData = await huo_qu_dao_shu_5_qi_sha_hao_hui_ce(backtest_period, stats_period);
       renderBacktestData(backtestData);
     }
     
-    // 保存回测期数和统计期数到localStorage
-    function savePeriodSelection(backtestPeriod, statsPeriod) {
+    // 保存统计范围到localStorage
+    function savePeriodSelection(backtest_period, stats_period) {
       try {
-        localStorage.setItem('backtestPeriod', backtestPeriod);
-        localStorage.setItem('statsPeriod', statsPeriod);
+        localStorage.setItem('selectedBacktestPeriod', backtest_period);
+        localStorage.setItem('selectedStatsPeriod', stats_period);
       } catch (e) {
         console.error('保存统计范围失败:', e);
       }
     }
     
-    // 从localStorage读取保存的回测期数和统计期数
+    // 从localStorage读取保存的统计范围
     function getSavedPeriodSelection() {
       try {
-        const backtestPeriod = localStorage.getItem('backtestPeriod') || '100';
-        const statsPeriod = localStorage.getItem('statsPeriod') || '100';
-        return { backtestPeriod, statsPeriod };
+        return {
+          backtest_period: localStorage.getItem('selectedBacktestPeriod') || '100',
+          stats_period: localStorage.getItem('selectedStatsPeriod') || '100'
+        };
       } catch (e) {
         console.error('读取统计范围失败:', e);
-        return { backtestPeriod: '100', statsPeriod: '100' };
+        return {
+          backtest_period: '100',
+          stats_period: '100'
+        };
       }
     }
     
+    // 定义全局变量用于存储当前选择的统计范围
+    let backtest_period = '100'; // 默认值
+    let stats_period = '100'; // 默认值
+    
     // 页面加载完成后渲染数据
     window.addEventListener('load', async function() {
-      // 首先从URL参数中获取回测期数和统计期数
+      // 获取URL参数
       const urlParams = getURLParameters();
       
-      // 获取保存的回测期数和统计期数
+      // 获取保存的统计范围，如果URL中有参数则优先使用URL参数
       const savedParams = getSavedPeriodSelection();
+      backtest_period = urlParams.backtest_period || savedParams.backtest_period;
+      stats_period = urlParams.stats_period || savedParams.stats_period;
       
-      // 使用URL参数优先于保存的参数，最后使用默认值
-      const backtestPeriod = urlParams.backtestPeriod || savedParams.backtestPeriod || '50';
-      const statsPeriod = urlParams.statsPeriod || savedParams.statsPeriod || '100';
+      // 设置下拉框选中状态
+      const backtestDropdown = document.getElementById('backtest-period');
+      const statsDropdown = document.getElementById('stats-period');
       
-      // 获取下拉选项元素
-      const backtestPeriodSelect = document.getElementById('backtestPeriod');
-      const statsPeriodSelect = document.getElementById('statsPeriod');
+      if (backtestDropdown) {
+        backtestDropdown.value = backtest_period;
+      }
       
-      // 设置下拉选项的初始值
-      backtestPeriodSelect.value = backtestPeriod;
-      statsPeriodSelect.value = statsPeriod;
+      if (statsDropdown) {
+        statsDropdown.value = stats_period;
+      }
       
-      // 保存选择的回测期数和统计期数到localStorage
-      savePeriodSelection(backtestPeriod, statsPeriod);
-      
-      // 使用回测期数和统计期数获取回测数据
-      fetchAndRenderBacktestData(backtestPeriod, statsPeriod);
+      // 使用保存的统计范围获取回测数据
+      fetchAndRenderBacktestData(backtest_period, stats_period);
       
       // 为回测期数下拉选择框添加事件监听器
-      backtestPeriodSelect.addEventListener('change', function() {
-        const newBacktestPeriod = this.value;
-        const currentStatsPeriod = statsPeriodSelect.value;
-        // 保存选择的回测期数和统计期数
-        savePeriodSelection(newBacktestPeriod, currentStatsPeriod);
-        // 根据选择的回测期数和统计期数重新获取回测数据
-        fetchAndRenderBacktestData(newBacktestPeriod, currentStatsPeriod);
-      });
+      if (backtestDropdown) {
+        backtestDropdown.addEventListener('change', function() {
+          backtest_period = this.value;
+          // 保存选择的统计范围
+          savePeriodSelection(backtest_period, stats_period);
+          // 根据选择的统计范围重新获取回测数据
+          fetchAndRenderBacktestData(backtest_period, stats_period);
+        });
+      }
       
       // 为统计期数下拉选择框添加事件监听器
-      statsPeriodSelect.addEventListener('change', function() {
-        const newStatsPeriod = this.value;
-        const currentBacktestPeriod = backtestPeriodSelect.value;
-        // 保存选择的回测期数和统计期数
-        savePeriodSelection(currentBacktestPeriod, newStatsPeriod);
-        // 根据选择的回测期数和统计期数重新获取回测数据
-        fetchAndRenderBacktestData(currentBacktestPeriod, newStatsPeriod);
-      });
+      if (statsDropdown) {
+        statsDropdown.addEventListener('change', function() {
+          stats_period = this.value;
+          // 保存选择的统计范围
+          savePeriodSelection(backtest_period, stats_period);
+          // 根据选择的统计范围重新获取回测数据
+          fetchAndRenderBacktestData(backtest_period, stats_period);
+        });
+      }
     });
     
     // 移动端侧边栏切换
@@ -374,7 +398,10 @@
         } else if (navTextContent.includes('倒数2期两球')) {
           console.log('跳转到倒数2期两球组合分析页面');
           window.location.href = 'dao_shu_2_qi_liang_qiu_zu_he.html';
-        } else if (navTextContent.includes('两球组合分析') || navTextContent.includes('两球')) {
+        } else if (navTextContent.includes('两球组合分析')) {
+          console.log('跳转到最新1期两球组合分析页面');
+          window.location.href = 'zu_he_xiang_qing.html';
+        } else if (navTextContent.includes('两球')) {
           console.log('跳转到最新1期两球组合分析页面');
           window.location.href = 'sha_hao_fen_xi.html';
         }
