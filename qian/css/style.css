@@ -47,6 +47,48 @@
   --sidebar-divider: #F2F2F2; /* 分割线颜色 */
 }
 
+/* 预测结果样式 */
+.prediction-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.prediction-reason {
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+  max-width: 200px;
+  padding: 8px;
+  border-radius: 8px;
+  line-height: 1.4;
+  transition: all 0.3s ease;
+}
+
+/* 前区预测原因样式 */
+.prediction-item:nth-child(odd) .prediction-reason {
+  background: rgba(223, 34, 32, 0.1);
+}
+
+/* 后区预测原因样式 */
+.prediction-item:nth-child(even) .prediction-reason {
+  background: rgba(164, 98, 248, 0.1);
+}
+
+/* 深色主题下的预测原因样式 */
+body.dark-theme .prediction-reason {
+  color: var(--text-light);
+}
+
+body.dark-theme .prediction-item:nth-child(odd) .prediction-reason {
+  background: rgba(223, 34, 32, 0.2);
+}
+
+body.dark-theme .prediction-item:nth-child(even) .prediction-reason {
+  background: rgba(164, 98, 248, 0.2);
+}
+
 /* 主题切换按钮样式 */
 .theme-toggle {
   background: none;
@@ -1312,6 +1354,33 @@ table td.stat-data {
   background-color: #91d5ff;
   transform: scale(1.05);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* 汇总行样式 */
+.combination-table .summary-row {
+  font-weight: bold;
+}
+
+.combination-table .summary-cell {
+  background-color: #f0f8ff;
+  font-weight: bold;
+  color: var(--text-primary);
+}
+
+.combination-table .summary-highlight {
+  background-color: #f0f8ff;
+  font-weight: bold;
+}
+
+/* 深色主题下的汇总行样式 */
+body.dark-theme .combination-table .summary-cell {
+  background-color: #2d3748;
+  color: var(--text-primary);
+}
+
+body.dark-theme .combination-table .summary-highlight {
+  background-color: #4a5568;
+  color: var(--text-primary);
 }
 
 /* 遗漏数据颜色梯度显示 */

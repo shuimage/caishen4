@@ -8,6 +8,8 @@ const huoQuSqlShuJuRouter = require('./获取SQL数据.js');
 const sqlZuiXinYiQiRouter = require('./SQL最新一期.js');
 const sqlDaoShu2QiRouter = require('./SQL倒数2期.js');
 const sqlDaoShu3QiRouter = require('./SQL倒数3期.js');
+const sqlDaoShu4QiRouter = require('./sql_dao_shu_4_qi.js'); // 导入倒数第4期数据路由
+const sqlDaoShu5QiRouter = require('./sql_dao_shu_5_qi.js'); // 导入倒数第5期数据路由
 const daoShu2QiTuiJianShaHaoRouter = require('./倒数2期推荐杀号.js');
 const huoQuTiCaiShuJuRouter = require('./获取体彩数据.js');
 const gengXinKaiJiangRouter = require('./更新开奖.js');
@@ -19,6 +21,10 @@ const daoShu2QiHouQuZuHeRouter = require('./倒数2期后区组合.js'); // 导�
 const daoShu2QiHouQuLiangQiuZuHeRouter = require('./倒数2期后区两球组合.js'); // 导入倒数2期后区两球组合分析路由
 const daoShu3QiLiangQiuZuHeRouter = require('./倒数3期两球组合前区.js'); // 导入倒数3期前区两球组合路由
 const daoShu3QiHouQuZuHeRouter = require('./倒数3期两球组合后区.js'); // 导入倒数3期后区两球组合路由
+const daoShu4QiLiangQiuZuHeRouter = require('./倒数4期两球组合前区.js'); // 导入倒数4期前区两球组合路由
+const daoShu4QiHouQuZuHeRouter = require('./倒数4期两球组合后区.js'); // 导入倒数4期后区两球组合路由
+const daoShu5QiLiangQiuZuHeRouter = require('./倒数5期两球组合前区.js'); // 导入倒数5期前区两球组合路由
+const daoShu5QiHouQuZuHeRouter = require('./倒数5期两球组合后区.js'); // 导入倒数5期后区两球组合路由
 const zuHeXiangQingRouter = require('./组合详情.js');
 const sanQiuXiangQingRouter = require('./三球详情.js');
 const sanQiuZuHeXiangQingRouter = require('./三球组合详情.js'); // 导入最新1期三球组合详情路由
@@ -61,6 +67,8 @@ app.use('/huo_qu_sql_shu_ju', huoQuSqlShuJuRouter);
 app.use('/sql_zui_xin_yi_qi', sqlZuiXinYiQiRouter);
 app.use('/sql_dao_shu_2_qi', sqlDaoShu2QiRouter);
 app.use('/sql_dao_shu_3_qi', sqlDaoShu3QiRouter);
+app.use('/sql_dao_shu_4_qi', sqlDaoShu4QiRouter); // 注册倒数第4期数据路由
+app.use('/sql_dao_shu_5_qi', sqlDaoShu5QiRouter); // 注册倒数第5期数据路由
 app.use('/dao_shu_2_qi_tui_jian_sha_hao', daoShu2QiTuiJianShaHaoRouter);
 app.use('/huo_qu_ti_cai_shu_ju', huoQuTiCaiShuJuRouter);
 app.use('/geng_xin_kai_jiang', gengXinKaiJiangRouter);
@@ -72,6 +80,10 @@ app.use('/dao_shu_2_qi_hou_qu_zu_he', daoShu2QiHouQuZuHeRouter); // 注册倒数
 app.use('/dao_shu_2_qi_hou_qu_liang_qiu_zu_he', daoShu2QiHouQuLiangQiuZuHeRouter); // 注册倒数2期后区两球组合分析路由
 app.use('/dao_shu_3_qi_liang_qiu_zu_he', daoShu3QiLiangQiuZuHeRouter); // 注册倒数3期前区两球组合路由
 app.use('/dao_shu_3_qi_hou_qu_zu_he', daoShu3QiHouQuZuHeRouter); // 注册倒数3期后区两球组合路由
+app.use('/dao_shu_4_qi_liang_qiu_zu_he', daoShu4QiLiangQiuZuHeRouter); // 注册倒数4期前区两球组合路由
+app.use('/dao_shu_4_qi_hou_qu_zu_he', daoShu4QiHouQuZuHeRouter); // 注册倒数4期后区两球组合路由
+app.use('/dao_shu_5_qi_liang_qiu_zu_he', daoShu5QiLiangQiuZuHeRouter); // 注册倒数5期前区两球组合路由
+app.use('/dao_shu_5_qi_hou_qu_zu_he', daoShu5QiHouQuZuHeRouter); // 注册倒数5期后区两球组合路由
 const daoShu2QiSanQiuZuHeRouter = require('./倒数2期三球组合.js');
 app.use('/dao_shu_2_qi_san_qiu_zu_he', daoShu2QiSanQiuZuHeRouter); // 注册倒数2期前区三球组合路由
 const daoShu2QiSanQiuZuHeXiangQingRouter = require('./倒数2期三球组合详情.js');
@@ -467,10 +479,12 @@ function startServer() {
       console.log(`获取SQL数据接口: http://localhost:${PORT}/huo_qu_sql_shu_ju`);
       console.log(`获取最新期号接口: http://localhost:${PORT}/sql_zui_xin_yi_qi`);
       console.log(`获取倒数第二期接口: http://localhost:${PORT}/sql_dao_shu_2_qi`);
-      console.log(`获取倒数第三期接口: http://localhost:${PORT}/sql_dao_shu_3_qi`);
-      console.log(`推荐杀号接口: http://localhost:${PORT}/dao_shu_2_qi_tui_jian_sha_hao`);
-      console.log(`获取体彩数据接口: http://localhost:${PORT}/huo_qu_ti_cai_shu_ju`);
-      console.log(`更新开奖数据接口: http://localhost:${PORT}/geng_xin_kai_jiang`);
+console.log(`获取倒数第三期接口: http://localhost:${PORT}/sql_dao_shu_3_qi`);
+console.log(`获取倒数第四期接口: http://localhost:${PORT}/sql_dao_shu_4_qi`);
+console.log(`获取倒数第五期接口: http://localhost:${PORT}/sql_dao_shu_5_qi`);
+console.log(`推荐杀号接口: http://localhost:${PORT}/dao_shu_2_qi_tui_jian_sha_hao`);
+console.log(`获取体彩数据接口: http://localhost:${PORT}/huo_qu_ti_cai_shu_ju`);
+console.log(`更新开奖数据接口: http://localhost:${PORT}/geng_xin_kai_jiang`);
 console.log(`双杀分析接口: http://localhost:${PORT}/shuang_sha_fen_xi`);
 console.log(`倒数2期双杀分析接口: http://localhost:${PORT}/dao_shu_2_qi_shuang_sha_fen_xi`);
 console.log(`倒数2期前区两球组合接口: http://localhost:${PORT}/dao_shu_2_qi_liang_qiu_zu_he`);
@@ -478,6 +492,10 @@ console.log(`倒数2期后区两球组合接口: http://localhost:${PORT}/dao_sh
 console.log(`倒数2期后区两球组合分析接口: http://localhost:${PORT}/dao_shu_2_qi_hou_qu_liang_qiu_zu_he`);
 console.log(`倒数3期前区两球组合接口: http://localhost:${PORT}/dao_shu_3_qi_liang_qiu_zu_he`);
 console.log(`倒数3期后区两球组合接口: http://localhost:${PORT}/dao_shu_3_qi_hou_qu_zu_he`);
+console.log(`倒数4期前区两球组合接口: http://localhost:${PORT}/dao_shu_4_qi_liang_qiu_zu_he`);
+console.log(`倒数4期后区两球组合接口: http://localhost:${PORT}/dao_shu_4_qi_hou_qu_zu_he`);
+console.log(`倒数5期前区两球组合接口: http://localhost:${PORT}/dao_shu_5_qi_liang_qiu_zu_he`);
+console.log(`倒数5期后区两球组合接口: http://localhost:${PORT}/dao_shu_5_qi_hou_qu_zu_he`);
 console.log(`====================================`);
     });
   } catch (error) {
