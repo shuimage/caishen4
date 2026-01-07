@@ -776,7 +776,7 @@
         // 添加35个单元格，对应前区号码1-35
         for (let i = 1; i <= 35; i++) {
           const td = document.createElement('td');
-          const numStr = String(i); // 后端使用数字作为键，不需要补0
+          const numStr = String(i).padStart(2, '0'); // 使用两位格式的号码，与后端一致
           // 安全访问nextDrawNumbers属性
           let count = 0;
           if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {

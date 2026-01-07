@@ -150,7 +150,7 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
           red,
           blue
         FROM lottery_results
-        WHERE issue <= ?
+        WHERE issue < ?
         ORDER BY issue DESC
         LIMIT ?
       `;
@@ -166,18 +166,18 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
       });
     }
     
-    // 性能优化 - 创建期号到数据的映射，便于快速查找
-    const periodMap = new Map();
-    historyResults.forEach(item => {
-      periodMap.set(item.period, item);
-    });
-    
     // 3. 数据处理阶段 - 组合匹配和结果处理
     const resultList = []; // 存储最终的统计结果
     let index = 1;        // 用于结果排序的序号
     
-    // 遍历每条历史开奖记录
-    for (const record of historyResults) {
+    // 遍历每条历史开奖记录，从第1条开始（因为我们需要查找下一期的数据）
+    for (let i = 1; i < historyResults.length; i++) {
+      const record = historyResults[i]; // 当前期（组合出现的期数）
+      const nextRecord = historyResults[i - 1]; // 下一期（期号比当前期大1，因为数据是降序排列的）
+      
+      // 确保下一期数据存在
+      if (!nextRecord) continue;
+      
       // 根据类型获取对应区域的号码（前区/后区）
       let balls;
       if (type === 'front') {
@@ -186,73 +186,40 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
         balls = processBalls(record.blue); // 处理后区蓝球数据
       }
       
-      // 格式化号码为两位数字的字符串，确保与输入组合格式一致，便于匹配
-      const formattedBalls = balls.map(ball => String(ball).padStart(2, '0'));
-      
-      // 遍历用户提供的所有组合，检查是否在当前开奖记录中出现
+      // 遍历用户提供的所有组合，只检查主组合（前两个球）
       for (const combination of combinations) {
-        // 将组合拆分为多个单独的号码（2-5个）
-        const comboNumbers = combination.split('-');
-        // 检查当前开奖记录是否包含组合中的所有号码（不考虑顺序）
-        const allMatch = comboNumbers.every(num => formattedBalls.includes(num));
+        // 分离主组合和目标球，只检查主组合（前两个球）
+        const mainCombo = combination.split('-').slice(0, 2).join('-');
+        const comboNumbers = mainCombo.split('-');
+        
+        // 检查当前开奖记录是否包含主组合中的所有号码
+        const allMatch = comboNumbers.every(num => {
+          // 将号码转换为数字，以便正确比较
+          const numInt = parseInt(num);
+          return balls.includes(numInt);
+        });
+        
         if (allMatch) {
-          // 关联信息处理 - 查找下一期的开奖数据
-          let nextPeriod = null;     // 下一期期号
-          let nextDrawInfo = null;   // 下一期开奖号码
-          
-          // 添加调试日志 - 查看当前记录的bian_hao值
-          console.log(`当前记录期号:${record.period}, bian_hao:${record.bian_hao}`);
-          
-          // 正确处理字符串格式的bian_hao字段
-          // 提取前缀（LT）和数字部分
-          const prefixMatch = record.bian_hao.match(/^([A-Z]+)(\d+)$/);
-          if (prefixMatch) {
-            const prefix = prefixMatch[1]; // LT前缀
-            const numStr = prefixMatch[2]; // 数字部分字符串
-            const num = parseInt(numStr, 10); // 转换为数字
-            const nextNum = num + 1; // 下一期数字
-            // 格式化为5位数字并拼接前缀
-            const nextBianHao = prefix + String(nextNum).padStart(5, '0');
-            
-            // 添加调试日志 - 查看要查询的下一期bian_hao值
-            console.log(`查询下一期bian_hao:${nextBianHao}`);
-            
-            // 在历史数据中查找下一期的记录（通过bian_hao）
-            const nextPeriodRecord = historyResults.find(item => item.bian_hao === nextBianHao);
-            
-            // 添加调试日志 - 查看查询结果
-            console.log(`下一期查询结果:${nextPeriodRecord ? nextPeriodRecord.period : '未找到'}`);
-            
-            // 如果找到下一期数据，提取相关信息
-            if (nextPeriodRecord) {
-            nextPeriod = nextPeriodRecord.period;
-            // 根据类型获取下一期对应区域的号码
-            if (type === 'front') {
-              nextDrawInfo = processBalls(nextPeriodRecord.red);
-            } else {
-              nextDrawInfo = processBalls(nextPeriodRecord.blue);
-            }
+          // 获取下一期的号码
+          let nextDrawInfo;
+          if (type === 'front') {
+            nextDrawInfo = processBalls(nextRecord.red);
+          } else {
+            nextDrawInfo = processBalls(nextRecord.blue);
           }
           
-                // 如果指定了目标球号，则只添加下一期开奖信息中包含该球号的记录
-                // 这是正确的需求：只显示下一期包含目标球号的组合记录
-                if (!targetBallNumber || (nextDrawInfo && nextDrawInfo.includes(targetBallNumber))) {
-                  // 构建结果对象并添加到结果列表
-                  resultList.push({
-                    index: index++,        // 结果序号（递增）
-                    period: record.period, // 当前匹配的期号
-                    combination: combination, // 匹配的号码组合
-                    draw_info: balls,      // 当前期开奖号码
-                    next_period: nextPeriod,  // 下一期期号
-                    next_draw_info: nextDrawInfo // 下一期开奖号码
-                  });
-                } else {
-                console.log(`跳过不包含目标球号${targetBallNumber}的记录，期号:${record.period}`);
-              }
-            } else {
-              // 处理bian_hao格式不符合预期的情况
-              console.log(`bian_hao格式不符合预期: ${record.bian_hao}`);
-            }
+          // 如果指定了目标球号，则只添加下一期开奖信息中包含该球号的记录
+          if (!targetBallNumber || (nextDrawInfo && nextDrawInfo.includes(targetBallNumber))) {
+            // 构建结果对象并添加到结果列表
+            resultList.push({
+              index: index++,        // 结果序号（递增）
+              period: record.period, // 当前匹配的期号
+              combination: combination, // 匹配的号码组合
+              draw_info: balls,      // 当前期开奖号码
+              next_period: nextRecord.period,  // 下一期期号
+              next_draw_info: nextDrawInfo // 下一期开奖号码
+            });
+          }
         }
       }
     }

@@ -58,6 +58,10 @@
               <a href="dao_shu_4_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数4期两球组合分析</a>
             </li>
             <li class="nav-item">
+              <span class="nav-icon">✅</span>
+              <a href="dao_shu_5_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数5期两球组合分析</a>
+            </li>
+            <li class="nav-item">
               <span class="nav-icon">🔺</span>
               <span onclick="window.location.href='/san_qiu_fen_xi.html'">最新1期三球组合分析</span>
             </li>
@@ -167,7 +171,12 @@
       // 获取类型并确保格式正确
       let type = urlParams.get('type') || localStorage.getItem('combinationType') || 'first';
       // 获取统计期数，默认100期
-      let statsRange = parseInt(urlParams.get('stats_range')) || 100;
+      let statsRange = urlParams.get('stats_range');
+      if (statsRange === 'all') {
+        statsRange = 'all';
+      } else {
+        statsRange = parseInt(statsRange) || 100;
+      }
       // 确保组合格式为两位数字，例如将'1-3'转换为'01-03'
       const formattedCombination = combination.split('-')
         .map(num => String(num).padStart(2, '0'))
@@ -250,7 +259,7 @@
         
         console.log('格式化后的请求数据:', requestData);
         
-        const response = await fetch('http://localhost:18889/dao_shu_3_qi_liang_qiu_zu_he_xiang_qing', {
+        const response = await fetch('http://localhost:18889/zuhe/dao_shu_3_qi_liang_qiu_zu_he_xiang_qing', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -262,7 +271,7 @@
         
         if (result.code === 200) {
           return result.data;
-        } else if (result.code === 404 && result.message === '在指定范围内未找到匹配的组合数据') {
+        } else if (result.code === 404) {
           // 这是正常的业务情况，表示没有找到匹配数据
           return [];
         } else {

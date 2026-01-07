@@ -9,6 +9,21 @@ const { query } = require('./数据库配置.js');
 
 const router = express.Router();
 
+// 处理球号数据，确保格式一致
+function processBalls(balls) {
+  if (!balls) return [];
+  // 将球号字符串转换为数组并处理成标准格式
+  if (typeof balls === 'string') {
+    return balls.split(' ')
+      .filter(ball => ball.trim() !== '')
+      .map(ball => String(ball).padStart(2, '0'));
+  } else if (Array.isArray(balls)) {
+    return balls.map(ball => String(ball).padStart(2, '0'));
+  }
+  return [];
+}
+
+
 /**
  * 获取倒数第4期前区两球组合下下下期出现统计数据
  * @param {string} period - 统计周期（35, 50, 100, 200, 300, 500, 1000）
@@ -44,16 +59,10 @@ async function getFourthLastFrontZoneAnalysis(period) {
     // 解析前区号码（从red字段中获取）
     let frontNumbers = [];
     try {
-      if (Array.isArray(fourthLastDraw.red)) {
-        // 如果已经是数组，直接使用
-        frontNumbers = fourthLastDraw.red.map(num => typeof num === 'string' ? parseInt(num) : num);
-      } else if (typeof fourthLastDraw.red === 'string') {
-        // 从字符串中提取数字
-        const numbers = fourthLastDraw.red.match(/\d+/g);
-        if (numbers) {
-          frontNumbers = numbers.map(num => parseInt(num));
-        }
-      }
+      // 使用processBalls函数处理号码，确保格式一致
+      const processedBalls = processBalls(fourthLastDraw.red);
+      // 转换回数字数组
+      frontNumbers = processedBalls.map(num => parseInt(num));
       // 确保frontNumbers至少有一些号码，否则记录错误
       if (!frontNumbers.length) {
         console.error('Failed to extract front numbers from:', fourthLastDraw.red);
@@ -71,21 +80,25 @@ async function getFourthLastFrontZoneAnalysis(period) {
       const historySql = `
         SELECT * 
         FROM lottery_results 
-        WHERE issue < '${fourthLastDraw.issue}' 
-        ORDER BY issue DESC
+        WHERE id < ${fourthLastDraw.id} 
+        ORDER BY id ASC
       `;
       historyData = await query(historySql);
+      // 反转结果，按照id从大到小排序
+      historyData = historyData.reverse();
     } else {
       // 查询指定周期内的历史数据
-      const limit = parseInt(period);
+      const limit = parseInt(period) * 2; // 查询period*2期，确保有足够数据计算下下下下期
       const historySql = `
-        SELECT * 
+        SELECT *, bian_hao 
         FROM lottery_results 
-        WHERE issue < '${fourthLastDraw.issue}' 
-        ORDER BY issue DESC 
+        WHERE id < ${fourthLastDraw.id} 
+        ORDER BY id ASC 
         LIMIT ${limit}
       `;
       historyData = await query(historySql);
+      // 反转结果，按照id从大到小排序
+      historyData = historyData.reverse();
     }
     console.log('历史数据查询完成，共获取', historyData.length, '条记录');
 
@@ -112,23 +125,43 @@ async function getFourthLastFrontZoneAnalysis(period) {
       };
     });
 
+    // 创建bian_hao到数据的映射，用于快速查找下下下下期数据
+    const numericBianHaoToDataMap = new Map();
+    historyData.forEach(row => {
+      if (row.bian_hao) {
+        // 从bian_hao字符串中提取数字部分
+        const numericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
+        numericBianHaoToDataMap.set(numericBianHao, row);
+      }
+    });
+
     // 遍历历史数据，查找组合出现的位置，并记录下下下下期的号码
-    // 注意：历史数据是按issue降序排列的，所以下下下下期的索引是i-4
-    for (let i = 4; i < historyData.length; i++) {
+    // 使用bian_hao字段计算下下下下期，而不是依赖索引
+    for (let i = 0; i < historyData.length; i++) { // 从i=0开始，不跳过任何记录
       const currentDraw = historyData[i];  // 当前期（组合出现的期数）
-      const nextNextNextNextDraw = historyData[i - 4]; // 下下下下期（期号比当前期大4，因为数据是降序排列的）
       
-      // 确保nextNextNextNextDraw存在
-      if (!nextNextNextNextDraw) continue;
+      // 确保currentDraw有bian_hao字段
+      if (!currentDraw.bian_hao) continue;
+      
+      // 从当前bian_hao中提取数字部分
+      const currentNumericBianHao = parseInt(currentDraw.bian_hao.replace(/[^0-9]/g, ''));
+      
+      // 计算下下下下期的数字bian_hao（当前期+4）
+      const nextNextNextNumericBianHao = currentNumericBianHao + 4;
+      
+      // 查找下下下下期数据
+      const nextNextNextDraw = numericBianHaoToDataMap.get(nextNextNextNumericBianHao);
+      
+      // 确保下下下下期数据存在
+      if (!nextNextNextDraw) continue;
       
       // 解析当前期的前区号码
       let currentFrontNumbers = [];
       try {
-        if (Array.isArray(currentDraw.red)) {
-          currentFrontNumbers = currentDraw.red.map(num => typeof num === 'string' ? parseInt(num) : num);
-        } else if (typeof currentDraw.red === 'string') {
-          currentFrontNumbers = currentDraw.red.match(/\d+/g)?.map(num => parseInt(num)) || [];
-        }
+        // 使用processBalls函数处理号码，确保格式一致
+        const processedBalls = processBalls(currentDraw.red);
+        // 转换回数字数组
+        currentFrontNumbers = processedBalls.map(num => parseInt(num));
       } catch (e) {
         console.error('Error extracting current draw red numbers:', e);
       }
@@ -137,8 +170,10 @@ async function getFourthLastFrontZoneAnalysis(period) {
       const currentFrontCombinations = [];
       for (let j = 0; j < currentFrontNumbers.length; j++) {
         for (let k = j + 1; k < currentFrontNumbers.length; k++) {
+          // 确保小球在前，大球在后，保持一致性
           const ball1 = Math.min(currentFrontNumbers[j], currentFrontNumbers[k]);
           const ball2 = Math.max(currentFrontNumbers[j], currentFrontNumbers[k]);
+          // 组合号使用数字格式，不需要补0
           currentFrontCombinations.push(`${ball1}-${ball2}`);
         }
       }
@@ -147,20 +182,19 @@ async function getFourthLastFrontZoneAnalysis(period) {
       currentFrontCombinations.forEach(comb => {
         if (frontCombinations.includes(comb)) {
           // 获取下下下下期的前区号码
-          let nextNextNextNextNumbers = [];
+          let nextNextNextNumbers = [];
           try {
-            if (Array.isArray(nextNextNextNextDraw.red)) {
-              nextNextNextNextNumbers = nextNextNextNextDraw.red.map(num => typeof num === 'string' ? parseInt(num) : num);
-            } else if (typeof nextNextNextNextDraw.red === 'string') {
-              nextNextNextNextNumbers = nextNextNextNextDraw.red.match(/\d+/g)?.map(num => parseInt(num)) || [];
-            }
+            // 使用processBalls函数处理号码，确保格式一致
+            const processedBalls = processBalls(nextNextNextDraw.red);
+            // 存储两位格式的号码，用于统计
+            nextNextNextNumbers = processedBalls;
           } catch (e) {
-            console.error('Error extracting next next next next draw red numbers:', e);
+            console.error('Error extracting next next next draw red numbers:', e);
           }
           
           // 记录下下下下期的号码
-          nextNextNextNextNumbers.forEach(num => {
-            frontCombinationStats[comb].nextDrawNumbers.push(String(num));
+          nextNextNextNumbers.forEach(num => {
+            frontCombinationStats[comb].nextDrawNumbers.push(num); // 存储两位格式的号码
             frontCombinationStats[comb].numberCounts[num] = 
               (frontCombinationStats[comb].numberCounts[num] || 0) + 1;
           });
@@ -170,9 +204,9 @@ async function getFourthLastFrontZoneAnalysis(period) {
             currentPeriod: currentDraw.issue,
             currentDrawDate: currentDraw.draw_date || currentDraw.date || '',
             currentFrontNumbers: currentFrontNumbers,
-            nextNextNextNextPeriod: nextNextNextNextDraw.issue,
-            nextNextNextNextDrawDate: nextNextNextNextDraw.draw_date || nextNextNextNextDraw.date || '',
-            nextNextNextNextFrontNumbers: nextNextNextNextNumbers
+            nextNextNextPeriod: nextNextNextDraw.issue,
+            nextNextNextDrawDate: nextNextNextDraw.draw_date || nextNextNextDraw.date || '',
+            nextNextNextFrontNumbers: nextNextNextNumbers
           });
           
           // 更新组合出现次数
