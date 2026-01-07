@@ -9,7 +9,14 @@ const sqlZuiXinYiQiRouter = require('./SQL最新一期.js');
 const sqlDaoShu2QiRouter = require('./SQL倒数2期.js');
 const sqlDaoShu3QiRouter = require('./SQL倒数3期.js');
 const sqlDaoShu4QiRouter = require('./sql_dao_shu_4_qi.js'); // 导入倒数第4期数据路由
-const sqlDaoShu5QiRouter = require('./sql_dao_shu_5_qi.js'); // 导入倒数第5期数据路由
+// 导入倒数第5期数据路由
+const sqlDaoShu5QiRouter = require('./sql_dao_shu_5_qi.js');
+// 导入倒数4期两球组合详情路由
+const daoShu4QiLiangQiuZuHeXiangQingRouter = require('./倒数4期两球组合详情服务器.js');
+// 导入倒数5期两球组合详情路由
+const daoShu5QiLiangQiuZuHeXiangQingRouter = require('./倒数5期两球组合详情服务器.js'); // 导入倒数第5期数据路由
+// 导入倒数3期两球组合详情路由
+const daoShu3QiLiangQiuZuHeXiangQingRouter = require('./倒数3期两球组合详情.js');
 const daoShu2QiTuiJianShaHaoRouter = require('./倒数2期推荐杀号.js');
 const huoQuTiCaiShuJuRouter = require('./获取体彩数据.js');
 const gengXinKaiJiangRouter = require('./更新开奖.js');
@@ -94,295 +101,160 @@ const daoShu3QiSanQiuZuHeXiangQingRouter = require('./倒数3期三球组合详�
 app.use('/dao_shu_3_qi_san_qiu_zu_he_xiang_qing', daoShu3QiSanQiuZuHeXiangQingRouter); // 注册倒数3期前区三球组合详情路由
 
 // 先注册直接路由，再注册中间件，避免中间件拦截
+// 注册倒数4期两球组合详情路由
+app.use('/zuhe/dao_shu_4_qi_liang_qiu_zu_he_xiang_qing', daoShu4QiLiangQiuZuHeXiangQingRouter);
+
+// 注册倒数5期两球组合详情路由
+app.use('/zuhe/dao_shu_5_qi_liang_qiu_zu_he_xiang_qing', daoShu5QiLiangQiuZuHeXiangQingRouter);
+
 app.post('/zuhe/dao_shu_2_qi_liang_qiu_zu_he_xiang_qing', async (req, res) => {
   console.log('收到倒数2期两球组合详情请求，请求体:', req.body);
   try {
     const { latest_period, type = 'front', combinations = [], stats_range = 100, target_ball = null } = req.body;
     if (!latest_period) return res.status(400).json({ code: 400, message: '最新期号是必填参数' });
     if (!Array.isArray(combinations) || combinations.length === 0) return res.status(400).json({ code: 400, message: '组合数组不能为空' });
-    if (!Number.isInteger(stats_range) || stats_range <= 0) return res.status(400).json({ code: 400, message: '统计范围必须是正整数' });
+    if (stats_range !== 'all' && (!Number.isInteger(stats_range) || stats_range <= 0)) return res.status(400).json({ code: 400, message: '统计范围必须是正整数或"all"' });
     if (type !== 'front' && type !== 'back') return res.status(400).json({ code: 400, message: '类型只能是front或back' });
-    const periodPrefixMatch = latest_period.match(/[^0-9]+/);
-    const periodPrefix = periodPrefixMatch ? periodPrefixMatch[0] : '';
-    const periodNumber = parseInt(latest_period.replace(/[^0-9]/g, ''));
-    if (isNaN(periodNumber)) return res.status(400).json({ code: 400, message: '最新期号格式不正确' });
-    const daoShu2QiPeriodNumber = periodNumber - 2;
-    const daoShu2QiPeriod = periodPrefix + daoShu2QiPeriodNumber.toString().padStart(3, '0');
-    const daoShu2QiData = await query('SELECT * FROM lottery_results WHERE issue = ? LIMIT 1', [daoShu2QiPeriod]);
-    if (!daoShu2QiData || daoShu2QiData.length === 0) return res.status(404).json({ code: 404, message: '未找到倒数2期的开奖数据' });
-    const daoShu2QiResult = daoShu2QiData[0];
+    
+    // 获取倒数第2期的开奖数据
+    const secondLastResultSql = `
+      SELECT * 
+      FROM lottery_results 
+      ORDER BY issue DESC 
+      LIMIT 1, 1
+    `;
+    
+    const secondLastResult = await query(secondLastResultSql);
+    if (!secondLastResult || secondLastResult.length === 0) {
+      return res.status(404).json({ code: 404, message: '未找到倒数第2期开奖数据' });
+    }
+    
+    const secondLastDraw = secondLastResult[0];
+    console.log('获取到倒数第2期开奖期号:', secondLastDraw.issue);
+    
     const drawField = type === 'front' ? 'red' : 'blue';
-    function __processBalls(balls) {
+    
+    // 处理球号数据，确保格式一致
+    function processBalls(balls) {
       if (!balls) return [];
+      // 将球号字符串转换为数字数组
       if (typeof balls === 'string') {
-        // 处理 [x, x, x] 格式的JSON字符串
-        if (balls.startsWith('[') && balls.endsWith(']')) {
-          try {
-            // 解析JSON字符串
-            const parsedBalls = JSON.parse(balls);
-            if (Array.isArray(parsedBalls)) {
-              return parsedBalls.map(ball => String(ball).padStart(2, '0'));
-            }
-          } catch (e) {
-            // JSON解析失败，尝试其他格式
-          }
+        const numbers = balls.match(/\d+/g);
+        if (numbers) {
+          return numbers.map(num => parseInt(num));
         }
-        // 处理空格分隔的字符串格式
-        return balls.split(' ').filter(ball => ball.trim() !== '').map(ball => String(ball).padStart(2, '0'));
       } else if (Array.isArray(balls)) {
-        return balls.map(ball => String(ball).padStart(2, '0'));
+        return balls.map(num => typeof num === 'string' ? parseInt(num) : num);
       }
       return [];
     }
-    // 查询近300期的所有记录，包括bian_hao字段
-    // 使用字符串拼接，避免参数化查询的类型匹配问题
-    const idValue = daoShu2QiResult.id;
-    const limitValue = stats_range;
+    
+    // 精确检查组合是否在开奖号码中
+    function checkCombinationInDraw(drawNumbers, combination) {
+      const comboParts = combination.split('-')
+        .map(part => part.trim())
+        .map(part => parseInt(part))
+        .slice(0, 2); // 只检查主组合（前两个球）
+      
+      return comboParts.every(part => drawNumbers.includes(part));
+    }
+    
+    // 查询历史数据，查找这些组合出现的记录
+    let limit = Number(stats_range);
+    
+    // 使用字符串替换构建SQL查询，避免参数类型问题
     let sql = `
       SELECT 
         id, 
         issue, 
-        bian_hao,
         ${drawField} as draw_info
       FROM 
         lottery_results 
       WHERE 
-        id < ${idValue}
-      ORDER BY id ASC
-      LIMIT ${limitValue}
+        issue < '${secondLastDraw.issue}'
+      ORDER BY issue DESC
     `;
+    
+    // 只有当stats_range不是'all'时，才添加LIMIT子句
+    if (stats_range !== 'all') {
+      sql += ` LIMIT ${limit}`;
+    }
+    
     console.log('SQL查询语句:', sql);
-    // 不使用参数数组，直接执行SQL语句
-    const rows = await query(sql);
     
-    // 创建bian_hao到数据的映射，方便快速查找下下期数据
-    const bianHaoToDataMap = new Map();
-    // 创建数字bian_hao到数据的映射，用于计算下下期
-    const numericBianHaoToDataMap = new Map();
+    // 执行查询，先获取足够多的数据
+    let rawResults = await query(sql);
     
-    rows.forEach(row => {
-      bianHaoToDataMap.set(row.bian_hao, row);
-      // 从bian_hao字符串中提取数字部分，比如从"LT00222"中提取"00222"，然后转换为数字222
-      const numericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
-      numericBianHaoToDataMap.set(numericBianHao, row);
-    });
+    console.log('原始查询结果数量:', rawResults.length);
     
+    // 过滤出真正包含请求组合的记录，并查找下下下期数据
     let results = [];
     
-    // 遍历所有记录，找出符合条件的记录
-    for (const row of rows) {
-      console.log('当前记录:', { id: row.id, issue: row.issue, bian_hao: row.bian_hao });
-      const currentDrawNumbers = __processBalls(row.draw_info);
-      const currentSet = new Set(currentDrawNumbers);
+    // 遍历历史数据，查找组合出现的位置，并记录下下期的号码
+    // 注意：历史数据是按issue降序排列的，所以下下期的索引是i-2
+    for (let i = 2; i < rawResults.length; i++) {
+      const currentDraw = rawResults[i];  // 当前期（组合出现的期数）
+      const nextNextDraw = rawResults[i - 2]; // 下下期（期号比当前期大2，因为数据是降序排列的）
       
-      // 检查当前期是否包含组合
-      const isMatch = combinations.some(combination => {
-        const comboParts = combination.split('-').map(part => part.trim()).map(part => part.padStart(2, '0'));
-        return comboParts.every(part => currentSet.has(part));
+      // 确保nextNextDraw存在
+      if (!nextNextDraw) continue;
+      
+      const currentDrawNumbers = processBalls(currentDraw.draw_info);
+      
+      // 检查当前期是否包含请求组合
+      const isMatch = combinations.some(fullCombination => {
+        const match = checkCombinationInDraw(currentDrawNumbers, fullCombination);
+        return match;
       });
       
       if (isMatch) {
-        console.log('找到匹配组合的记录:', { id: row.id, issue: row.issue, bian_hao: row.bian_hao });
-        // 从当前bian_hao中提取数字部分
-        const currentNumericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
-        console.log('当前数字bian_hao:', currentNumericBianHao);
-        // 计算下下期的数字bian_hao
-        const nextNextNumericBianHao = currentNumericBianHao + 2;
-        console.log('计算下下期数字bian_hao:', nextNextNumericBianHao);
-        // 查找下下期数据
-        const nextNextData = numericBianHaoToDataMap.get(nextNextNumericBianHao);
-        
-        if (nextNextData) {
-          console.log('找到下下期数据:', { id: nextNextData.id, issue: nextNextData.issue, bian_hao: nextNextData.bian_hao });
-          const nextNextDrawNumbers = __processBalls(nextNextData.draw_info);
+          const nextNextDrawNumbers = processBalls(nextNextDraw.draw_info);
           
-          // 如果有目标球，检查目标球是否在下下期出现
-          if (target_ball !== null && target_ball !== undefined && target_ball !== '') {
-            const targetBallStr = String(target_ball).padStart(2, '0');
-            console.log('检查目标球是否在下下期出现:', { target_ball: targetBallStr, nextNextDrawNumbers: nextNextDrawNumbers });
-            if (nextNextDrawNumbers.includes(targetBallStr)) {
-              results.push({
-                index: 0, // 序号会在前端生成
-                period: row.issue,
-                draw_info: currentDrawNumbers,
-                next_period: nextNextData.issue,
-                next_draw_info: nextNextDrawNumbers
-              });
-            }
-          } else {
-            // 没有目标球，直接添加结果
-            results.push({
-              index: 0, // 序号会在前端生成
-              period: row.issue,
-              draw_info: currentDrawNumbers,
-              next_period: nextNextData.issue,
-              next_draw_info: nextNextDrawNumbers
-            });
-          }
-        } else {
-          console.log('未找到下下期数据，数字bian_hao:', nextNextNumericBianHao);
+          // 直接添加结果，后续统一处理目标球
+          results.push({
+            id: currentDraw.id,
+            period: currentDraw.issue,
+            draw_info: currentDrawNumbers,
+            next_period: nextNextDraw.issue,
+            next_draw_info: nextNextDrawNumbers
+          });
         }
-      }
     }
     
-    // 生成序号
-    results = results.map((result, index) => ({
+    // 如果有目标球，检查目标球是否在下下下期出现
+    if (target_ball !== null && target_ball !== undefined && target_ball !== '') {
+      const targetBallNum = parseInt(target_ball);
+      results = results.filter(result => {
+        // 由于next_draw_info已经是通过processBalls处理过的数字数组，直接使用
+        return result.next_draw_info.includes(targetBallNum);
+      });
+    }
+    
+    // 反转结果，按照id从大到小排序
+    results = results.reverse();
+    
+    console.log('过滤后的结果数量:', results.length);
+    
+    // 为结果添加索引
+    const indexedResults = results.map((result, index) => ({
       ...result,
       index: index + 1
     }));
     
-    res.json({ code: 200, message: 'success', data: results });
+    console.log('最终返回的结果数量:', indexedResults.length);
+    
+    res.json({ code: 200, message: 'success', data: indexedResults });
   } catch (error) {
-    res.status(500).json({ code: 500, message: '服务器内部错误', error: error.message });
-  }
-});
-
-// 倒数3期两球组合详情接口
-app.post('/dao_shu_3_qi_liang_qiu_zu_he_xiang_qing', async (req, res) => {
-  console.log('收到倒数3期两球组合详情请求，请求体:', req.body);
-  try {
-    const { latest_period, type = 'front', combinations = [], stats_range = 100, target_ball = null } = req.body;
-    if (!latest_period) return res.status(400).json({ code: 400, message: '最新期号是必填参数' });
-    if (!Array.isArray(combinations) || combinations.length === 0) return res.status(400).json({ code: 400, message: '组合数组不能为空' });
-    if (!Number.isInteger(stats_range) || stats_range <= 0) return res.status(400).json({ code: 400, message: '统计范围必须是正整数' });
-    if (type !== 'front' && type !== 'back') return res.status(400).json({ code: 400, message: '类型只能是front或back' });
-    const periodPrefixMatch = latest_period.match(/[^0-9]+/);
-    const periodPrefix = periodPrefixMatch ? periodPrefixMatch[0] : '';
-    const periodNumber = parseInt(latest_period.replace(/[^0-9]/g, ''));
-    if (isNaN(periodNumber)) return res.status(400).json({ code: 400, message: '最新期号格式不正确' });
-    const daoShu3QiPeriodNumber = periodNumber - 3;
-    const daoShu3QiPeriod = periodPrefix + daoShu3QiPeriodNumber.toString().padStart(3, '0');
-    const daoShu3QiData = await query('SELECT * FROM lottery_results WHERE issue = ? LIMIT 1', [daoShu3QiPeriod]);
-    if (!daoShu3QiData || daoShu3QiData.length === 0) return res.status(404).json({ code: 404, message: '未找到倒数3期的开奖数据' });
-    const daoShu3QiResult = daoShu3QiData[0];
-    const drawField = type === 'front' ? 'red' : 'blue';
-    function __processBalls(balls) {
-      if (!balls) return [];
-      if (typeof balls === 'string') {
-        // 处理 [x, x, x] 格式的JSON字符串
-        if (balls.startsWith('[') && balls.endsWith(']')) {
-          try {
-            // 解析JSON字符串
-            const parsedBalls = JSON.parse(balls);
-            if (Array.isArray(parsedBalls)) {
-              return parsedBalls.map(ball => String(ball).padStart(2, '0'));
-            }
-          } catch (e) {
-            // JSON解析失败，尝试其他格式
-          }
-        }
-        // 处理空格分隔的字符串格式
-        return balls.split(' ').filter(ball => ball.trim() !== '').map(ball => String(ball).padStart(2, '0'));
-      } else if (Array.isArray(balls)) {
-        return balls.map(ball => String(ball).padStart(2, '0'));
-      }
-      return [];
-    }
-    // 查询近300期的所有记录，包括bian_hao字段
-    // 使用字符串拼接，避免参数化查询的类型匹配问题
-    const idValue = daoShu3QiResult.id;
-    const limitValue = stats_range;
-    let sql = `
-      SELECT 
-        id, 
-        issue, 
-        bian_hao,
-        ${drawField} as draw_info
-      FROM 
-        lottery_results 
-      WHERE 
-        id < ${idValue}
-      ORDER BY id ASC
-      LIMIT ${limitValue}
-    `;
-    console.log('SQL查询语句:', sql);
-    // 不使用参数数组，直接执行SQL语句
-    const rows = await query(sql);
-    
-    // 创建bian_hao到数据的映射，方便快速查找下下下期数据
-    const bianHaoToDataMap = new Map();
-    // 创建数字bian_hao到数据的映射，用于计算下下下期
-    const numericBianHaoToDataMap = new Map();
-    
-    rows.forEach(row => {
-      bianHaoToDataMap.set(row.bian_hao, row);
-      // 从bian_hao字符串中提取数字部分，比如从"LT00222"中提取"00222"，然后转换为数字222
-      const numericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
-      numericBianHaoToDataMap.set(numericBianHao, row);
-    });
-    
-    let results = [];
-    
-    // 遍历所有记录，找出符合条件的记录
-    for (const row of rows) {
-      console.log('当前记录:', { id: row.id, issue: row.issue, bian_hao: row.bian_hao });
-      const currentDrawNumbers = __processBalls(row.draw_info);
-      const currentSet = new Set(currentDrawNumbers);
-      
-      // 检查当前期是否包含组合
-      const isMatch = combinations.some(combination => {
-        const comboParts = combination.split('-').map(part => part.trim()).map(part => part.padStart(2, '0'));
-        return comboParts.every(part => currentSet.has(part));
-      });
-      
-      if (isMatch) {
-        console.log('找到匹配组合的记录:', { id: row.id, issue: row.issue, bian_hao: row.bian_hao });
-        // 从当前bian_hao中提取数字部分
-        const currentNumericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
-        console.log('当前数字bian_hao:', currentNumericBianHao);
-        // 计算下下下期的数字bian_hao
-        const nextNextNextNumericBianHao = currentNumericBianHao + 3;
-        console.log('计算下下下期数字bian_hao:', nextNextNextNumericBianHao);
-        // 查找下下下期数据
-        const nextNextNextData = numericBianHaoToDataMap.get(nextNextNextNumericBianHao);
-        
-        if (nextNextNextData) {
-          console.log('找到下下下期数据:', { id: nextNextNextData.id, issue: nextNextNextData.issue, bian_hao: nextNextNextData.bian_hao });
-          const nextNextNextDrawNumbers = __processBalls(nextNextNextData.draw_info);
-          
-          // 如果有目标球，检查目标球是否在下下下期出现
-          if (target_ball !== null && target_ball !== undefined && target_ball !== '') {
-            const targetBallStr = String(target_ball).padStart(2, '0');
-            console.log('检查目标球是否在下下下期出现:', { target_ball: targetBallStr, nextNextNextDrawNumbers: nextNextNextDrawNumbers });
-            if (nextNextNextDrawNumbers.includes(targetBallStr)) {
-              results.push({
-                index: 0, // 序号会在前端生成
-                period: row.issue,
-                draw_info: currentDrawNumbers,
-                next_next_next_period: nextNextNextData.issue,
-                next_next_next_draw_info: nextNextNextDrawNumbers
-              });
-            }
-          } else {
-            // 没有目标球，直接添加结果
-            results.push({
-              index: 0, // 序号会在前端生成
-              period: row.issue,
-              draw_info: currentDrawNumbers,
-              next_next_next_period: nextNextNextData.issue,
-              next_next_next_draw_info: nextNextNextDrawNumbers
-            });
-          }
-        } else {
-          console.log('未找到下下下期数据，数字bian_hao:', nextNextNextNumericBianHao);
-        }
-      }
-    }
-    
-    // 生成序号
-    results = results.map((result, index) => ({
-      ...result,
-      index: index + 1
-    }));
-    
-    res.json({ code: 200, message: 'success', data: results });
-  } catch (error) {
+    console.error('处理请求时发生错误:', error);
     res.status(500).json({ code: 500, message: '服务器内部错误', error: error.message });
   }
 });
 
 // 注册中间件，放在直接路由之后
 app.use('/zuhe', zuHeXiangQingRouter);
+app.use('/zuhe', daoShu3QiLiangQiuZuHeXiangQingRouter); // 注册倒数3期两球组合详情路由
+app.use('/zuhe', daoShu4QiLiangQiuZuHeXiangQingRouter); // 注册倒数4期两球组合详情路由
+app.use('/zuhe', daoShu5QiLiangQiuZuHeXiangQingRouter); // 注册倒数5期两球组合详情路由
 app.use('/san_qiu_zu_he_xiang_qing', sanQiuZuHeXiangQingRouter); // 注册最新1期三球组合详情路由
 app.use('/', sanQiuXiangQingRouter);
 app.use('/huo_qu_sha_hao_hui_ce', shaHaoHuiCeRouter); // 注册杀号回测路由

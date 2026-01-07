@@ -36,6 +36,10 @@
               <a href="dao_shu_4_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数4期两球组合分析</a>
             </li>
             <li class="nav-item">
+              <span class="nav-icon">✅</span>
+              <a href="dao_shu_5_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数5期两球组合分析</a>
+            </li>
+            <li class="nav-item">
               <span class="nav-icon">🔺</span>
               <span onclick="window.location.href='san_qiu_fen_xi.html'">最新1期三球组合分析</span>
             </li>
@@ -140,7 +144,12 @@
       // 获取类型并确保格式正确
       let type = urlParams.get('type') || localStorage.getItem('combinationType') || 'first';
       // 获取统计期数，默认100期
-      let statsRange = parseInt(urlParams.get('stats_range')) || 100;
+      let statsRange = urlParams.get('stats_range');
+      if (statsRange === 'all') {
+        statsRange = 'all';
+      } else {
+        statsRange = parseInt(statsRange) || 100;
+      }
       
       console.log('原始参数:', { combination, type, statsRange });
       
