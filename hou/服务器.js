@@ -30,8 +30,12 @@ const daoShu3QiLiangQiuZuHeRouter = require('./倒数3期两球组合前区.js')
 const daoShu3QiHouQuZuHeRouter = require('./倒数3期两球组合后区.js'); // 导入倒数3期后区两球组合路由
 const daoShu4QiLiangQiuZuHeRouter = require('./倒数4期两球组合前区.js'); // 导入倒数4期前区两球组合路由
 const daoShu4QiHouQuZuHeRouter = require('./倒数4期两球组合后区.js'); // 导入倒数4期后区两球组合路由
-const daoShu5QiLiangQiuZuHeRouter = require('./倒数5期两球组合前区.js'); // 导入倒数5期前区两球组合路由
+const daoShu5QiLiangQiuZuHeRouter = require('./倒数5期两球组合前区.js'); // 导入倒数5期后区两球组合路由
 const daoShu5QiHouQuZuHeRouter = require('./倒数5期两球组合后区.js'); // 导入倒数5期后区两球组合路由
+// 导入近两期两球组合路由
+const jinLiangQiLiangQiuZuHeFrontRouter = require('./近两期两球组合前区.js'); // 导入近两期前区两球组合路由
+const jinLiangQiLiangQiuZuHeBackRouter = require('./近两期两球组合后区.js'); // 导入近两期后区两球组合路由
+const jinLiangQiLiangQiuZuHeXiangQingRouter = require('./近两期两球组合详情.js'); // 导入近两期两球组合详情路由
 const zuHeXiangQingRouter = require('./组合详情.js');
 const sanQiuXiangQingRouter = require('./三球详情.js');
 const sanQiuZuHeXiangQingRouter = require('./三球组合详情.js'); // 导入最新1期三球组合详情路由
@@ -41,6 +45,8 @@ const daoShu3QiShaHaoHuiCeRouter = require('./倒数3期两球前区杀号回测
 const sanQiuShaHaoHuiCeRouter = require('./最新1期三球前区杀号回测.js'); // 导入三球组合前区杀号回测路由
 const daoShu2QiSanQiuShaHaoHuiCeRouter = require('./倒数2期三球前区杀号回测.js'); // 导入倒数2期三球组合前区杀号回测路由
 const daoShu3QiSanQiuShaHaoHuiCeRouter = require('./倒数3期三球前区杀号回测.js'); // 导入倒数3期三球组合前区杀号回测路由
+const daoShu4QiShaHaoHuiCeRouter = require('./倒数4期两球前区杀号回测.js'); // 导入倒数4期杀号回测路由
+const daoShu5QiShaHaoHuiCeRouter = require('./倒数5期两球前区杀号回测.js'); // 导入倒数5期杀号回测路由
 const huoQuShaHaoHouHuiCeRouter = require('./最新1期两球前区杀号回测.js'); // 导入后区杀号回测路由
 const daoShu2QiHouQuShaHaoHuiCeRouter = require('./倒数2期两球后区杀号回测.js'); // 导入倒数2期后区杀号回测路由
 const daoShu3QiHouQuShaHaoHuiCeRouter = require('./倒数3期两球后区杀号回测.js'); // 导入倒数3期后区杀号回测路由
@@ -91,6 +97,10 @@ app.use('/dao_shu_4_qi_liang_qiu_zu_he', daoShu4QiLiangQiuZuHeRouter); // 注册
 app.use('/dao_shu_4_qi_hou_qu_zu_he', daoShu4QiHouQuZuHeRouter); // 注册倒数4期后区两球组合路由
 app.use('/dao_shu_5_qi_liang_qiu_zu_he', daoShu5QiLiangQiuZuHeRouter); // 注册倒数5期前区两球组合路由
 app.use('/dao_shu_5_qi_hou_qu_zu_he', daoShu5QiHouQuZuHeRouter); // 注册倒数5期后区两球组合路由
+// 注册近两期两球组合路由
+app.use('/jin_liang_qi_liang_qiu_zu_he_front', jinLiangQiLiangQiuZuHeFrontRouter); // 注册近两期前区两球组合路由
+app.use('/jin_liang_qi_liang_qiu_zu_he_back', jinLiangQiLiangQiuZuHeBackRouter); // 注册近两期后区两球组合路由
+app.use('/jin_liang_qi_liang_qiu_zu_he_xiang_qing', jinLiangQiLiangQiuZuHeXiangQingRouter); // 注册近两期两球组合详情路由
 const daoShu2QiSanQiuZuHeRouter = require('./倒数2期三球组合.js');
 app.use('/dao_shu_2_qi_san_qiu_zu_he', daoShu2QiSanQiuZuHeRouter); // 注册倒数2期前区三球组合路由
 const daoShu2QiSanQiuZuHeXiangQingRouter = require('./倒数2期三球组合详情.js');
@@ -260,6 +270,8 @@ app.use('/', sanQiuXiangQingRouter);
 app.use('/huo_qu_sha_hao_hui_ce', shaHaoHuiCeRouter); // 注册杀号回测路由
 app.use('/dao_shu_2_qi_sha_hao_hui_ce', daoShu2QiShaHaoHuiCeRouter); // 注册倒数2期杀号回测路由
 app.use('/dao_shu_3_qi_sha_hao_hui_ce', daoShu3QiShaHaoHuiCeRouter); // 注册倒数3期杀号回测路由
+app.use('/dao_shu_4_qi_sha_hao_hui_ce', daoShu4QiShaHaoHuiCeRouter); // 注册倒数4期杀号回测路由
+app.use('/dao_shu_5_qi_sha_hao_hui_ce', daoShu5QiShaHaoHuiCeRouter); // 注册倒数5期杀号回测路由
 app.use('/san_qiu_sha_hao_hui_ce', sanQiuShaHaoHuiCeRouter); // 注册三球组合前区杀号回测路由
 app.use('/dao_shu_2_qi_san_qiu_sha_hao_hui_ce', daoShu2QiSanQiuShaHaoHuiCeRouter); // 注册倒数2期三球组合前区杀号回测路由
 app.use('/dao_shu_3_qi_san_qiu_sha_hao_hui_ce', daoShu3QiSanQiuShaHaoHuiCeRouter); // 注册倒数3期三球组合前区杀号回测路由
@@ -301,6 +313,21 @@ app.get('/getLatestData', async (req, res) => {
     res.json({ success: true, latestResults, fromMock: false });
   } catch (error) {
     res.status(500).json({ success: false, message: '获取最新数据失败' });
+  }
+});
+
+// 获取近两期开奖数据
+app.get('/sql_jin_liang_qi', async (req, res) => {
+  try {
+    const result = await query('SELECT * FROM lottery_results ORDER BY issue DESC LIMIT 2');
+    if (result && result.length > 0) {
+      res.json({ success: true, data: result });
+    } else {
+      res.json({ success: false, message: '未找到数据' });
+    }
+  } catch (error) {
+    console.error('获取近两期开奖数据失败:', error);
+    res.status(500).json({ success: false, message: '数据库查询失败' });
   }
 });
 
