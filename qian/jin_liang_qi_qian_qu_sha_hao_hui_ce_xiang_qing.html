@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>近两期两球组合前区杀号回测结果</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/navigation.js"></script>
+  <script src="js/theme-toggle.js"></script>
+  <style>
+    .period-input {
+      width: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .period-input:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    .period-input::-webkit-inner-spin-button,
+    .period-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    body.dark-theme .period-input {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+    body.dark-theme .period-input:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+    }
+    
+    /* 为主题适配添加额外样式 */
+    body.dark-theme .section,
+    body.dark-theme .combination-table {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    
+    body.dark-theme .combination-table th,
+    body.dark-theme .combination-table td {
+      border-color: #333333;
+      color: #ffffff !important;
+    }
+    
+    body.dark-theme .highlight {
+      background-color: rgba(96, 39, 39, 0.8) !important;
+    }
+    
+    /* 确保统计信息在深色主题下可见 */
+    body.dark-theme #backtestStats {
+      color: #ffffff !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="main-layout">
+      <!-- 左侧导航栏 -->
+      <div class="left-sidebar">
+        <!-- 顶部快捷栏 -->
+        <div class="top-bar">
+          <div class="current-period">25120期</div>
+        </div>
+        
+        <!-- 主导航区 -->
+        <nav class="main-nav">
+          <ul>
+          </ul>
+        </nav>
+        
+        <!-- 期数选择区 -->
+        <div class="period-selection" style="position: relative; top: -400px;">
+          <h4 class="section-title">选择统计范</h4>
+          <select class="period-dropdown">
+            <option selected>最近50期</option>
+            <option>最近10期</option>
+            <option>最近15期</option>
+            <option>最近200期</option>
+            <option>最近300期</option>
+            <option>最近500期</option>
+            <option>最近1000期</option>
+            <option>全部期</option>
+          </select>
+        </div>
+      </div>
+      
+      <!-- 右侧主内容区 -->
+      <div class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h1 class="page-title">近两期两球组合前区杀号回测结果</h1>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn back-btn" onclick="window.location.href='jin_liang_qi_liang_qiu_zu_he.html'">返回</button>
+          </div>
+        </div>
+        
+        <!-- 回测期数和统计期数选择 -->
+        <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: flex-start; flex-wrap: nowrap;">
+          <div style="display: flex; align-items: flex-start; gap: 5px; white-space: nowrap;">
+            <span style="line-height: 32px; white-space: nowrap;">回测期数：</span>
+            <select id="backtest-period" class="period-dropdown">
+              <option value="100">最近100期</option>
+              <option value="50">最近50期</option>
+              <option value="35">最近35期</option>
+              <option value="200">最近200期</option>
+              <option value="300">最近300期</option>
+              <option value="500">最近500期</option>
+              <option value="1000">最近1000期</option>
+              <option value="all">全部期</option>
+            </select>
+          </div>
+          <div style="display: flex; align-items: flex-start; gap: 5px; white-space: nowrap;">
+            <span style="line-height: 32px; white-space: nowrap;">统计期数：</span>
+            <select id="stats-period" class="period-dropdown">
+              <option value="100">最近100期</option>
+              <option value="50">最近50期</option>
+              <option value="35">最近35期</option>
+              <option value="200">最近200期</option>
+              <option value="300">最近300期</option>
+              <option value="500">最近500期</option>
+              <option value="1000">最近1000期</option>
+              <option value="all">全部期</option>
+            </select>
+            <input type="number" id="stats-period-input" class="period-input" placeholder="手动输入" min="1" max="5000">
+          </div>
+        </div>
+        
+        <!-- 回测统计结果 -->
+        <div class="section" style="margin-bottom: 20px;">
+          <div id="backtestStats" style="color: #DF2220; font-weight: bold;">
+            请点击"运行回测"按钮查看结果
+          </div>
+        </div>
+        
+        <!-- 回测详细结果表格 -->
+        <div class="section">
+          <h3>回测详细结果</h3>
+          <div style="overflow-x: auto;">
+            <table class="combination-table">
+              <thead>
+                <tr>
+                  <th>序号</th>
+                  <th>当前回测期号</th>
+                  <th>前区推荐杀号</th>
+                  <th>推荐杀号数量</th>
+                  <th>下期开奖期号</th>
+                  <th>下期实际开奖前区</th>
+                  <th>前区正确杀号</th>
+                  <th>前区错误杀号</th>
+                  <th>是否成功杀号</th>
+                </tr>
+              </thead>
+              <tbody id="backtestResults">
+                <!-- 回测结果将通过JavaScript动态生成 -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // 主题切换功能 - 仅从localStorage读取设置，不在此页面提供切换按钮
+    document.addEventListener('DOMContentLoaded', function() {
+      // 从localStorage读取主题设置
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-theme');
+      }
+      
+      // 从URL参数获取回测期数和统计范
+      const urlParams = new URLSearchParams(window.location.search);
+      const backtestPeriod = urlParams.get('backtest_period');
+      const statsPeriod = urlParams.get('stats_period');
+      
+      // 获取下拉选项元素和输入框元素
+      const backtestDropdown = document.getElementById('backtest-period');
+      const statsDropdown = document.getElementById('stats-period');
+      const statsInput = document.getElementById('stats-period-input');
+      
+      // 设置下拉选项的初始值
+      if (backtestDropdown) {
+        backtestDropdown.value = backtestPeriod || '100';
+      }
+      
+      // 检查statsPeriod是否是自定义值（不在下拉选项中）
+      if (statsDropdown && statsInput) {
+        const dropdownOptions = Array.from(statsDropdown.options).map(opt => opt.value);
+        if (!dropdownOptions.includes(statsPeriod) && statsPeriod !== 'all') {
+          // 如果是自定义值，显示在输入框中
+          statsInput.value = statsPeriod;
+        } else {
+          // 如果在下拉选项中，设置下拉框的值
+          statsDropdown.value = statsPeriod || '100';
+        }
+      } else if (statsDropdown) {
+        statsDropdown.value = statsPeriod || '100';
+      }
+      
+      // 自动运行回测
+      runBacktest();
+      
+      // 为回测期数下拉选择框添加事件监听器
+      if (backtestDropdown) {
+        backtestDropdown.addEventListener('change', function() {
+          runBacktest();
+        });
+      }
+      
+      // 为统计期数下拉选择框添加事件监听器
+      if (statsDropdown && statsInput) {
+        statsDropdown.addEventListener('change', function() {
+          // 清空手动输入值
+          statsInput.value = '';
+          runBacktest();
+        });
+      }
+      
+      // 为统计期数手动输入框添加事件监听器
+      if (statsInput) {
+        statsInput.addEventListener('keypress', function(event) {
+          if (event.key === 'Enter') {
+            runBacktest();
+          }
+        });
+        
+        // 为统计期数手动输入框添加失去焦点事件监听器
+        statsInput.addEventListener('blur', function() {
+          runBacktest();
+        });
+      }
+    });
+    
+    // 运行回测
+    async function runBacktest() {
+      // 获取下拉选项元素和输入框元素
+      const backtestDropdown = document.getElementById('backtest-period');
+      const statsDropdown = document.getElementById('stats-period');
+      const statsInput = document.getElementById('stats-period-input');
+      
+      // 确定回测期数
+      const backtestPeriod = backtestDropdown ? backtestDropdown.value : '100';
+      
+      // 确定统计期数（优先使用手动输入值，其次使用下拉框值）
+      let statsPeriod;
+      if (statsInput && statsInput.value.trim()) {
+        statsPeriod = statsInput.value.trim();
+      } else if (statsDropdown) {
+        statsPeriod = statsDropdown.value;
+      } else {
+        statsPeriod = '100';
+      }
+      
+      try {
+        console.log('开始运行近两期前区杀号回测');
+        const response = await fetch('http://localhost:18889/jin_liang_qi_qian_qu_sha_hao_hui_ce', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ 
+            backtest_period: backtestPeriod, 
+            stats_range: statsPeriod 
+          }),
+          mode: 'cors'
+        });
+        
+        if (!response.ok) {
+          throw new Error('HTTP错误! 状态 ' + response.status);
+        }
+        
+        const result = await response.json();
+        console.log('回测结果:', result);
+        
+        if (result.success) {
+          displayBacktestResults(result.data);
+        } else {
+          document.getElementById('backtestStats').innerHTML = '回测失败: ' + (result.message || '未知错误');
+          document.getElementById('backtestResults').innerHTML = '';
+        }
+      } catch (error) {
+        console.error('回测失败:', error);
+        document.getElementById('backtestStats').innerHTML = '回测失败: ' + error.message;
+        document.getElementById('backtestResults').innerHTML = '';
+      }
+    }
+    
+    // 显示回测结果
+    function displayBacktestResults(data) {
+      // 更新统计结果
+      const statsHtml = `
+        总回测期数: ${data.totalPeriods} | 
+        正确杀号期数: ${data.correctPeriods} | 
+        正确率: ${data.accuracy.toFixed(2)}% | 
+        平均每期杀号: ${data.averageKillNumbersPerPeriod}个 | 
+        总杀对号数: ${data.totalCorrectKills}个
+      `;
+      document.getElementById('backtestStats').innerHTML = statsHtml;
+      
+      // 更新详细结果表格
+      const resultsBody = document.getElementById('backtestResults');
+      resultsBody.innerHTML = '';
+      
+      data.results.forEach((result, index) => {
+        const tr = document.createElement('tr');
+        
+        // 处理当前回测期号，显示为相邻两期以-连接
+        const currentBacktestPeriod = `${result.basePeriod1}-${result.basePeriod2}`;
+        
+        // 计算推荐杀号数量
+        const recommendedKillCount = result.recommendedKills.length;
+        
+        // 分离正确杀号和错误杀号
+        const correctKills = result.killResults.filter(kill => kill.isCorrect).map(kill => kill.number);
+        const wrongKills = result.killResults.filter(kill => !kill.isCorrect).map(kill => kill.number);
+        
+        // 格式化前区推荐杀号
+        const recommendedKillsStr = result.recommendedKills.map(num => `<span class="red-ball">${num}</span>`).join(' ');
+        
+        // 格式化下期实际开奖前区
+        const nextDrawNumbersStr = result.nextDrawNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
+        
+        tr.innerHTML = `
+          <td>${index + 1}</td>
+          <td>${currentBacktestPeriod}</td>
+          <td>${recommendedKillsStr}</td>
+          <td>${recommendedKillCount}</td>
+          <td>${result.nextPeriod}</td>
+          <td>${nextDrawNumbersStr}</td>
+          <td style="color: green; font-weight: bold;">${correctKills.length}</td>
+          <td style="color: red; font-weight: bold;">${wrongKills.length}</td>
+          <td>
+            ${wrongKills.length === 0 ? 
+              '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#4CAF50"/><path d="M7 12L10 15L17 8" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>' : 
+              '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="10" fill="#F44336"/><path d="M8 8L16 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 8L8 16" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            }
+          </td>
+        `;
+        
+        resultsBody.appendChild(tr);
+      });
+    }
+  </script>
+  <style>
+    /* 添加杀号结果样式 */
+    .correct-kill {
+      color: green;
+      font-weight: bold;
+    }
+    .wrong-kill {
+      color: red;
+      font-weight: bold;
+    }
+    body.dark-theme .correct-kill {
+      color: #4CAF50;
+    }
+    body.dark-theme .wrong-kill {
+      color: #f44336;
+    }
+  </style>
+</body>
+</html>

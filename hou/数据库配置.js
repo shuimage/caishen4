@@ -32,7 +32,8 @@ const pool = mysql.createPool(dbConfig);
  */
 async function query(sql, params = []) {
   try {
-    const [results] = await pool.execute(sql, params);
+    // 使用query方法代替execute方法，避免创建过多预处理语句
+    const [results] = await pool.query(sql, params);
     return results;
   } catch (error) {
     console.error('数据库查询错误:', error);

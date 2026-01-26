@@ -55,7 +55,7 @@ const router = express.Router();
  * 4. 关联下一期开奖信息
  * 5. 返回格式化的统计结果
  */
-router.post('/zu_he_xiang_qing', async (req, res) => {
+router.post('/', async (req, res) => {
   console.log('收到组合详情请求！请求方法:', req.method, '请求路径:', req.path);
   console.log('请求体内容:', req.body);
   
@@ -117,7 +117,8 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
     }
     
     // 验证统计范围 - 确保为正整数且不超过5000，避免查询过多数据导致性能问题
-    if (!Number.isInteger(stats_range) || stats_range <= 0 || stats_range > 5000) {
+    const parsedStatsRange = parseInt(stats_range);
+    if (isNaN(parsedStatsRange) || parsedStatsRange <= 0 || parsedStatsRange > 5000) {
       return res.status(400).json({
         code: 400,
         message: 'stats_range必须为正整数且不大于5000'
@@ -126,7 +127,7 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
     
     // 验证目标球号（可选参数）
     let targetBallNumber = null;
-    if (target_ball) {
+    if (target_ball !== null && target_ball !== undefined) {
       const parsedBall = parseInt(target_ball, 10);
       if (isNaN(parsedBall) || parsedBall < 1 || parsedBall > 35) {
         return res.status(400).json({
@@ -141,22 +142,24 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
     console.log('开始组合详情分析，参数:', { latest_period, type, combinations, stats_range, target_ball });
     
     // 2. 数据查询阶段 - 查询指定范围的历史开奖数据
-      // SQL查询语句 - 按期号降序排列，确保最新的记录在前面
-      const querySql = `
-        SELECT
-          issue AS period,
-          bian_hao,
-          draw_date,
-          red,
-          blue
-        FROM lottery_results
-        WHERE issue < ?
-        ORDER BY issue DESC
-        LIMIT ?
-      `;
+    // SQL查询语句 - 按期号降序排列，确保最新的记录在前面
+    const querySql = `
+      SELECT
+        issue AS period,
+        draw_date,
+        red,
+        blue
+      FROM lottery_results
+      WHERE issue < ?
+      ORDER BY issue DESC
+      LIMIT ?
+    `;
     
-    // 执行数据库查询 - 使用参数化查询防止SQL注入，确保参数类型正确
-    const historyResults = await query(querySql, [latest_period.toString(), stats_range.toString()]);
+    console.log('SQL查询语句:', querySql);
+    console.log('查询参数:', [latest_period, parsedStatsRange]);
+    
+    // 执行数据库查询 - 使用参数化查询防止SQL注入
+    const historyResults = await query(querySql, [latest_period, parsedStatsRange]);
     
     // 检查查询结果 - 如果没有找到数据，返回404错误
     if (!historyResults || historyResults.length === 0) {
@@ -166,9 +169,13 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
       });
     }
     
+    console.log('查询到的历史数据数量:', historyResults.length);
+    
     // 3. 数据处理阶段 - 组合匹配和结果处理
     const resultList = []; // 存储最终的统计结果
     let index = 1;        // 用于结果排序的序号
+    
+    console.log('开始处理历史数据，数据总条数:', historyResults.length);
     
     // 遍历每条历史开奖记录，从第1条开始（因为我们需要查找下一期的数据）
     for (let i = 1; i < historyResults.length; i++) {
@@ -176,7 +183,12 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
       const nextRecord = historyResults[i - 1]; // 下一期（期号比当前期大1，因为数据是降序排列的）
       
       // 确保下一期数据存在
-      if (!nextRecord) continue;
+      if (!nextRecord) {
+        console.log(`第${i}条记录没有下一期数据，跳过`);
+        continue;
+      }
+      
+      console.log(`处理第${i}条记录，期号: ${record.period}，下一期期号: ${nextRecord.period}`);
       
       // 根据类型获取对应区域的号码（前区/后区）
       let balls;
@@ -186,11 +198,16 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
         balls = processBalls(record.blue); // 处理后区蓝球数据
       }
       
+      console.log(`${type === 'front' ? '前区' : '后区'}号码:`, balls);
+      
       // 遍历用户提供的所有组合，只检查主组合（前两个球）
       for (const combination of combinations) {
+        console.log(`检查组合: ${combination}`);
         // 分离主组合和目标球，只检查主组合（前两个球）
         const mainCombo = combination.split('-').slice(0, 2).join('-');
         const comboNumbers = mainCombo.split('-');
+        
+        console.log(`主组合: ${mainCombo}，组合号码:`, comboNumbers);
         
         // 检查当前开奖记录是否包含主组合中的所有号码
         const allMatch = comboNumbers.every(num => {
@@ -198,6 +215,8 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
           const numInt = parseInt(num);
           return balls.includes(numInt);
         });
+        
+        console.log(`组合匹配结果: ${allMatch}`);
         
         if (allMatch) {
           // 获取下一期的号码
@@ -208,8 +227,11 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
             nextDrawInfo = processBalls(nextRecord.blue);
           }
           
+          console.log(`下一期${type === 'front' ? '前区' : '后区'}号码:`, nextDrawInfo);
+          
           // 如果指定了目标球号，则只添加下一期开奖信息中包含该球号的记录
           if (!targetBallNumber || (nextDrawInfo && nextDrawInfo.includes(targetBallNumber))) {
+            console.log(`目标球匹配结果: ${!targetBallNumber ? '未指定目标球' : '包含目标球'}`);
             // 构建结果对象并添加到结果列表
             resultList.push({
               index: index++,        // 结果序号（递增）
@@ -219,6 +241,7 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
               next_period: nextRecord.period,  // 下一期期号
               next_draw_info: nextDrawInfo // 下一期开奖号码
             });
+            console.log(`添加匹配记录，当前累计: ${resultList.length}条`);
           }
         }
       }
@@ -227,6 +250,7 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
     // 4. 响应处理阶段 - 返回查询结果
     // 检查是否有匹配的数据
     if (resultList.length === 0) {
+      console.log('未找到匹配的组合数据');
       return res.status(404).json({
         code: 404,
         message: '在指定范围内未找到匹配的组合数据'
@@ -244,11 +268,12 @@ router.post('/zu_he_xiang_qing', async (req, res) => {
     
   } catch (error) {
     // 异常处理 - 捕获并记录所有可能的错误
-    console.error('组合详情分析失败:', error);
-    // 返回服务器错误响应
+    console.error('组合详情分析失败:', error.stack);
+    // 返回服务器错误响应，包含详细错误信息
     res.status(500).json({
       code: 500,
-      message: '数据库操作失败'
+      message: '服务器内部错误',
+      error: error.message
     });
   }
 });
@@ -286,11 +311,27 @@ function processBalls(ballsData) {
         .map(ball => parseInt(ball.trim(), 10))
         .filter(num => !isNaN(num));
     } else {
-      // 子情况B: 直接按逗号分割的字符串格式
-      return ballsData
-        .split(',')
-        .map(ball => parseInt(ball.trim(), 10))
-        .filter(num => !isNaN(num));
+      // 子情况B: 处理空格分隔的字符串格式（如"1 2 3 4 5"）
+      if (ballsData.includes(' ')) {
+        return ballsData
+          .split(' ')
+          .map(ball => parseInt(ball.trim(), 10))
+          .filter(num => !isNaN(num));
+      } 
+      // 子情况C: 处理逗号分隔的字符串格式（如"1,2,3,4,5"）
+      else if (ballsData.includes(',')) {
+        return ballsData
+          .split(',')
+          .map(ball => parseInt(ball.trim(), 10))
+          .filter(num => !isNaN(num));
+      }
+      // 子情况D: 处理其他格式的字符串，尝试提取所有数字
+      else {
+        const numbers = ballsData.match(/\d+/g);
+        if (numbers) {
+          return numbers.map(num => parseInt(num, 10)).filter(num => !isNaN(num));
+        }
+      }
     }
   }
   

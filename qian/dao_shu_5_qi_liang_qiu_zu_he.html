@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>大乐透统计分析 - 倒数5期两球组合分析</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/navigation.js"></script>
   <style>
     /* 确保没有水平导航栏显示 */
     .main-content > div:nth-child(2) {
@@ -41,60 +42,27 @@
         <!-- 主导航区 -->
         <nav class="main-nav">
           <ul>
-            <li class="nav-item">
-              <span class="nav-icon">✕</span>
-              <a href="sha_hao_fen_xi.html" style="text-decoration: none; color: inherit;">最新1期两球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✖️</span>
-              <span onclick="window.location.href='dao_shu_2_qi_liang_qiu_zu_he.html'">倒数2期两球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✗</span>
-              <span onclick="window.location.href='dao_shu_3_qi_liang_qiu_zu_he.html'">倒数3期两球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✘</span>
-              <a href="dao_shu_4_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数4期两球组合分析</a>
-            </li>
-            <li class="nav-item active">
-              <span class="nav-icon">✙</span>
-              <span>倒数5期两球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔺</span>
-              <span onclick="window.location.href='/san_qiu_fen_xi.html'">最新1期三球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔻</span>
-              <span onclick="window.location.href='dao_shu_2_qi_san_qiu_zu_he.html'">倒数2期三球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔹</span>
-              <a href="dao_shu_3_qi_san_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期三球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔮</span>
-              <span onclick="window.location.href='xia_qi_kai_jiang_yu_ce.html'">下期开奖预测</span>
-            </li>
           </ul>
         </nav>
         
         <!-- 期数选择区 -->
         <div class="period-selection" style="position: relative; top: -400px;">
-          <h4 class="section-title">选择统计范围</h4>
-          <select class="period-dropdown">
-            <option selected>最近100期</option>
-            <option>最近50期</option>
-            <option>最近35期</option>
-            <option>最近200期</option>
-            <option>最近300期</option>
-            <option>最近500期</option>
-            <option>最近1000期</option>
-            <option>最近1500期</option>
-            <option>最近2000期</option>
-            <option>全部期</option>
-          </select>
+          <h4 class="section-title">选择统计范</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <select class="period-dropdown">
+              <option selected>最近100期</option>
+              <option>最近50期</option>
+              <option>最近35期</option>
+              <option>最近200期</option>
+              <option>最近300期</option>
+              <option>最近500期</option>
+              <option>最近1000期</option>
+              <option>最近1500期</option>
+              <option>最近2000期</option>
+              <option>全部期</option>
+            </select>
+            <input type="number" id="customPeriod" class="period-input" placeholder="输入期数" min="1" max="5000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; outline: none; transition: border-color 0.3s, box-shadow 0.3s;">
+          </div>
         </div>
       </div>
       
@@ -112,11 +80,21 @@
           <h3 style="color: #ff6600; margin-bottom: 15px;">推荐杀号</h3>
           <div style="display: flex; gap: 30px;">
             <div>
-              <h4 style="color: #ffffff; margin-bottom: 10px;">前区推荐杀号</h4>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <h4 style="color: #ffffff; margin: 0;">前区推荐杀号</h4>
+                <button class="copy-btn" onclick="copyKillNumbers('front')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
               <div id="front-kill-numbers" style="font-size: 18px; color: #ff4444; font-weight: bold;">--</div>
             </div>
             <div>
-              <h4 style="color: #ffffff; margin-bottom: 10px;">后区推荐杀号</h4>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <h4 style="color: #ffffff; margin: 0;">后区推荐杀号</h4>
+                <button class="copy-btn" onclick="copyKillNumbers('back')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
               <div id="back-kill-numbers" style="font-size: 18px; color: #ff4444; font-weight: bold;">--</div>
             </div>
           </div>
@@ -158,41 +136,112 @@
             </div>
           </div>
 
-          <!-- 前区推荐杀号 -->
-        <div class="section" style="flex: 1; min-width: 200px;">
-          <div class="section-header" style="margin-bottom: 10px;">
-            <h3 style="margin: 0;">前区推荐杀号</h3>
-          </div>
-          <div class="kill-numbers-container" id="firstZoneKillNumbersContainer">
-            <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
-              <div id="firstZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
-                加载中...
+          <!-- 前区推荐买号 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;">前区推荐买号：</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="backtest-btn" onclick="goToFrontBuyBacktestPage()" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg>
+                </button>
               </div>
             </div>
-            <!-- 添加查看回测结果链接 -->
-            <div style="margin-top: 15px; text-align: center;">
-              <a href="#" onclick="window.location.href='dao_shu_5_qi_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=' + periodValue; return false;" style="color: #1890ff; text-decoration: none; font-size: 14px; font-weight: bold;">
-                查看回测结果
-              </a>
+            <!-- 出现最多球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最多球：</span>
+              <div id="firstZoneMostOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现最少球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最少球：</span>
+              <div id="firstZoneLeastOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现平均球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现平均球：</span>
+              <div id="firstZoneAverageOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
             </div>
           </div>
-        </div>
+          
+          <!-- 后区推荐买号 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;">后区推荐买号：</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="backtest-btn" onclick="goToBackBuyBacktestPage()" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg>
+              </button>
+              </div>
+            </div>
+            <!-- 出现最多球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最多球：</span>
+              <div id="lastZoneMostOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现最少球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最少球：</span>
+              <div id="lastZoneLeastOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现平均球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现平均球：</span>
+              <div id="lastZoneAverageOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 前区推荐杀号 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;">前区推荐杀号</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="copy-btn" onclick="copyKillNumbers('front')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  复制
+                </button>
+                <button class="backtest-btn" onclick="window.location.href='dao_shu_5_qi_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=' + periodValue" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="kill-numbers-container" id="firstZoneKillNumbersContainer">
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
+                <div id="firstZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
+                  加载中...
+                </div>
+              </div>
+            </div>
+          </div>
 
           <!-- 后区推荐杀号 -->
           <div class="section" style="flex: 1; min-width: 200px;">
-            <div class="section-header" style="margin-bottom: 10px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
               <h3 style="margin: 0;">后区推荐杀号</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="copy-btn" onclick="copyKillNumbers('back')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  复制
+                </button>
+                <button class="backtest-btn" onclick="goToBacktestHouPage()" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg>
+                </button>
+              </div>
             </div>
             <div class="kill-numbers-container" id="secondZoneKillNumbersContainer">
               <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
                 <div id="secondZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
                   加载中...
                 </div>
-              </div>
-              <div style="margin-top: 15px; text-align: center;">
-                <a href="#" onclick="goToBacktestHouPage(); return false;" style="color: #1890ff; text-decoration: none; font-size: 14px; font-weight: bold;">
-                  查看回测结果
-                </a>
               </div>
             </div>
           </div>
@@ -735,13 +784,59 @@
         }
       }
       
+      // 计算从未出现球
+      // 收集所有组合中出现过的前区号码
+      const appearedNumbers = new Set();
+      analysisData.combinations.forEach(combo => {
+        if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
+          combo.nextDrawNumbers.forEach(num => {
+            // 转换为数字存储，避免重复
+            appearedNumbers.add(parseInt(num));
+          });
+        }
+      });
+      
+      // 找出1-35中从未出现过的球
+      const neverAppearedNumbers = [];
+      for (let i = 1; i <= 35; i++) {
+        if (!appearedNumbers.has(i)) {
+          neverAppearedNumbers.push(i);
+        }
+      }
+      
+      // 构建杀号方法数组
+      let killMethods = [];
+      
+      // 添加现有杀号
+      if (killNumbers.length > 0) {
+        killMethods.push({
+          name: '现有杀号',
+          numbers: killNumbers
+        });
+      }
+      
+      // 添加从未出现球杀号（始终显示，无论是否有数据）
+      killMethods.push({
+        name: '从未出现球',
+        numbers: neverAppearedNumbers
+      });
+      
       // 更新前区推荐杀号区块（卡片区域）
       const firstZoneKillNumbersElement = document.getElementById('firstZoneKillNumbers');
       if (firstZoneKillNumbersElement) {
-        if (killNumbers.length > 0) {
-          firstZoneKillNumbersElement.innerHTML = killNumbers.map(num => 
-            `<span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; margin: 3px; background-color: #DF2220; border-radius: 50%; font-size: 14px; color: #ffffff; font-weight: bold;">${num}</span>`
-          ).join(' ');
+        if (killMethods.length > 0) {
+          let html = '';
+          killMethods.forEach(method => {
+            html += `<div style="margin-bottom: 10px;">
+              <div style="font-weight: bold; margin-bottom: 5px;">${method.name}:</div>
+              <div>
+                ${method.numbers.length > 0 ? method.numbers.map(num => 
+                  `<span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; margin: 3px; background-color: #DF2220; border-radius: 50%; font-size: 14px; color: #ffffff; font-weight: bold;">${num}</span>`
+                ).join(' ') : '暂无数据'}
+              </div>
+            </div>`;
+          });
+          firstZoneKillNumbersElement.innerHTML = html;
         } else {
           firstZoneKillNumbersElement.textContent = '暂无推荐杀号';
         }
@@ -895,6 +990,86 @@
         } else {
           predictionBalls.textContent = '暂无预测数据';
         }
+      }
+      
+      // 渲染前区推荐买号
+      // 1. 出现最多球：找到totalCounts中的最大值对应的号码
+      const firstZoneMostOccurrences = document.getElementById('firstZoneMostOccurrences');
+      firstZoneMostOccurrences.innerHTML = '';
+      // 找到前区汇总计数中的最大值
+      const maxFirstCount = Math.max(...totalCounts);
+      if (maxFirstCount > 0) {
+        // 找出所有最大值对应的号码
+        const mostOccurrenceNumbers = [];
+        for (let i = 1; i <= 35; i++) {
+          if (totalCounts[i] === maxFirstCount) {
+            mostOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现最多球
+        mostOccurrenceNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'red-ball';
+          ball.textContent = num;
+          firstZoneMostOccurrences.appendChild(ball);
+        });
+      } else {
+        firstZoneMostOccurrences.textContent = '暂无数据';
+      }
+      
+      // 2. 出现最少球：找到totalCounts中除0以外的最小值对应的号码
+      const firstZoneLeastOccurrences = document.getElementById('firstZoneLeastOccurrences');
+      firstZoneLeastOccurrences.innerHTML = '';
+      // 过滤掉0值，找到最小值
+      const nonZeroCounts = totalCounts.filter(count => count > 0);
+      if (nonZeroCounts.length > 0) {
+        const minFirstCount = Math.min(...nonZeroCounts);
+        // 找出所有最小值对应的号码
+        const leastOccurrenceNumbers = [];
+        for (let i = 1; i <= 35; i++) {
+          if (totalCounts[i] === minFirstCount) {
+            leastOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现最少球
+        leastOccurrenceNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'red-ball';
+          ball.textContent = num;
+          firstZoneLeastOccurrences.appendChild(ball);
+        });
+      } else {
+        firstZoneLeastOccurrences.textContent = '暂无数据';
+      }
+      
+      // 3. 出现平均球：找到totalCounts中次数等于平均值的号码
+      const firstZoneAverageOccurrences = document.getElementById('firstZoneAverageOccurrences');
+      firstZoneAverageOccurrences.innerHTML = '';
+      // 计算前区号码的平均出现次数
+      const nonZeroTotalCounts = totalCounts.filter(count => count > 0);
+      if (nonZeroTotalCounts.length > 0) {
+        const sumCounts = nonZeroTotalCounts.reduce((sum, count) => sum + count, 0);
+        const averageCount = Math.round(sumCounts / nonZeroTotalCounts.length);
+        // 找出所有等于平均值的号码
+        const averageOccurrenceNumbers = [];
+        for (let i = 1; i <= 35; i++) {
+          if (totalCounts[i] === averageCount) {
+            averageOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现平均球
+        if (averageOccurrenceNumbers.length > 0) {
+          averageOccurrenceNumbers.forEach(num => {
+            const ball = document.createElement('span');
+            ball.className = 'red-ball';
+            ball.textContent = num;
+            firstZoneAverageOccurrences.appendChild(ball);
+          });
+        } else {
+          firstZoneAverageOccurrences.textContent = '暂无数据';
+        }
+      } else {
+        firstZoneAverageOccurrences.textContent = '暂无数据';
       }
       
       // 更新前区统计信息
@@ -1102,6 +1277,87 @@
         secondZoneCombinations.appendChild(tr);
       }
       
+      // 后区推荐买号的三种类型：出现最多球、出现最少球、出现平均球
+      
+      // 1. 出现最多球：找到backTotalCounts中的最大值对应的号码
+      const lastZoneMostOccurrences = document.getElementById('lastZoneMostOccurrences');
+      lastZoneMostOccurrences.innerHTML = '';
+      // 找到后区汇总计数中的最大值
+      const maxLastCount = Math.max(...backTotalCounts);
+      if (maxLastCount > 0) {
+        // 找出所有最大值对应的号码
+        const mostOccurrenceNumbers = [];
+        for (let i = 1; i <= 12; i++) {
+          if (backTotalCounts[i] === maxLastCount) {
+            mostOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现最多球
+        mostOccurrenceNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'blue-ball';
+          ball.textContent = num;
+          lastZoneMostOccurrences.appendChild(ball);
+        });
+      } else {
+        lastZoneMostOccurrences.textContent = '暂无数据';
+      }
+      
+      // 2. 出现最少球：找到backTotalCounts中除0以外的最小值对应的号码
+      const lastZoneLeastOccurrences = document.getElementById('lastZoneLeastOccurrences');
+      lastZoneLeastOccurrences.innerHTML = '';
+      // 过滤掉0值，找到最小值
+      const nonZeroBackCounts = backTotalCounts.filter(count => count > 0);
+      if (nonZeroBackCounts.length > 0) {
+        const minLastCount = Math.min(...nonZeroBackCounts);
+        // 找出所有最小值对应的号码
+        const leastOccurrenceNumbers = [];
+        for (let i = 1; i <= 12; i++) {
+          if (backTotalCounts[i] === minLastCount) {
+            leastOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现最少球
+        leastOccurrenceNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'blue-ball';
+          ball.textContent = num;
+          lastZoneLeastOccurrences.appendChild(ball);
+        });
+      } else {
+        lastZoneLeastOccurrences.textContent = '暂无数据';
+      }
+      
+      // 3. 出现平均球：找到backTotalCounts中次数等于平均值的号码
+      const lastZoneAverageOccurrences = document.getElementById('lastZoneAverageOccurrences');
+      lastZoneAverageOccurrences.innerHTML = '';
+      // 计算后区号码的平均出现次数
+      const nonZeroTotalBackCounts = backTotalCounts.filter(count => count > 0);
+      if (nonZeroTotalBackCounts.length > 0) {
+        const sumBackCounts = nonZeroTotalBackCounts.reduce((sum, count) => sum + count, 0);
+        const averageBackCount = Math.round(sumBackCounts / nonZeroTotalBackCounts.length);
+        // 找出所有等于平均值的号码
+        const averageOccurrenceNumbers = [];
+        for (let i = 1; i <= 12; i++) {
+          if (backTotalCounts[i] === averageBackCount) {
+            averageOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现平均球
+        if (averageOccurrenceNumbers.length > 0) {
+          averageOccurrenceNumbers.forEach(num => {
+            const ball = document.createElement('span');
+            ball.className = 'blue-ball';
+            ball.textContent = num;
+            lastZoneAverageOccurrences.appendChild(ball);
+          });
+        } else {
+          lastZoneAverageOccurrences.textContent = '暂无数据';
+        }
+      } else {
+        lastZoneAverageOccurrences.textContent = '暂无数据';
+      }
+      
       // 更新后区统计信息
       const secondZoneSection = document.querySelector('.section:nth-child(2)');
       if (secondZoneSection && secondZoneSection.querySelector('.section-header')) {
@@ -1161,21 +1417,21 @@
       }
     }
     
-    // 保存统计范围到localStorage
+    // 保存统计范到localStorage
     function savePeriodSelection(periodValue) {
       try {
         localStorage.setItem('selectedPeriodRange', periodValue);
       } catch (e) {
-        console.error('保存统计范围失败:', e);
+        console.error('保存统计范失败:', e);
       }
     }
     
-    // 从localStorage读取保存的统计范围
+    // 从localStorage读取保存的统计范
     function getSavedPeriodSelection() {
       try {
         return localStorage.getItem('selectedPeriodRange') || '100';
       } catch (e) {
-        console.error('读取统计范围失败:', e);
+        console.error('读取统计范失败:', e);
         return '100';
       }
     }
@@ -1183,6 +1439,7 @@
     // 根据period值设置下拉框选中状态
     function setPeriodDropdownSelection(periodValue) {
       const periodDropdown = document.querySelector('.period-dropdown');
+      const customPeriodInput = document.getElementById('customPeriod');
       if (periodDropdown) {
         if (periodValue === '100') periodDropdown.value = '最近100期';
         else if (periodValue === '50') periodDropdown.value = '最近50期';
@@ -1194,13 +1451,43 @@
         else if (periodValue === '1500') periodDropdown.value = '最近1500期';
         else if (periodValue === '2000') periodDropdown.value = '最近2000期';
         else if (periodValue === 'all') periodDropdown.value = '全部期';
+        else {
+          // 自定义期数，清空下拉框选中状态，设置输入框值
+          periodDropdown.selectedIndex = -1;
+          if (customPeriodInput) {
+            customPeriodInput.value = periodValue;
+          }
+        }
       }
     }
     
-    // 定义全局变量用于存储当前选择的统计范围
+    // 定义全局变量用于存储当前选择的统计范
     let periodValue = '100'; // 默认值
     
     // 全局存储汇总数据，用于主题切换时重新绘制图表
+    
+    // 跳转到前区买号回测页面
+    function goToFrontBuyBacktestPage() {
+      // 获取当前选择的统计范
+      const statsRange = getSelectedStatsRange();
+      // 跳转到回测页面
+      window.location.href = `dao_shu_5_qi_mai_hao_qian_qu_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsRange}&type=front`;
+    }
+    
+    // 跳转到后区买号回测页面
+    function goToBackBuyBacktestPage() {
+      // 获取当前选择的统计范
+      const statsRange = getSelectedStatsRange();
+      // 跳转到回测页面
+      window.location.href = `dao_shu_5_qi_mai_hao_hou_qu_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsRange}&type=back`;
+    }
+    
+    // 获取当前选择的统计范
+    function getSelectedStatsRange() {
+      // 这里应该根据页面上的选择获取统计范
+      // 目前使用全局变量periodValue
+      return periodValue;
+    }
     let globalTotalCounts = [];
     let globalBackTotalCounts = [];
     
@@ -1224,7 +1511,7 @@
       
       renderTableHeaders();
       
-      // 获取保存的统计范围，如果没有则使用默认值100
+      // 获取保存的统计范，如果没有则使用默认值100
       periodValue = getSavedPeriodSelection();
       
       // 设置下拉框选中状态
@@ -1233,7 +1520,7 @@
       // 调用函数获取并显示倒数第5期开奖信息
       await xuan_ran_dao_shu_5_qi_kai_jiang();
       
-      // 使用保存的统计范围渲染数据
+      // 使用保存的统计范渲染数据
       await renderTwoBallAnalysisData(periodValue);
       
       console.log('页面初始化完成，所有数据已加载');
@@ -1244,8 +1531,9 @@ console.log('3. 两球组合分析数据: http://localhost:18889/dao_shu_5_qi_li
 console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_5_qi_hou_qu_zu_he');
       console.log('推荐杀号信息现在直接从两球组合分析数据接口获取并更新');
       
-      // 为统计范围下拉选择框添加事件监听器
+      // 为统计范下拉选择框添加事件监听器
       const periodDropdown = document.querySelector('.period-dropdown');
+      const customPeriodInput = document.getElementById('customPeriod');
       if (periodDropdown) {
         periodDropdown.addEventListener('change', function() {
           const selectedText = this.value;
@@ -1262,12 +1550,62 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_5_qi_ho
           else if (selectedText === '最近2000期') periodValue = '2000';
           else if (selectedText === '全部期') periodValue = 'all';
           
-          // 保存选择的统计范围
+          // 清空手动输入框
+          if (customPeriodInput) {
+            customPeriodInput.value = '';
+          }
+          
+          // 保存选择的统计范
           savePeriodSelection(periodValue);
           
-          // 根据选择的统计范围重新渲染数据
+          // 根据选择的统计范重新渲染数据
           renderTwoBallAnalysisData(periodValue);
           // 推荐杀号信息现在直接从两球组合分析数据接口获取并更新
+        });
+      }
+      
+      // 为手动输入期数添加事件监听器
+      if (customPeriodInput) {
+        // 监听回车键
+        customPeriodInput.addEventListener('keypress', function(event) {
+          if (event.key === 'Enter') {
+            const inputValue = this.value.trim();
+            if (inputValue && parseInt(inputValue) > 0) {
+              // 更新全局变量
+              periodValue = inputValue;
+              
+              // 保存选择的统计范
+              savePeriodSelection(periodValue);
+              
+              // 清空下拉框选中状态
+              if (periodDropdown) {
+                periodDropdown.selectedIndex = -1;
+              }
+              
+              // 根据选择的统计范重新渲染数据
+              renderTwoBallAnalysisData(periodValue);
+            }
+          }
+        });
+        
+        // 监听失去焦点事件
+        customPeriodInput.addEventListener('blur', function() {
+          const inputValue = this.value.trim();
+          if (inputValue && parseInt(inputValue) > 0) {
+            // 更新全局变量
+            periodValue = inputValue;
+            
+            // 保存选择的统计范
+            savePeriodSelection(periodValue);
+            
+            // 清空下拉框选中状态
+            if (periodDropdown) {
+              periodDropdown.selectedIndex = -1;
+            }
+            
+            // 根据选择的统计范重新渲染数据
+            renderTwoBallAnalysisData(periodValue);
+          }
         });
       }
       
@@ -1318,6 +1656,55 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_5_qi_ho
         });
       }
     });
+    
+    // 复制杀号到剪贴板
+    function copyKillNumbers(zoneType) {
+      let killNumbersText;
+      let copyBtn;
+      
+      if (zoneType === 'front') {
+        const frontKillNumbersElement = document.getElementById('front-kill-numbers');
+        killNumbersText = frontKillNumbersElement.textContent.trim();
+        copyBtn = frontKillNumbersElement.closest('div').querySelector('.copy-btn');
+      } else {
+        const backKillNumbersElement = document.getElementById('back-kill-numbers');
+        killNumbersText = backKillNumbersElement.textContent.trim();
+        copyBtn = backKillNumbersElement.closest('div').querySelector('.copy-btn');
+      }
+      
+      if (!killNumbersText || killNumbersText === '--' || killNumbersText.includes('暂无推荐杀号')) {
+        alert('暂无推荐杀号可复制');
+        return;
+      }
+      
+      // 提取数字
+      const killNumbers = killNumbersText.match(/\d+/g);
+      if (!killNumbers || killNumbers.length === 0) {
+        alert('无法提取杀号数字');
+        return;
+      }
+      
+      // 复制到剪贴板
+      const textToCopy = killNumbers.join(' ');
+      
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        // 显示复制成功反馈
+        if (copyBtn) {
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = '已复制';
+          copyBtn.style.backgroundColor = '#2196F3';
+          
+          // 恢复原始状态
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+            copyBtn.style.backgroundColor = '#4CAF50';
+          }, 1500);
+        }
+      }).catch(err => {
+        console.error('复制失败:', err);
+        alert('复制失败，请手动复制');
+      });
+    }
     
     // 绘制前区汇总数据图表
     async function drawFrontZoneChart(totalCounts, periodValue) {
@@ -1684,7 +2071,7 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_5_qi_ho
       });
     });
     
-    // 添加统计范围选择事件
+    // 添加统计范选择事件
     document.querySelector('.period-dropdown').addEventListener('change', function() {
       const selectedText = this.value;
       let period = '100';
@@ -1705,10 +2092,10 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_5_qi_ho
         period = 'all';
       }
       
-      // 保存选择的统计范围
+      // 保存选择的统计范
       localStorage.setItem('selectedPeriodRange', period);
       
-      // 根据选择的统计范围重新渲染数据
+      // 根据选择的统计范重新渲染数据
       renderTwoBallAnalysisData(period);
     });
   </script>

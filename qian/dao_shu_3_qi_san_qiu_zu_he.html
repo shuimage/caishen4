@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大乐透统计分析 - 倒数3期三球组合分析</title>
+  <title>大乐透统计分析- 倒数3期三球组合分析</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/navigation.js"></script>
+  <script src="js/theme-toggle.js"></script>
   <style>
     /* 确保没有水平导航栏显示 */
     .main-content > div:nth-child(2):has(.tabs) {
@@ -41,60 +43,27 @@
         <!-- 主导航区 -->
         <nav class="main-nav">
           <ul>
-            <li class="nav-item">
-              <span class="nav-icon">✕</span>
-              <a href="sha_hao_fen_xi.html" style="text-decoration: none; color: inherit;">最新1期两球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✖️</span>
-              <span onclick="window.location.href='dao_shu_2_qi_liang_qiu_zu_he.html'">倒数2期两球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✗</span>
-              <a href="dao_shu_3_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期两球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✘</span>
-              <a href="dao_shu_4_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数4期两球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✙</span>
-              <a href="dao_shu_5_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数5期两球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔺</span>
-              <span onclick="window.location.href='san_qiu_fen_xi.html'">最新1期三球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔻</span>
-              <span onclick="window.location.href='dao_shu_2_qi_san_qiu_zu_he.html'">倒数2期三球组合分析</span>
-            </li>
-            <li class="nav-item active">
-              <span class="nav-icon">🔹</span>
-              <span>倒数3期三球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔮</span>
-              <span onclick="window.location.href='xia_qi_kai_jiang_yu_ce.html'">下期开奖预测</span>
-            </li>
           </ul>
         </nav>
         
         <!-- 期数选择区 -->
         <div class="period-selection">
-          <h4 class="section-title">选择统计范围</h4>
-          <select class="period-dropdown">
-            <option selected>最近100期</option>
-            <option>最近50期</option>
-            <option>最近35期</option>
-            <option>最近200期</option>
-            <option>最近300期</option>
-            <option>最近500期</option>
-            <option>最近1000期</option>
-            <option>最近1500期</option>
-            <option>最近2000期</option>
-            <option>全部期</option>
-          </select>
+          <h4 class="section-title">选择统计范</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <select class="period-dropdown">
+              <option selected>最新100期</option>
+              <option>最新50期</option>
+              <option>最新35期</option>
+              <option>最新200期</option>
+              <option>最新300期</option>
+              <option>最新500期</option>
+              <option>最新1000期</option>
+              <option>最新1500期</option>
+              <option>最新2000期</option>
+              <option>全部期</option>
+            </select>
+            <input type="number" id="customPeriod" class="period-input" placeholder="输入期数" min="1" max="5000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; outline: none; transition: border-color 0.3s, box-shadow 0.3s;">
+          </div>
         </div>
       </div>
       
@@ -120,41 +89,72 @@
                 <!-- 标题已移除 -->
                 <div id="latestDrawInfo">
                   <!-- 数据将通过JavaScript动态生成 -->
-                  <div>加载中...</div>
+                  <div>加载中..</div>
                 </div>
               </div>
             </div>
           </div>
 
-          <!-- 倒数第3期开奖信息 -->
+          <!-- 倒数2期开奖信息 -->
           <div class="section" style="flex: 1; min-width: 200px;">
             <div class="section-header" style="margin-bottom: 10px;">
-              <h3 style="margin: 0;">倒数第3期开奖信息</h3>
+              <h3 style="margin: 0;">倒数2期开奖信息</h3>
             </div>
             <div class="draw-info-container">
               <div class="draw-info-box" id="thirdLastDrawInfoBox">
                 <!-- 标题已移除 -->
                 <div id="thirdLastDrawInfo">
                   <!-- 数据将通过JavaScript动态生成 -->
-                  <div>加载中...</div>
+                  <div>加载中..</div>
                 </div>
               </div>
             </div>
           </div>
 
+          <!-- 前区推荐买号 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;">前区推荐买号</h3>
+              <button class="backtest-btn" onclick="goToFrontBuyBacktestPage()" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg></button>
+            </div>
+            <!-- 出现最多球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最多球：</span>
+              <div id="firstZoneMostOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现最少球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最少球：</span>
+              <div id="firstZoneLeastOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现平均球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现平均球：</span>
+              <div id="firstZoneAverageOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+          </div>
+          
           <!-- 前区推荐杀号 -->
           <div class="section" style="flex: 1; min-width: 200px;">
             <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
               <h3 style="margin: 0;">前区推荐杀号</h3>
-              <div>
-                <a href="dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=100" style="color: #1890ff; text-decoration: none;">查看回测结果</a>
+              <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="copy-btn" onclick="copyKillNumbers('front')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg></button>
+                <a href="dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html" style="color: #1890ff; text-decoration: none;">查看回测结果</a>
               </div>
             </div>
             <div class="kill-numbers-container" id="firstZoneKillNumbersContainer">
-              <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
-                <div id="firstZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
-                  加载中...
-                </div>
+              <div id="firstZoneRecommendations" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+              <div style="margin-top: 10px; text-align: center;">
+                <a href="dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html" style="color: #1890ff; text-decoration: none;">查看回测结果</a>
               </div>
             </div>
           </div>
@@ -168,7 +168,7 @@
               <div style="color: #DF2220;">
                 <!-- 统计信息将通过JavaScript动态生成 -->
               </div>
-              <button class="btn back-btn" onclick="window.location.href='dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=100'">查看回测结果</button>
+              <button class="btn back-btn" onclick="window.location.href='dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html'">查看回测结果</button>
             </div>
           </div>
           <div style="overflow-x: auto;">
@@ -210,746 +210,6 @@
   </div>
 
   <script src="js/data.js"></script>
-  <script>
-    // 主题切换功能 - 仅从localStorage读取设置，不在此页面提供切换按钮
-    document.addEventListener('DOMContentLoaded', function() {
-      // 从localStorage读取主题设置
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.body.classList.add('dark-theme');
-      }
-    });
-  </script>
-  <script>
-    // 从sql_zui_xin_yi_qi接口获取最新一期开奖信息
-    async function huo_qu_sql_zui_xin_yi_qi() {
-      try {
-        const response = await fetch('http://localhost:18889/sql_zui_xin_yi_qi');
-        const result = await response.json();
-        
-        // 处理新的数据格式
-        if (result && result.success && result.latestDraw) {
-          return result.latestDraw;
-        } else {
-          console.error('接口返回数据格式不正确:', result);
-          return null;
-        }
-      } catch (error) {
-        console.error('获取最新一期开奖数据失败:', error);
-        return null;
-      }
-    }
-    
-    // 从sql_dao_shu_3_qi接口获取倒数第3期开奖信息
-    async function huo_qu_sql_dao_shu_3_qi() {
-      try {
-        const response = await fetch('http://localhost:18889/sql_dao_shu_3_qi');
-        const result = await response.json();
-        
-        // 处理新的数据格式
-        if (result && result.success && result.thirdLastDraw) {
-          return result.thirdLastDraw;
-        } else {
-          console.error('接口返回数据格式不正确:', result);
-          return null;
-        }
-      } catch (error) {
-        console.error('获取倒数第3期开奖数据失败:', error);
-        return null;
-      }
-    }
-    
-    // 渲染最新一期开奖信息到新增的区域
-    async function xuan_ran_sql_zui_xin_yi_qi() {
-      const latestDraw = await huo_qu_sql_zui_xin_yi_qi();
-      const latestDrawInfoElement = document.getElementById('latestDrawInfo');
-      
-      if (!latestDraw) {
-        if (latestDrawInfoElement) {
-          latestDrawInfoElement.innerHTML = '<div>接口失败</div>';
-        }
-        return;
-      }
-      
-      // 处理日期格式，只显示年月日
-      let formattedDate = latestDraw.drawDate;
-      if (formattedDate && typeof formattedDate === 'string') {
-        // 处理ISO格式日期
-        if (formattedDate.includes('T')) {
-          formattedDate = formattedDate.split('T')[0];
-        } else if (formattedDate.includes(' ')) {
-          formattedDate = formattedDate.split(' ')[0];
-        }
-      }
-      
-      if (latestDrawInfoElement) {
-        latestDrawInfoElement.innerHTML = `
-          <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
-            期号: ${latestDraw.period}
-          </div>
-          <div>
-            开奖日期: ${formattedDate}
-          </div>
-          <div>
-            前区号码: ${Array.isArray(latestDraw.firstZoneNumbers) ? latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
-          </div>
-          <div>
-            后区号码: ${Array.isArray(latestDraw.lastZoneNumbers) ? latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
-          </div>
-        `;
-      }
-    }
-    
-    // 渲染倒数第3期开奖信息到新增的区域
-    async function xuan_ran_sql_dao_shu_3_qi() {
-      const thirdLastDraw = await huo_qu_sql_dao_shu_3_qi();
-      const thirdLastDrawInfoElement = document.getElementById('thirdLastDrawInfo');
-      
-      if (!thirdLastDraw) {
-        if (thirdLastDrawInfoElement) {
-          thirdLastDrawInfoElement.innerHTML = '<div>接口失败</div>';
-        }
-        return;
-      }
-      
-      // 处理日期格式，只显示年月日
-      let formattedDate = thirdLastDraw.drawDate;
-      if (formattedDate && typeof formattedDate === 'string') {
-        // 处理ISO格式日期
-        if (formattedDate.includes('T')) {
-          formattedDate = formattedDate.split('T')[0];
-        } else if (formattedDate.includes(' ')) {
-          formattedDate = formattedDate.split(' ')[0];
-        }
-      }
-      
-      if (thirdLastDrawInfoElement) {
-        thirdLastDrawInfoElement.innerHTML = `
-          <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
-            期号: ${thirdLastDraw.period}
-          </div>
-          <div>
-            开奖日期: ${formattedDate}
-          </div>
-          <div>
-            前区号码: ${Array.isArray(thirdLastDraw.firstZoneNumbers) ? thirdLastDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
-          </div>
-          <div>
-            后区号码: ${Array.isArray(thirdLastDraw.lastZoneNumbers) ? thirdLastDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
-          </div>
-        `;
-      }
-    }
-  </script>
-  <script>
-    // 从后端获取前区推荐杀号
-    async function huo_qu_qian_qu_tui_jian_sha_hao() {
-      try {
-        const response = await fetch('http://localhost:18889/huo_qu_qian_qu_tui_jian_sha_hao');
-        const result = await response.json();
-        
-        if (result.success) {
-          return result.killNumbers;
-        } else {
-          alert('接口失败');
-          return null;
-        }
-      } catch (error) {
-        console.error('获取前区推荐杀号失败:', error);
-        alert('接口失败');
-        return null;
-      }
-    }
-    
-
-    
-    // 显示前区推荐杀号
-     async function showFirstZoneKillNumbers() {
-       const killNumbers = await huo_qu_qian_qu_tui_jian_sha_hao();
-       const container = document.getElementById('firstZoneKillNumbers');
-       if (killNumbers && killNumbers.length > 0) {
-         container.textContent = killNumbers.join('  ');
-       } else {
-         // 如果没有数据或接口失败，显示"暂无推荐杀号"
-         container.textContent = '暂无推荐杀号';
-       }
-     }
-    
-    // 从后端获取倒数3期三球组合分析数据
-    async function huo_qu_dao_shu_3_qi_san_qiu_zu_he(period = '100') {
-      try {
-        const response = await fetch(`http://localhost:18889/dao_shu_3_qi_san_qiu_zu_he?period=${period}`);
-        const result = await response.json();
-        
-        if (result.success) {
-          return result.data;
-        } else {
-          alert('接口失败');
-          return null;
-        }
-      } catch (error) {
-        console.error('获取倒数3期三球组合分析数据失败:', error);
-        alert('接口失败');
-        return null;
-      }
-    }
-    
-    // 全局存储汇总数据，用于主题切换时重新绘制图表
-    let globalTotalCounts = [];
-    
-    // 渲染三球组合分析数据
-    async function renderDaoShu3QiSanQiuAnalysisData(period = '100') {
-      // 获取三球组合分析数据
-      const analysisData = await huo_qu_dao_shu_3_qi_san_qiu_zu_he(period);
-      
-      if (!analysisData) {
-        // 接口调用失败，不使用模拟数据
-        return;
-      }
-      
-      // 注意：最新开奖信息和倒数第3期开奖信息已通过专门的接口获取，这里不再重复设置
-      // 但仍然需要更新顶部期数显示，以保持一致性
-      if (analysisData.latestDraw && analysisData.latestDraw.issue) {
-        updateCurrentPeriod(analysisData.latestDraw.issue);
-      }
-      
-      // 渲染前区三球组合统计
-      const firstZoneCombinations = document.getElementById('firstZoneCombinations');
-      firstZoneCombinations.innerHTML = ''; // 清空现有数据
-      
-      console.log('渲染三球组合数据，共', analysisData.frontCombinations.length, '个组合');
-      console.log('第一个组合数据结构:', analysisData.frontCombinations[0]);
-      
-      // 初始化汇总计数数组
-      const totalCounts = new Array(36).fill(0); // 索引0不使用，1-35对应前区号码
-      let totalOccurrences = 0; // 总出现次数
-      
-      // 为了更好的用户体验，先按照出现次数降序排序
-      const sortedCombinations = [...analysisData.frontCombinations].sort((a, b) => {
-        // 直接使用后端提供的count字段
-        return (b.count || 0) - (a.count || 0);
-      });
-      
-      if (sortedCombinations.length === 0) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td colspan="37" style="text-align: center;">暂无三球组合统计数据</td>
-        `;
-        firstZoneCombinations.appendChild(tr);
-        return;
-      }
-      
-      sortedCombinations.forEach(combo => {
-        // 直接使用后端提供的count字段
-        const totalCount = combo.count || 0;
-        
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td class="combination-cell" data-combination="${combo.combination}">${combo.combination}</td>
-          <td class="count">${totalCount}</td>
-        `;
-        
-        // 添加35个单元格，对应前区号码1-35
-        for (let i = 1; i <= 35; i++) {
-          const td = document.createElement('td');
-          const numStr = String(i); // 后端使用数字作为键，不需要补0
-          // 安全访问numberCounts属性
-          const count = combo.numberCounts[numStr] || 0;
-          
-          // 累加汇总计数
-          totalCounts[i] += count;
-          
-          // 当值为0时不显示，只显示大于0的统计值
-          td.textContent = count > 0 ? count : '';
-          
-          // 只有当count大于0时才高亮显示
-          if (count > 0) {
-            td.className = 'highlight';
-            
-            // 添加一些视觉效果，根据count值设置不同的背景色深度
-            const opacity = 0.2 + (count * 0.1); // 基础透明度0.2，每增加1次出现增加0.1的不透明度
-            const clampedOpacity = Math.min(opacity, 0.9); // 最大不透明度为0.9
-            td.style.backgroundColor = `rgba(223, 34, 32, ${clampedOpacity})`;
-            td.style.color = '#fff';
-            td.style.cursor = 'pointer'; // 添加鼠标指针样式
-            td.style.transition = 'background-color 0.2s'; // 添加过渡效果
-            
-            // 为有统计值的单元格添加点击事件
-            td.addEventListener('click', function() {
-              const combination = combo.combination;
-              const selectedNumber = i;
-              console.log('点击组合统计值:', combination, selectedNumber);
-              // 跳转到倒数3期三球组合详情页面，传递组合和号码参数
-              window.location.href = `dao_shu_3_qi_san_qiu_zu_he_xiang_qing.html?combination=${combination}&number=${selectedNumber}`;
-            });
-            
-            // 添加鼠标悬停效果
-            td.addEventListener('mouseenter', function() {
-              this.style.backgroundColor = 'rgba(223, 34, 32, 1)';
-            });
-            
-            td.addEventListener('mouseleave', function() {
-              this.style.backgroundColor = `rgba(223, 34, 32, ${clampedOpacity})`;
-            });
-          }
-          
-          tr.appendChild(td);
-        }
-        
-        // 累加总出现次数
-        totalOccurrences += totalCount;
-        
-        // 为组合号单元格添加点击事件
-        const combinationCell = tr.querySelector('.combination-cell');
-        combinationCell.addEventListener('click', function() {
-          const combination = this.getAttribute('data-combination');
-          console.log('点击组合:', combination);
-          // 跳转到倒数3期三球组合详情页面，传递组合参数
-          window.location.href = `dao_shu_3_qi_san_qiu_zu_he_xiang_qing.html?combination=${combination}`;
-        });
-        
-        firstZoneCombinations.appendChild(tr);
-      });
-      
-      // 添加汇总行
-      const summaryTr = document.createElement('tr');
-      summaryTr.className = 'summary-row';
-      summaryTr.innerHTML = `
-        <td class="summary-cell">汇总</td>
-        <td class="count summary-cell">${totalOccurrences}</td>
-      `;
-      
-      // 添加35个汇总单元格
-      for (let i = 1; i <= 35; i++) {
-        const td = document.createElement('td');
-        const count = totalCounts[i];
-        
-        if (count > 0) {
-            td.textContent = count;
-            td.className = 'highlight summary-highlight';
-          }
-        
-        summaryTr.appendChild(td);
-      }
-      
-      firstZoneCombinations.appendChild(summaryTr);
-      
-      // 绘制前区图表
-      await drawFrontZoneChart(totalCounts, period);
-      // 更新全局汇总数据
-      globalTotalCounts = totalCounts;
-      
-      // 更新统计信息
-      const firstZoneSection = document.querySelector('.section:last-child');
-      if (firstZoneSection && firstZoneSection.querySelector('.section-header')) {
-        firstZoneSection.querySelector('.section-header').innerHTML = `
-          <h3 style="margin: 0;">前区三球组合统计</h3>
-        `;
-      }
-      
-      // 显示前区推荐杀号
-      const firstZoneKillNumbersContainer = document.getElementById('firstZoneKillNumbers');
-      if (firstZoneKillNumbersContainer) {
-        if (analysisData.recommendedFrontKillNumbers && analysisData.recommendedFrontKillNumbers.length > 0) {
-          // 生成杀号HTML，使用红色球样式
-          const killNumbersHtml = analysisData.recommendedFrontKillNumbers.map(num => 
-            `<span class="red-ball">${num}</span>`
-          ).join(' ');
-          firstZoneKillNumbersContainer.innerHTML = killNumbersHtml;
-        } else {
-          firstZoneKillNumbersContainer.textContent = '暂无推荐杀号';
-        }
-      }
-    }
-     
-     
-    
-    // 渲染表格头部
-    function renderTableHeaders() {
-      // 渲染前区表格头部
-      const firstZoneHeader = document.getElementById('firstZoneTableHeader');
-      const firstZoneRow = firstZoneHeader.querySelector('tr');
-      for (let i = 1; i <= 35; i++) {
-        const th = document.createElement('th');
-        th.textContent = String(i).padStart(2, '0');
-        firstZoneRow.appendChild(th);
-      }
-    }
-    
-    // 更新顶部快捷栏的期数显示
-    function updateCurrentPeriod(period) {
-      document.querySelector('.current-period').textContent = period;
-    }
-    
-    // 保存统计范围到localStorage
-    function savePeriodSelection(periodValue) {
-      try {
-        localStorage.setItem('selectedPeriodRange', periodValue);
-      } catch (e) {
-        console.error('保存统计范围失败:', e);
-      }
-    }
-    
-    // 从localStorage读取保存的统计范围
-    function getSavedPeriodSelection() {
-      try {
-        return localStorage.getItem('selectedPeriodRange') || '100';
-      } catch (e) {
-        console.error('读取统计范围失败:', e);
-        return '100';
-      }
-    }
-    
-    // 根据period值设置下拉框选中状态
-    function setPeriodDropdownSelection(periodValue) {
-      const periodDropdown = document.querySelector('.period-dropdown');
-      if (periodDropdown) {
-        if (periodValue === '100') periodDropdown.value = '最近100期';
-        else if (periodValue === '50') periodDropdown.value = '最近50期';
-        else if (periodValue === '35') periodDropdown.value = '最近35期';
-        else if (periodValue === '200') periodDropdown.value = '最近200期';
-        else if (periodValue === '300') periodDropdown.value = '最近300期';
-        else if (periodValue === '500') periodDropdown.value = '最近500期';
-        else if (periodValue === '1000') periodDropdown.value = '最近1000期';
-        else if (periodValue === '1500') periodDropdown.value = '最近1500期';
-        else if (periodValue === '2000') periodDropdown.value = '最近2000期';
-        else if (periodValue === 'all') periodDropdown.value = '全部期';
-      }
-    }
-    
-    // 获取当前选择的统计范围期数
-    function getSelectedStatsRange() {
-      const periodDropdown = document.querySelector('.period-dropdown');
-      if (periodDropdown) {
-        const selectedText = periodDropdown.value;
-        if (selectedText === '最近100期') return '100';
-        else if (selectedText === '最近50期') return '50';
-        else if (selectedText === '最近35期') return '35';
-        else if (selectedText === '最近200期') return '200';
-        else if (selectedText === '最近300期') return '300';
-        else if (selectedText === '最近500期') return '500';
-        else if (selectedText === '最近1000期') return '1000';
-        else if (selectedText === '全部期') return 'all';
-      }
-      return '100'; // 默认值
-    }
-    
-    // 更新所有"查看回测结果"链接和按钮的参数
-    function updateBacktestLinks() {
-      const statsPeriod = getSelectedStatsRange();
-      
-      // 更新前区推荐杀号区域的"查看回测结果"链接
-      const backtestLink1 = document.querySelector('#firstZoneKillNumbersContainer + div a');
-      if (backtestLink1) {
-        backtestLink1.href = `dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
-      }
-      
-      // 更新前区三球组合统计区域的"查看回测结果"按钮
-      const backtestButton = document.querySelector('#firstZoneCombinations + div button');
-      if (backtestButton) {
-        backtestButton.onclick = function() {
-          window.location.href = `dao_shu_3_qi_san_qiu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
-        };
-      }
-    }
-    
-    // 页面加载完成后渲染数据
-    window.addEventListener('load', async function() {
-      renderTableHeaders();
-      
-      // 获取保存的统计范围，如果没有则使用默认值100
-      const periodValue = getSavedPeriodSelection();
-      
-      // 设置下拉框选中状态
-      setPeriodDropdownSelection(periodValue);
-      
-      // 调用函数获取并显示最新一期开奖信息
-      await xuan_ran_sql_zui_xin_yi_qi();
-      
-      // 调用函数获取并显示倒数第3期开奖信息
-      await xuan_ran_sql_dao_shu_3_qi();
-      
-      // 获取并显示前区推荐杀号
-      await showFirstZoneKillNumbers();
-      
-      // 渲染倒数3期三球组合分析数据
-      await renderDaoShu3QiSanQiuAnalysisData(periodValue);
-      
-      // 更新所有"查看回测结果"链接和按钮的参数
-      updateBacktestLinks();
-      
-      // 为统计范围下拉选择框添加事件监听器
-      const periodDropdown = document.querySelector('.period-dropdown');
-      if (periodDropdown) {
-        periodDropdown.addEventListener('change', function() {
-          const selectedText = this.value;
-          
-          // 根据选择的文本确定对应的period值
-          let periodValue;
-          if (selectedText === '最近100期') periodValue = '100';
-          else if (selectedText === '最近50期') periodValue = '50';
-          else if (selectedText === '最近35期') periodValue = '35';
-          else if (selectedText === '最近200期') periodValue = '200';
-          else if (selectedText === '最近300期') periodValue = '300';
-          else if (selectedText === '最近500期') periodValue = '500';
-          else if (selectedText === '最近1000期') periodValue = '1000';
-          else if (selectedText === '最近1500期') periodValue = '1500';
-          else if (selectedText === '最近2000期') periodValue = '2000';
-          else if (selectedText === '全部期') periodValue = 'all';
-          
-          // 保存选择的统计范围
-          savePeriodSelection(periodValue);
-          
-          // 根据选择的统计范围重新渲染数据
-          renderDaoShu3QiSanQiuAnalysisData(periodValue);
-          
-          // 更新所有"查看回测结果"链接和按钮的参数
-          updateBacktestLinks();
-        });
-      }
-      
-      // 添加主题切换监听，重新绘制图表
-      const observer = new MutationObserver(async function(mutations) {
-        mutations.forEach(async function(mutation) {
-          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
-            // 主题切换时重新绘制图表
-            if (globalTotalCounts.length > 0) {
-              // 使用当前选择的统计范围重新绘制图表
-              const currentPeriodValue = getSavedPeriodSelection();
-              await drawFrontZoneChart(globalTotalCounts, currentPeriodValue);
-            }
-          }
-        });
-      });
-      
-      // 监听body元素的class变化
-      observer.observe(document.body, {
-        attributes: true,
-        attributeFilter: ['class']
-      });
-      
-      // 为前区图表排序选择框添加事件监听器
-      const firstZoneSortSelect = document.getElementById('firstZoneChartSort');
-      if (firstZoneSortSelect) {
-        firstZoneSortSelect.addEventListener('change', async function() {
-          // 重新绘制前区图表
-          if (globalTotalCounts.length > 0) {
-            const currentPeriodValue = getSavedPeriodSelection();
-            await drawFrontZoneChart(globalTotalCounts, currentPeriodValue);
-          }
-        });
-      }
-    });
-    
-    // 绘制前区汇总数据图表
-    async function drawFrontZoneChart(totalCounts, periodValue) {
-      const canvas = document.getElementById('firstZoneChart');
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      const isDarkTheme = document.body.classList.contains('dark-theme');
-      
-      // 清空画布
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // 设置图表样式
-      const chartWidth = canvas.width;
-      const chartHeight = canvas.height;
-      const padding = { top: 20, right: 20, bottom: 40, left: 40 };
-      const chartInnerWidth = chartWidth - padding.left - padding.right;
-      const chartInnerHeight = chartHeight - padding.top - padding.bottom;
-      
-      // 准备数据
-      const data = [];
-      for (let i = 1; i <= 35; i++) {
-        data.push({
-          number: i,
-          count: totalCounts[i] || 0
-        });
-      }
-      
-      // 获取排序方式
-      const sortSelect = document.getElementById('firstZoneChartSort');
-      const sortType = sortSelect ? sortSelect.value : 'number';
-      
-      // 根据选择的排序方式对数据进行排序
-      switch (sortType) {
-        case 'count_asc':
-          // 按出现次数升序
-          data.sort((a, b) => a.count - b.count);
-          break;
-        case 'count_desc':
-          // 按出现次数降序
-          data.sort((a, b) => b.count - a.count);
-          break;
-        case 'number':
-        default:
-          // 按号码顺序
-          data.sort((a, b) => a.number - b.number);
-          break;
-      }
-      
-      // 计算最大值
-      const maxCount = Math.max(...data.map(item => item.count), 1);
-      
-      // 绘制背景
-      ctx.fillStyle = isDarkTheme ? '#222' : '#fff';
-      ctx.fillRect(0, 0, chartWidth, chartHeight);
-      
-      // 绘制坐标轴
-      ctx.strokeStyle = isDarkTheme ? '#666' : '#333';
-      ctx.lineWidth = 1;
-      
-      // Y轴
-      ctx.beginPath();
-      ctx.moveTo(padding.left, padding.top);
-      ctx.lineTo(padding.left, chartHeight - padding.bottom);
-      ctx.stroke();
-      
-      // X轴
-      ctx.beginPath();
-      ctx.moveTo(padding.left, chartHeight - padding.bottom);
-      ctx.lineTo(chartWidth - padding.right, chartHeight - padding.bottom);
-      ctx.stroke();
-      
-      // 绘制Y轴刻度和标签
-      const yAxisSteps = 5;
-      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
-      ctx.font = '10px Arial';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      
-      for (let i = 0; i <= yAxisSteps; i++) {
-        const y = padding.top + (chartInnerHeight / yAxisSteps) * i;
-        const count = Math.round(maxCount * (1 - i / yAxisSteps));
-        
-        // 绘制刻度线
-        ctx.beginPath();
-        ctx.moveTo(padding.left - 5, y);
-        ctx.lineTo(padding.left, y);
-        ctx.stroke();
-        
-        // 绘制标签
-        ctx.fillText(count.toString(), padding.left - 10, y);
-      }
-      
-      // 绘制X轴标签
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      for (let i = 0; i < data.length; i++) {
-        const x = padding.left + (chartInnerWidth / data.length) * (i + 0.5);
-        const y = chartHeight - padding.bottom + 5;
-        ctx.fillText(data[i].number.toString(), x, y);
-      }
-      
-      // 绘制柱状图
-      const barWidth = chartInnerWidth / data.length * 0.8;
-      
-      data.forEach((item, index) => {
-        const barHeight = (item.count / maxCount) * chartInnerHeight;
-        const x = padding.left + (chartInnerWidth / data.length) * index + (chartInnerWidth / data.length - barWidth) / 2;
-        const y = chartHeight - padding.bottom - barHeight;
-        
-        // 颜色设置
-        // 根据数值大小调整颜色深度
-        const intensity = item.count / maxCount;
-        ctx.fillStyle = `rgba(223, 34, 32, ${0.5 + intensity * 0.5})`;
-        
-        // 绘制柱子
-        ctx.fillRect(x, y, barWidth, barHeight);
-        
-        // 绘制数值
-        ctx.fillStyle = isDarkTheme ? '#fff' : '#333';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        if (item.count > 0) {
-          ctx.fillText(item.count.toString(), x + barWidth / 2, y - 2);
-        }
-      });
-      
-      // 绘制统计期数信息
-      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'bottom';
-      
-      // 获取并显示具体期数
-      let periodText;
-      if (periodValue === 'all') {
-        // 获取总期数
-        const totalPeriods = await huo_qu_lottery_results_total();
-        periodText = totalPeriods ? `${totalPeriods}期` : '全部期';
-      } else {
-        periodText = `最近${periodValue}期`;
-      }
-      
-      // 计算总出现次数和平均次数
-      const totalOccurrences = data.reduce((sum, item) => sum + item.count, 0);
-      const averageCount = Math.round(totalOccurrences / 35); // 前区有35个号码
-      
-      ctx.fillText(`统计期数: ${periodText} | 平均次数: ${averageCount}`, padding.left + 5, padding.top + 15);
-    }
-    
-    // 移动端侧边栏切换
-    function toggleSidebar() {
-      const sidebar = document.querySelector('.left-sidebar');
-      sidebar.classList.toggle('open');
-    }
-    
-    // 导航项点击事件 - 只处理没有<a>标签的导航项，避免与默认<a>标签事件冲突
-    document.querySelectorAll('.nav-item').forEach(item => {
-      // 检查当前导航项是否包含<a>标签，如果包含则跳过，使用<a>标签的默认行为
-      const hasLink = item.querySelector('a') !== null;
-      if (hasLink) {
-        return; // 跳过包含<a>标签的导航项
-      }
-      
-      item.addEventListener('click', function() {
-        // 移除所有导航项的活动状态
-        document.querySelectorAll('.nav-item').forEach(navItem => {
-          navItem.classList.remove('active');
-        });
-        // 添加当前导航项的活动状态
-        this.classList.add('active');
-        
-        // 获取当前点击项的文本内容
-        const navText = this.textContent.trim();
-        console.log('点击的导航项文本:', navText);
-        
-        // 使用更宽松的匹配方式，只要文本中包含关键词即可
-        if (navText.includes('两球') || navText.includes('双球')) {
-          // 检查是否包含"倒数2期"或"倒数3期"以区分不同的两球组合分析页面
-          if (navText.includes('倒数2期')) {
-            console.log('跳转到倒数2期两球组合分析页面');
-            window.location.href = 'dao_shu_2_qi_liang_qiu_zu_he.html';
-          } else if (navText.includes('倒数3期')) {
-            console.log('跳转到倒数3期两球组合分析页面');
-            window.location.href = 'dao_shu_3_qi_liang_qiu_zu_he.html';
-          } else {
-            console.log('跳转到最新1期两球组合分析页面');
-            window.location.href = 'sha_hao_fen_xi.html';
-          }
-        } else if (navText.includes('三球') || navText.includes('三区')) {
-          // 检查是否包含"倒数2期"或"倒数3期"以区分不同的三球组合分析页面
-          if (navText.includes('倒数2期')) {
-            console.log('跳转到倒数2期三球组合分析页面');
-            window.location.href = 'dao_shu_2_qi_san_qiu_zu_he.html';
-          } else if (navText.includes('倒数3期')) {
-            console.log('跳转到倒数3期三球组合分析页面');
-            // 这里不需要跳转，因为当前就是这个页面
-          } else {
-            console.log('跳转到最新1期三球组合分析页面');
-            window.location.href = 'san_qiu_fen_xi.html';
-          }
-        }
-        
-        // 在移动端点击导航后关闭侧边栏
-        if (window.innerWidth <= 768) {
-          toggleSidebar();
-        }
-      });
-    });
-  </script>
+  <script src="js/dao_shu_3_qi_san_qiu_zu_he.js"></script>
 </body>
 </html>

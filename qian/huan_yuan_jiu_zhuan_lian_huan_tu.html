@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大乐透统计分析- 还原九转连环图</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/navigation.js"></script>
+  <script src="js/theme-toggle.js"></script>
+  <style>
+    /* 确保没有水平导航栏显示 */
+    .main-content > div:nth-child(2):has(.tabs) {
+      display: none !important;
+    }
+    
+    /* 为主题适配添加额外样式 */
+    body.dark-theme .section {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    
+    body.dark-theme .combination-table th,
+    body.dark-theme .combination-table td {
+      border-color: #333333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="main-layout">
+      <!-- 左侧导航栏 -->
+      <div class="left-sidebar">
+        <!-- 顶部快捷栏 -->
+        <div class="top-bar">
+          <div class="current-period">25120期</div>
+        </div>
+        
+        <!-- 主导航区 -->
+        <nav class="main-nav">
+          <ul>
+          </ul>
+        </nav>
+      </div>
+      
+      <!-- 右侧主内容区 -->
+      <div class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h1 class="page-title">还原九转连环图</h1>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
+            <button id="themeToggle" class="theme-toggle">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+            </button>
+          </div>
+        </div>
+        
+        <!-- 主要内容区域 -->
+        <div class="section">
+          <div class="section-header" style="margin-bottom: 20px;">
+            <h3 style="margin: 0;">还原九转连环图</h3>
+          </div>
+          
+          <!-- 图表容器 -->
+          <div class="chart-container" style="margin-bottom: 20px;">
+            <canvas id="huanYuanChart" width="800" height="600"></canvas>
+          </div>
+          
+          <!-- 控制区域 -->
+          <div class="control-panel" style="display: flex; gap: 15px; margin-bottom: 20px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <label for="periodRange">统计期数：</label>
+              <select id="periodRange" class="period-dropdown">
+                <option value="100" selected>最新100期</option>
+                <option value="50">最新50期</option>
+                <option value="200">最新200期</option>
+                <option value="300">最新300期</option>
+                <option value="all">全部期</option>
+              </select>
+            </div>
+            <button class="btn primary-btn" onclick="refreshChart()">刷新图表</button>
+          </div>
+          
+          <!-- 数据统计区域 -->
+          <div class="stats-panel" style="margin-top: 20px;">
+            <h4>统计信息</h4>
+            <div id="statsInfo" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+              <!-- 统计信息将通过JavaScript动态生成 -->
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script src="js/huan_yuan_jiu_zhuan_lian_huan_tu.js"></script>
+</body>
+</html>

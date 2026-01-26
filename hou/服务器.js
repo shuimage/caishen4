@@ -36,7 +36,6 @@ const daoShu5QiHouQuZuHeRouter = require('./倒数5期两球组合后区.js'); /
 const jinLiangQiLiangQiuZuHeFrontRouter = require('./近两期两球组合前区.js'); // 导入近两期前区两球组合路由
 const jinLiangQiLiangQiuZuHeBackRouter = require('./近两期两球组合后区.js'); // 导入近两期后区两球组合路由
 const jinLiangQiLiangQiuZuHeXiangQingRouter = require('./近两期两球组合详情.js'); // 导入近两期两球组合详情路由
-const zuHeXiangQingRouter = require('./组合详情.js');
 const sanQiuXiangQingRouter = require('./三球详情.js');
 const sanQiuZuHeXiangQingRouter = require('./三球组合详情.js'); // 导入最新1期三球组合详情路由
 const shaHaoHuiCeRouter = require('./杀号回测.js'); // 导入杀号回测路由
@@ -49,7 +48,52 @@ const daoShu4QiShaHaoHuiCeRouter = require('./倒数4期两球前区杀号回测
 const daoShu5QiShaHaoHuiCeRouter = require('./倒数5期两球前区杀号回测.js'); // 导入倒数5期杀号回测路由
 const huoQuShaHaoHouHuiCeRouter = require('./最新1期两球前区杀号回测.js'); // 导入后区杀号回测路由
 const daoShu2QiHouQuShaHaoHuiCeRouter = require('./倒数2期两球后区杀号回测.js'); // 导入倒数2期后区杀号回测路由
-const daoShu3QiHouQuShaHaoHuiCeRouter = require('./倒数3期两球后区杀号回测.js'); // 导入倒数3期后区杀号回测路由
+const daoShu3QiHouQuShaHaoHuiCeRouter = require('./倒数3期两球后区杀号回测.js'); // 导入倒数4期两球后区杀号回测路由
+const daoShu4QiHouQuShaHaoHuiCeRouter = require('./倒数4期两球后区杀号回测.js'); // 导入倒数4期后区杀号回测路由
+// 导入倒数5期两球后区杀号回测路由
+const daoShu5QiHouQuShaHaoHuiCeRouter = require('./倒数5期两球后区杀号回测.js'); // 导入倒数5期后区杀号回测路由
+// 导入近两期两球杀号回测路由
+const jinLiangQiQianQuShaHaoHuiCeRouter = require('./近两期两球前区杀号回测.js'); // 导入近两期两球前区杀号回测路由
+const jinLiangQiHouQuShaHaoHuiCeRouter = require('./近两期两球后区杀号回测.js'); // 导入近两期两球后区杀号回测路由
+// 导入最新1期两球买号回测路由
+const zuiXinYiQiLiangQiuQianQuMaiHaoHuiCeRouter = require('./最新1期两球前区买号回测.js'); // 导入最新1期两球前区买号回测路由
+const zuiXinYiQiLiangQiuHouQuMaiHaoHuiCeRouter = require('./最新1期两球后区买号回测.js'); // 导入最新1期两球后区买号回测路由
+// 导入倒数2期两球前区买号回测路由
+const daoShu2QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数2期两球前区买号回测.js'); // 导入倒数2期两球前区买号回测路由
+// 导入倒数3期两球前区买号回测路由
+const daoShu3QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数3期两球前区买号回测.js'); // 导入倒数3期两球前区买号回测路由
+// 导入倒数4期两球前区买号回测路由
+const daoShu4QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数4期两球前区买号回测.js'); // 导入倒数4期两球前区买号回测路由
+// 导入倒数5期两球前区买号回测路由
+const daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数5期两球前区买号回测.js'); // 导入倒数5期两球前区买号回测路由
+// 导入近两期两球前区买号回测路由
+const jinLiangQiLiangQiuQianQuMaiHaoHuiCeRouter = require('./近两期两球前区买号回测.js'); // 导入近两期两球前区买号回测路由
+// 导入近两期两球后区买号回测路由
+const jinLiangQiLiangQiuHouQuMaiHaoHuiCeRouter = require('./近两期两球后区买号回测.js'); // 导入近两期两球后区买号回测路由
+// 导入最新1期三球前区买号回测路由
+const zuiXinYiQiSanQiuQianQuMaiHaoHuiCeRouter = require('./最新1期三球前区买号回测.js'); // 导入最新1期三球前区买号回测路由
+// 导入倒数2期三球前区买号回测路由
+const daoShu2QiSanQiuQianQuMaiHaoHuiCeRouter = require('./倒数2期三球前区买号回测.js'); // 导入倒数2期三球前区买号回测路由
+// 导入倒数3期三球前区买号回测路由
+const daoShu3QiSanQiuQianQuMaiHaoHuiCeRouter = require('./倒数3期三球前区买号回测.js'); // 导入倒数3期三球前区买号回测路由
+// 导入倒数2期两球后区买号回测路由
+const daoShu2QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数2期两球后区买号回测.js'); // 导入倒数2期两球后区买号回测路由
+// 导入倒数3期两球后区买号回测路由
+const daoShu3QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数3期两球后区买号回测.js'); // 导入倒数3期两球后区买号回测路由
+// 导入倒数4期两球后区买号回测路由
+const daoShu4QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数4期两球后区买号回测.js'); // 导入倒数4期两球后区买号回测路由
+// 导入倒数5期两球后区买号回测路由
+const daoShu5QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数5期两球后区买号回测.js'); // 导入倒数5期两球后区买号回测路由
+// 导入幻圆回测路由
+const huanYuanHuiCeJingXiangRouter = require('./huan_yuan_hui_ce_jing_xiang.js'); // 导入幻圆回测镜像对称路由
+const huanYuanHuiCeZhouXianRouter = require('./huan_yuan_hui_ce_zhou_xian.js'); // 导入幻圆回测轴线对称路由
+const huanYuanHuiCeYuanHuanRouter = require('./huan_yuan_hui_ce_yuan_huan.js'); // 导入幻圆回测圆环对称路由
+const huanYuanHuiCeHuBuRouter = require('./huan_yuan_hui_ce_hu_bu.js'); // 导入幻圆回测互补对称路由
+const huanYuanHuiCeReLengRouter = require('./huan_yuan_hui_ce_re_leng.js'); // 导入幻圆回测冷热对称路由
+// 导入回测结果保存和获取路由
+const huiCeJieGuoRouter = require('./回测结果保存获取.js');
+// 导入还原九转连环图路由
+const huanYuanJiuZhuanLianHuanTuRouter = require('./huan_yuan_jiu_zhuan_lian_huan_tu.js');
 
 // 设置中间件
 app.use(express.json());
@@ -101,6 +145,8 @@ app.use('/dao_shu_5_qi_hou_qu_zu_he', daoShu5QiHouQuZuHeRouter); // 注册倒数
 app.use('/jin_liang_qi_liang_qiu_zu_he_front', jinLiangQiLiangQiuZuHeFrontRouter); // 注册近两期前区两球组合路由
 app.use('/jin_liang_qi_liang_qiu_zu_he_back', jinLiangQiLiangQiuZuHeBackRouter); // 注册近两期后区两球组合路由
 app.use('/jin_liang_qi_liang_qiu_zu_he_xiang_qing', jinLiangQiLiangQiuZuHeXiangQingRouter); // 注册近两期两球组合详情路由
+// 注册带zuhe前缀的近两期两球组合详情路由
+app.use('/zuhe/jin_liang_qi_liang_qiu_zu_he_xiang_qing', jinLiangQiLiangQiuZuHeXiangQingRouter); // 注册带zuhe前缀的近两期两球组合详情路由
 const daoShu2QiSanQiuZuHeRouter = require('./倒数2期三球组合.js');
 app.use('/dao_shu_2_qi_san_qiu_zu_he', daoShu2QiSanQiuZuHeRouter); // 注册倒数2期前区三球组合路由
 const daoShu2QiSanQiuZuHeXiangQingRouter = require('./倒数2期三球组合详情.js');
@@ -109,6 +155,8 @@ const daoShu3QiSanQiuZuHeRouter = require('./倒数3期三球组合');
 app.use('/dao_shu_3_qi_san_qiu_zu_he', daoShu3QiSanQiuZuHeRouter); // 注册倒数3期前区三球组合路由
 const daoShu3QiSanQiuZuHeXiangQingRouter = require('./倒数3期三球组合详情.js');
 app.use('/dao_shu_3_qi_san_qiu_zu_he_xiang_qing', daoShu3QiSanQiuZuHeXiangQingRouter); // 注册倒数3期前区三球组合详情路由
+// 注册还原九转连环图路由
+app.use('/huan_yuan_jiu_zhuan_lian_huan_tu', huanYuanJiuZhuanLianHuanTuRouter);
 
 // 先注册直接路由，再注册中间件，避免中间件拦截
 // 注册倒数4期两球组合详情路由
@@ -260,13 +308,183 @@ app.post('/zuhe/dao_shu_2_qi_liang_qiu_zu_he_xiang_qing', async (req, res) => {
   }
 });
 
-// 注册中间件，放在直接路由之后
-app.use('/zuhe', zuHeXiangQingRouter);
-app.use('/zuhe', daoShu3QiLiangQiuZuHeXiangQingRouter); // 注册倒数3期两球组合详情路由
-app.use('/zuhe', daoShu4QiLiangQiuZuHeXiangQingRouter); // 注册倒数4期两球组合详情路由
-app.use('/zuhe', daoShu5QiLiangQiuZuHeXiangQingRouter); // 注册倒数5期两球组合详情路由
+// 直接定义/zuhe/zu_he_xiang_qing路由，避免路由冲突和中间件问题
+// 特别处理请求体解析错误
+app.post('/zuhe/zu_he_xiang_qing', (req, res) => {
+  // 首先检查请求体是否已经解析成功
+  if (typeof req.body !== 'object' || req.body === null) {
+    console.error('请求体解析错误，原始请求体:', req.rawBody);
+    return res.status(400).json({
+      code: 400,
+      message: '请求体格式错误，请检查JSON格式',
+      error: 'Invalid JSON format'
+    });
+  }
+  
+  // 如果请求体解析成功，继续处理
+  (async () => {
+    try {
+      const { latest_period, target_ball, type, combinations, stats_range } = req.body;
+      
+      console.log('收到组合详情请求，参数:', req.body);
+      
+      // 参数验证
+      if (!latest_period || !type || !combinations || !stats_range) {
+        return res.status(400).json({
+          code: 400,
+          message: '参数不完整，所有参数均为必填'
+        });
+      }
+      
+      if (type !== 'front' && type !== 'back') {
+        return res.status(400).json({
+          code: 400,
+          message: 'type值错误，应为front或back'
+        });
+      }
+      
+      if (!Array.isArray(combinations) || combinations.length === 0) {
+        return res.status(400).json({
+          code: 400,
+          message: 'combinations必须是非空数组'
+        });
+      }
+      
+      const parsedStatsRange = parseInt(stats_range);
+      if (isNaN(parsedStatsRange) || parsedStatsRange <= 0 || parsedStatsRange > 5000) {
+        return res.status(400).json({
+          code: 400,
+          message: 'stats_range必须为正整数且不大于5000'
+        });
+      }
+      
+      // 处理球号数据的函数
+      function processBalls(ballsData) {
+        if (!ballsData) return [];
+        if (Array.isArray(ballsData)) {
+          return ballsData.map(ball => parseInt(ball, 10)).filter(num => !isNaN(num));
+        }
+        if (typeof ballsData === 'string') {
+          if (ballsData.startsWith('[') && ballsData.endsWith(']')) {
+            const content = ballsData.substring(1, ballsData.length - 1);
+            return content.split(',').map(ball => parseInt(ball.trim(), 10)).filter(num => !isNaN(num));
+          } else if (ballsData.includes(' ')) {
+            return ballsData.split(' ').map(ball => parseInt(ball.trim(), 10)).filter(num => !isNaN(num));
+          } else if (ballsData.includes(',')) {
+            return ballsData.split(',').map(ball => parseInt(ball.trim(), 10)).filter(num => !isNaN(num));
+          } else {
+            const numbers = ballsData.match(/\d+/g);
+            if (numbers) {
+              return numbers.map(num => parseInt(num, 10)).filter(num => !isNaN(num));
+            }
+          }
+        }
+        return [];
+      }
+      
+      // 查询历史数据
+      const querySql = `
+        SELECT
+          issue AS period,
+          red,
+          blue
+        FROM lottery_results
+        WHERE issue < ?
+        ORDER BY issue DESC
+        LIMIT ?
+      `;
+      
+      console.log('执行SQL查询:', querySql);
+      console.log('查询参数:', [latest_period, parsedStatsRange]);
+      
+      const historyResults = await query(querySql, [latest_period, parsedStatsRange]);
+      console.log('查询结果数量:', historyResults.length);
+      
+      if (!historyResults || historyResults.length === 0) {
+        return res.status(404).json({
+          code: 404,
+          message: '未找到指定范围的开奖数据'
+        });
+      }
+      
+      // 返回原始的组合详情数据，而不是计算从未出现球
+      // 遍历历史数据，查找组合出现的记录
+      const resultList = [];
+      let index = 1;
+      
+      for (let i = 1; i < historyResults.length; i++) {
+        const record = historyResults[i];
+        const nextRecord = historyResults[i - 1];
+        const drawNumbers = processBalls(type === 'front' ? record.red : record.blue);
+        
+        // 遍历所有组合
+        for (const combo of combinations) {
+          // 提取组合中的主球（前两个球）
+          const mainCombo = combo.split('-').slice(0, 2).join('-');
+          const comboNumbers = mainCombo.split('-').map(num => parseInt(num));
+          
+          // 检查组合是否在当前开奖记录中
+          if (comboNumbers.every(num => drawNumbers.includes(num))) {
+            // 检查目标球是否出现过
+            const nextDrawNumbers = processBalls(type === 'front' ? nextRecord.red : nextRecord.blue);
+            
+            // 构建结果对象
+            const result = {
+              index: index++,
+              period: record.period,
+              combination: mainCombo,
+              draw_info: drawNumbers,
+              next_period: nextRecord.period,
+              next_draw_info: nextDrawNumbers
+            };
+            
+            // 如果指定了target_ball，只返回包含target_ball的记录
+            if (target_ball === null || target_ball === undefined || nextDrawNumbers.includes(parseInt(target_ball))) {
+              resultList.push(result);
+            }
+          }
+        }
+      }
+      
+      console.log('查询完成，找到匹配记录:', resultList.length);
+      
+      return res.status(200).json({
+        code: 200,
+        data: resultList
+      });
+      
+    } catch (error) {
+      console.error('组合详情处理失败:', error.stack);
+      // 直接返回错误信息，不使用全局错误处理中间件
+      return res.status(500).json({
+        code: 500,
+        message: '服务器内部错误',
+        error: error.message,
+        stack: error.stack
+      });
+    }
+  })();
+});
+
+// 添加一个中间件来捕获请求体解析错误
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.type === 'entity.parse.failed') {
+    console.error('请求体解析错误:', err);
+    return res.status(400).json({
+      code: 400,
+      message: '请求体格式错误，请检查JSON格式',
+      error: err.message
+    });
+  }
+  next(err);
+});
+
+// 注册其他带zuhe前缀的路由
+app.use('/zuhe/dao_shu_3_qi_liang_qiu_zu_he_xiang_qing', daoShu3QiLiangQiuZuHeXiangQingRouter); // 注册倒数3期两球组合详情路由
+app.use('/zuhe/dao_shu_4_qi_liang_qiu_zu_he_xiang_qing', daoShu4QiLiangQiuZuHeXiangQingRouter); // 注册倒数4期两球组合详情路由
+app.use('/zuhe/dao_shu_5_qi_liang_qiu_zu_he_xiang_qing', daoShu5QiLiangQiuZuHeXiangQingRouter); // 注册倒数5期两球组合详情路由
 app.use('/san_qiu_zu_he_xiang_qing', sanQiuZuHeXiangQingRouter); // 注册最新1期三球组合详情路由
-app.use('/', sanQiuXiangQingRouter);
+app.use('/san_qiu_xiang_qing', sanQiuXiangQingRouter);
 app.use('/huo_qu_sha_hao_hui_ce', shaHaoHuiCeRouter); // 注册杀号回测路由
 app.use('/dao_shu_2_qi_sha_hao_hui_ce', daoShu2QiShaHaoHuiCeRouter); // 注册倒数2期杀号回测路由
 app.use('/dao_shu_3_qi_sha_hao_hui_ce', daoShu3QiShaHaoHuiCeRouter); // 注册倒数3期杀号回测路由
@@ -278,6 +496,67 @@ app.use('/dao_shu_3_qi_san_qiu_sha_hao_hui_ce', daoShu3QiSanQiuShaHaoHuiCeRouter
 app.use('/huo_qu_sha_hao_hou_hui_ce', huoQuShaHaoHouHuiCeRouter); // 注册后区杀号回测路由
 app.use('/dao_shu_2_qi_hou_qu_sha_hao_hui_ce', daoShu2QiHouQuShaHaoHuiCeRouter); // 注册倒数2期后区杀号回测路由
 app.use('/dao_shu_3_qi_hou_qu_sha_hao_hui_ce', daoShu3QiHouQuShaHaoHuiCeRouter); // 注册倒数3期后区杀号回测路由
+app.use('/dao_shu_4_qi_hou_qu_sha_hao_hui_ce', daoShu4QiHouQuShaHaoHuiCeRouter); // 注册倒数4期后区杀号回测路由
+app.use('/dao_shu_5_qi_hou_qu_sha_hao_hui_ce', daoShu5QiHouQuShaHaoHuiCeRouter); // 注册倒数5期后区杀号回测路由
+// 注册近两期两球杀号回测路由
+app.use('/jin_liang_qi_qian_qu_sha_hao_hui_ce', jinLiangQiQianQuShaHaoHuiCeRouter); // 注册近两期两球前区杀号回测路由
+app.use('/jin_liang_qi_hou_qu_sha_hao_hui_ce', jinLiangQiHouQuShaHaoHuiCeRouter); // 注册近两期两球后区杀号回测路由
+// 注册最新1期两球买号回测路由
+app.use('/huo_qu_sha_hao_mai_hao_hui_ce', zuiXinYiQiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册最新1期两球前区买号回测路由
+app.use('/huo_qu_sha_hao_hou_mai_hao_hui_ce', zuiXinYiQiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册最新1期两球后区买号回测路由
+// 注册倒数2期两球前区买号回测路由
+app.use('/dao_shu_2_qi_mai_hao_hui_ce', daoShu2QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数2期两球前区买号回测路由
+// 注册倒数3期两球前区买号回测路由
+app.use('/dao_shu_3_qi_mai_hao_hui_ce', daoShu3QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数3期两球前区买号回测路由
+// 注册倒数4期两球前区买号回测路由
+app.use('/dao_shu_4_qi_mai_hao_hui_ce', daoShu4QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数4期两球前区买号回测路由
+// 注册倒数5期两球前区买号回测路由
+app.use('/dao_shu_5_qi_mai_hao_hui_ce', daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数5期两球前区买号回测路由
+app.use('/dao_shu_5_qi_qian_qu_mai_hao_hui_ce', daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数5期前区买号回测路由（兼容前端请求路径）
+// 注册近两期两球前区买号回测路由
+app.use('/jin_liang_qi_mai_hao_hui_ce', jinLiangQiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册近两期两球前区买号回测路由
+// 注册近两期两球后区买号回测路由
+app.use('/jin_liang_qi_hou_qu_mai_hao_hui_ce', jinLiangQiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册近两期两球后区买号回测路由
+// 注册最新1期三球前区买号回测路由
+app.use('/san_qiu_mai_hao_hui_ce', zuiXinYiQiSanQiuQianQuMaiHaoHuiCeRouter); // 注册最新1期三球前区买号回测路由
+// 注册倒数2期三球前区买号回测路由
+app.use('/dao_shu_2_qi_san_qiu_mai_hao_hui_ce', daoShu2QiSanQiuQianQuMaiHaoHuiCeRouter); // 注册倒数2期三球前区买号回测路由
+// 注册倒数3期三球前区买号回测路由
+app.use('/dao_shu_3_qi_san_qiu_mai_hao_hui_ce', daoShu3QiSanQiuQianQuMaiHaoHuiCeRouter); // 注册倒数3期三球前区买号回测路由
+app.use('/huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce', daoShu2QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数2期两球后区买号回测路由
+app.use('/huo_qu_dao_shu_3_qi_hou_mai_hao_hui_ce', daoShu3QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数3期两球后区买号回测路由
+app.use('/huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce', daoShu4QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数4期两球后区买号回测路由
+app.use('/huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce', daoShu5QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数5期两球后区买号回测路由
+app.use('/dao_shu_5_qi_hou_mai_hao_hui_ce', daoShu5QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数5期两球后区买号回测路由（兼容前端请求路径）
+// 注册幻圆回测路由
+app.use('/huan_yuan_hui_ce_jing_xiang', huanYuanHuiCeJingXiangRouter); // 注册幻圆回测镜像对称路由
+app.use('/huan_yuan_hui_ce_zhou_xian', huanYuanHuiCeZhouXianRouter); // 注册幻圆回测轴线对称路由
+app.use('/huan_yuan_hui_ce_yuan_huan', huanYuanHuiCeYuanHuanRouter); // 注册幻圆回测圆环对称路由
+app.use('/huan_yuan_hui_ce_hu_bu', huanYuanHuiCeHuBuRouter); // 注册幻圆回测互补对称路由
+app.use('/huan_yuan_hui_ce_re_leng', huanYuanHuiCeReLengRouter); // 注册幻圆回测冷热对称路由
+
+// 注册回测结果保存和获取路由
+app.use('/', huiCeJieGuoRouter);
+
+// 测试路由
+app.get('/test', async (req, res) => {
+  try {
+    console.log('收到测试请求，req.query:', req.query);
+    const { backtest_period, backtest_method } = req.query;
+    res.json({
+      success: true,
+      message: '测试成功',
+      backtest_period: backtest_period,
+      backtest_method: backtest_method
+    });
+  } catch (error) {
+    console.error('处理测试请求失败:', error);
+    res.json({
+      success: false,
+      message: error.message
+    });
+  }
+});
 
 // 获取lottery_results总条数
 app.get('/huo_qu_lottery_results_total', async (req, res) => {
@@ -327,6 +606,67 @@ app.get('/sql_jin_liang_qi', async (req, res) => {
     }
   } catch (error) {
     console.error('获取近两期开奖数据失败:', error);
+    res.status(500).json({ success: false, message: '数据库查询失败' });
+  }
+});
+
+// 获取近五期开奖数据
+app.get('/huo_qu_jin_wu_qi_kai_jiang', async (req, res) => {
+  try {
+    const result = await query('SELECT issue, draw_date, red, blue FROM lottery_results ORDER BY draw_date DESC LIMIT 5');
+    if (result && result.length > 0) {
+      // 转换数据格式，使其与前端期望的格式一致
+      const formattedData = result.map(item => {
+        // 处理可能的字符串形式的号码数据
+        let firstZoneNumbers = item.red || [];
+        let lastZoneNumbers = item.blue || [];
+        
+        // 解析前区号码
+        if (typeof firstZoneNumbers === 'string') {
+          if (firstZoneNumbers.includes(',')) {
+            firstZoneNumbers = firstZoneNumbers.split(',').map(num => parseInt(num.trim()));
+          } else if (firstZoneNumbers.includes(' ')) {
+            firstZoneNumbers = firstZoneNumbers.split(' ').filter(num => num.trim() !== '').map(num => parseInt(num.trim()));
+          } else {
+            firstZoneNumbers = (firstZoneNumbers.match(/\d+/g) || []).map(num => parseInt(num));
+          }
+        }
+        
+        // 解析后区号码
+        if (typeof lastZoneNumbers === 'string') {
+          if (lastZoneNumbers.includes(',')) {
+            lastZoneNumbers = lastZoneNumbers.split(',').map(num => parseInt(num.trim()));
+          } else if (lastZoneNumbers.includes(' ')) {
+            lastZoneNumbers = lastZoneNumbers.split(' ').filter(num => num.trim() !== '').map(num => parseInt(num.trim()));
+          } else {
+            lastZoneNumbers = (lastZoneNumbers.match(/\d+/g) || []).map(num => parseInt(num));
+          }
+        }
+        
+        // 格式化日期
+        let formattedDate = item.draw_date;
+        if (formattedDate instanceof Date) {
+          formattedDate = formattedDate.toISOString().split('T')[0];
+        } else if (typeof formattedDate === 'string') {
+          if (formattedDate.includes('T')) {
+            formattedDate = formattedDate.split('T')[0];
+          }
+        }
+        
+        return {
+          period: item.issue + '期',
+          drawDate: formattedDate,
+          firstZoneNumbers,
+          lastZoneNumbers
+        };
+      });
+      
+      res.json({ success: true, data: formattedData });
+    } else {
+      res.json({ success: false, message: '未找到数据' });
+    }
+  } catch (error) {
+    console.error('获取近五期开奖数据失败:', error);
     res.status(500).json({ success: false, message: '数据库查询失败' });
   }
 });
