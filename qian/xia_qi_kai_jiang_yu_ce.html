@@ -3,8 +3,272 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大乐透统计分析 - 下期开奖预测</title>
+  <title>大乐透统计分析- 下期前区开奖预测</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/navigation.js"></script>
+  <script src="js/theme-toggle.js"></script>
+  <style>
+    /* 回测相关样式 */
+    .period-input {
+      width: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .period-input:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    .period-input::-webkit-inner-spin-button,
+    .period-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    body.dark-theme .period-input {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+    body.dark-theme .period-input:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+    }
+    /* 详细信息列表样式 */
+    .detail-list {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .detail-list th,
+    .detail-list td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    .detail-list th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    body.dark-theme .detail-list th {
+      background-color: #2d2d2d;
+      color: #fff;
+    }
+    body.dark-theme .detail-list td {
+      background-color: #1a1a1a;
+      color: #fff;
+      border-bottom-color: #444;
+    }
+    /* 进度显示的深色主题样式 */
+    body.dark-theme #progressNewest,
+    body.dark-theme #progressSecondLast,
+    body.dark-theme #progressThirdLast,
+    body.dark-theme #progressFourthLast,
+    body.dark-theme #progressFifthLast,
+    body.dark-theme #progressNearTwoPeriods,
+    body.dark-theme #progressThreeBall,
+    body.dark-theme #progressSecondLastThreeBall,
+    body.dark-theme #progressThirdLastThreeBall {
+      background-color: #222222 !important;
+      color: #ffffff !important;
+      border-left-color: #ffffff !important;
+      border: 1px solid #ffffff !important;
+    }
+    
+    /* 进度条标题的深色主题样式 */
+    body.dark-theme #progressNewest strong,
+    body.dark-theme #progressSecondLast strong,
+    body.dark-theme #progressThirdLast strong,
+    body.dark-theme #progressFourthLast strong,
+    body.dark-theme #progressFifthLast strong,
+    body.dark-theme #progressNearTwoPeriods strong,
+    body.dark-theme #progressThreeBall strong,
+    body.dark-theme #progressSecondLastThreeBall strong,
+    body.dark-theme #progressThirdLastThreeBall strong {
+      color: #ffffff !important;
+    }
+    
+    /* 进度条背景的深色主题样式 */
+    body.dark-theme #progressNewest > div:nth-child(2) > div:first-child,
+    body.dark-theme #progressSecondLast > div:nth-child(2) > div:first-child,
+    body.dark-theme #progressThirdLast > div:nth-child(2) > div:first-child,
+    body.dark-theme #progressFourthLast > div:nth-child(2) > div:first-child,
+    body.dark-theme #progressFifthLast > div:nth-child(2) > div:first-child,
+    body.dark-theme #progressNearTwoPeriods > div:nth-child(2) > div:first-child,
+    body.dark-theme #progressThreeBall > div:nth-child(2) > div:first-child,
+    body.dark-theme #progressSecondLastThreeBall > div:nth-child(2) > div:first-child,
+    body.dark-theme #progressThirdLastThreeBall > div:nth-child(2) > div:first-child {
+      background-color: #222222 !important;
+      border: 1px solid #ffffff !important;
+    }
+    
+    /* 进度文本容器的深色主题样式 */
+    body.dark-theme #progressNewest > div:nth-child(2) > div:last-child,
+    body.dark-theme #progressSecondLast > div:nth-child(2) > div:last-child,
+    body.dark-theme #progressThirdLast > div:nth-child(2) > div:last-child,
+    body.dark-theme #progressFourthLast > div:nth-child(2) > div:last-child,
+    body.dark-theme #progressFifthLast > div:nth-child(2) > div:last-child,
+    body.dark-theme #progressNearTwoPeriods > div:nth-child(2) > div:last-child,
+    body.dark-theme #progressThreeBall > div:nth-child(2) > div:last-child,
+    body.dark-theme #progressSecondLastThreeBall > div:nth-child(2) > div:last-child,
+    body.dark-theme #progressThirdLastThreeBall > div:nth-child(2) > div:last-child {
+      color: #ffffff !important;
+    }
+    
+    /* 进度条填充的深色主题样式 */
+    body.dark-theme #progressBarNewest,
+    body.dark-theme #progressBarSecondLast,
+    body.dark-theme #progressBarThirdLast,
+    body.dark-theme #progressBarFourthLast,
+    body.dark-theme #progressBarFifthLast,
+    body.dark-theme #progressBarNearTwoPeriods,
+    body.dark-theme #progressBarThreeBall,
+    body.dark-theme #progressBarSecondLastThreeBall,
+    body.dark-theme #progressBarThirdLastThreeBall {
+      background-color: #4CAF50 !important;
+    }
+    
+    /* 所有进度文本的深色主题样式 */
+    body.dark-theme #progressNewest #progressTextNewest,
+    body.dark-theme #progressNewest #progressPercentageNewest,
+    body.dark-theme #progressNewest #currentPhaseNewest,
+    body.dark-theme #progressSecondLast #progressTextSecondLast,
+    body.dark-theme #progressSecondLast #progressPercentageSecondLast,
+    body.dark-theme #progressSecondLast #currentPhaseSecondLast,
+    body.dark-theme #progressThirdLast #progressTextThirdLast,
+    body.dark-theme #progressThirdLast #progressPercentageThirdLast,
+    body.dark-theme #progressThirdLast #currentPhaseThirdLast,
+    body.dark-theme #progressFourthLast #progressTextFourthLast,
+    body.dark-theme #progressFourthLast #progressPercentageFourthLast,
+    body.dark-theme #progressFourthLast #currentPhaseFourthLast,
+    body.dark-theme #progressFifthLast #progressTextFifthLast,
+    body.dark-theme #progressFifthLast #progressPercentageFifthLast,
+    body.dark-theme #progressFifthLast #currentPhaseFifthLast,
+    body.dark-theme #progressNearTwoPeriods #progressTextNearTwoPeriods,
+    body.dark-theme #progressNearTwoPeriods #progressPercentageNearTwoPeriods,
+    body.dark-theme #progressNearTwoPeriods #currentPhaseNearTwoPeriods,
+    body.dark-theme #progressThreeBall #progressTextThreeBall,
+    body.dark-theme #progressThreeBall #progressPercentageThreeBall,
+    body.dark-theme #progressThreeBall #currentPhaseThreeBall,
+    body.dark-theme #progressSecondLastThreeBall #progressTextSecondLastThreeBall,
+    body.dark-theme #progressSecondLastThreeBall #progressPercentageSecondLastThreeBall,
+    body.dark-theme #progressSecondLastThreeBall #currentPhaseSecondLastThreeBall,
+    body.dark-theme #progressThirdLastThreeBall #progressTextThirdLastThreeBall,
+    body.dark-theme #progressThirdLastThreeBall #progressPercentageThirdLastThreeBall,
+    body.dark-theme #progressThirdLastThreeBall #currentPhaseThirdLastThreeBall,
+    body.dark-theme #totalProgress #totalProgressText,
+    body.dark-theme #totalProgress #totalProgressPercentage,
+    body.dark-theme #totalProgress #totalCurrentPhase {
+      color: #ffffff !important;
+    }
+    
+    /* 推荐买号合集的深色主题样式 */
+    body.dark-theme #buyNumbersCollectionNewest,
+    body.dark-theme #buyNumbersCollectionSecondLast,
+    body.dark-theme #buyNumbersCollectionThirdLast,
+    body.dark-theme #buyNumbersCollectionFourthLast,
+    body.dark-theme #buyNumbersCollectionFifthLast,
+    body.dark-theme #buyNumbersCollectionNearTwoPeriods,
+    body.dark-theme #buyNumbersCollectionThreeBall,
+    body.dark-theme #buyNumbersCollectionSecondLastThreeBall,
+    body.dark-theme #buyNumbersCollectionThirdLastThreeBall {
+      background-color: #2d2d2d !important;
+      border-color: #444 !important;
+    }
+    
+    body.dark-theme #buyNumbersCollectionNewest h4,
+    body.dark-theme #buyNumbersCollectionSecondLast h4,
+    body.dark-theme #buyNumbersCollectionThirdLast h4,
+    body.dark-theme #buyNumbersCollectionFourthLast h4,
+    body.dark-theme #buyNumbersCollectionFifthLast h4,
+    body.dark-theme #buyNumbersCollectionNearTwoPeriods h4,
+    body.dark-theme #buyNumbersCollectionThreeBall h4,
+    body.dark-theme #buyNumbersCollectionSecondLastThreeBall h4,
+    body.dark-theme #buyNumbersCollectionThirdLastThreeBall h4 {
+      color: #ffffff !important;
+    }
+    
+    body.dark-theme #buyNumbersCollectionNewest #buyNumbersCollectionContentNewest div,
+    body.dark-theme #buyNumbersCollectionSecondLast #buyNumbersCollectionContentSecondLast div,
+    body.dark-theme #buyNumbersCollectionThirdLast #buyNumbersCollectionContentThirdLast div,
+    body.dark-theme #buyNumbersCollectionFourthLast #buyNumbersCollectionContentFourthLast div,
+    body.dark-theme #buyNumbersCollectionFifthLast #buyNumbersCollectionContentFifthLast div,
+    body.dark-theme #buyNumbersCollectionNearTwoPeriods #buyNumbersCollectionContentNearTwoPeriods div,
+    body.dark-theme #buyNumbersCollectionThreeBall #buyNumbersCollectionContentThreeBall div,
+    body.dark-theme #buyNumbersCollectionSecondLastThreeBall #buyNumbersCollectionContentSecondLastThreeBall div,
+    body.dark-theme #buyNumbersCollectionThirdLastThreeBall #buyNumbersCollectionContentThirdLastThreeBall div {
+      color: #cccccc !important;
+    }
+    
+    /* 总进度显示的深色主题样式 */
+    body.dark-theme #totalProgress {
+      background-color: #222222 !important;
+      color: #ffffff !important;
+      border-left-color: #ffffff !important;
+      border: 1px solid #ffffff !important;
+    }
+    
+    /* 总进度条标题的深色主题样式 */
+    body.dark-theme #totalProgress strong {
+      color: #ffffff !important;
+    }
+    
+    /* 总进度条背景的深色主题样式 */
+    body.dark-theme #totalProgress > div:nth-child(2) > div:first-child {
+      background-color: #222222 !important;
+      border: 1px solid #ffffff !important;
+    }
+    
+    /* 总进度文本容器的深色主题样式 */
+    body.dark-theme #totalProgress > div:nth-child(2) > div:last-child {
+      color: #ffffff !important;
+    }
+    
+    /* 总进度条填充的深色主题样式 */
+    body.dark-theme #totalProgressBar {
+      background-color: #4CAF50 !important;
+    }
+    
+    /* 图表容器的深色主题样式 */
+    body.dark-theme #buyNumberChartContainer {
+      background-color: #222222 !important;
+      border-color: #ffffff !important;
+    }
+    
+    /* 统计说明的深色主题样式 */
+    body.dark-theme #chartStats {
+      background-color: #333333 !important;
+      color: #ffffff !important;
+    }
+    /* 红色球样式 */
+    .red-ball {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+      text-align: center;
+      background-color: #DF2220;
+      color: white;
+      border-radius: 50%;
+      margin: 0 1px;
+      font-size: 9px;
+    }
+    /* 蓝色球样式 */
+    .blue-ball {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      line-height: 16px;
+      text-align: center;
+      background-color: #2154F0;
+      color: white;
+      border-radius: 50%;
+      margin: 0 1px;
+      font-size: 9px;
+    }
+  </style>
 </head>
 <body>
   <div class="container">
@@ -19,827 +283,632 @@
         <!-- 主导航区 -->
         <nav class="main-nav">
           <ul>
-            <li class="nav-item">
-              <span class="nav-icon">✕</span>
-              <span onclick="window.location.href='zu_he_xiang_qing.html'">最新1期两球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✖️</span>
-              <span onclick="window.location.href='dao_shu_2_qi_liang_qiu_zu_he.html'">倒数2期两球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✗</span>
-              <a href="dao_shu_3_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期两球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✘</span>
-              <a href="dao_shu_4_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数4期两球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">✙</span>
-              <a href="dao_shu_5_qi_liang_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数5期两球组合分析</a>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔺</span>
-              <span onclick="window.location.href='san_qiu_fen_xi.html'">最新1期三球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔻</span>
-              <span onclick="window.location.href='dao_shu_2_qi_san_qiu_zu_he.html'">倒数2期三球组合分析</span>
-            </li>
-            <li class="nav-item">
-              <span class="nav-icon">🔽</span>
-              <a href="dao_shu_3_qi_san_qiu_zu_he.html" style="text-decoration: none; color: inherit;">倒数3期三球组合分析</a>
-            </li>
-            <li class="nav-item active">
-              <span class="nav-icon">🔮</span>
-              <span>下期开奖预测</span>
-            </li>
           </ul>
         </nav>
         
         <!-- 期数选择区 -->
-        <div class="period-selection" style="position: relative; top: -400px;">
-          <h4 class="section-title">选择统计范围</h4>
+        <div class="period-selection">
+          <h4 class="section-title">选择统计范</h4>
           <select class="period-dropdown">
-            <option selected>最近100期</option>
-            <option>最近50期</option>
-            <option>最近35期</option>
-            <option>最近200期</option>
-            <option>最近300期</option>
-            <option>最近500期</option>
-            <option>最近1000期</option>
-            <option>最近1500期</option>
-            <option>最近2000期</option>
+            <option selected>最新100期</option>
+            <option>最新50期</option>
+            <option>最新35期</option>
+            <option>最新200期</option>
+            <option>最新300期</option>
+            <option>最新500期</option>
+            <option>最新1000期</option>
+            <option>最新1500期</option>
+            <option>最新2000期</option>
             <option>全部期</option>
           </select>
           <!-- 隐藏快捷期数按钮 -->
           <div class="quick-period-buttons" style="display: none;">
-            <button class="quick-period-btn">近5期</button>
-            <button class="quick-period-btn">近10期</button>
-            <button class="quick-period-btn">最新1期</button>
+            <button class="quick-period-btn">50期</button>
+            <button class="quick-period-btn">100期</button>
+            <button class="quick-period-btn">最新期</button>
           </div>
         </div>
         
-
       </div>
       
       <!-- 右侧主内容区 -->
       <div class="main-content">
         <div style="display: flex; justify-content: space-between; align-items: center;">
-          <h1 class="page-title">下期开奖预测</h1>
+          <h1 class="page-title">下期前区开奖预测</h1>
           <div style="display: flex; gap: 10px; align-items: center;">
             <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
           </div>
         </div>
     
-        <!-- 最新开奖信息 -->
-        <div class="section" style="margin-bottom: 20px;">
-          <h3>最新开奖信息</h3>
-          <div id="latestDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
-            <!-- 数据将通过JavaScript动态生成 -->
-          </div>
-        </div>
-        
-        <!-- 预测结果区域 -->
-        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-          <!-- 前区预测结果 -->
-          <div class="section" style="flex: 1;">
-            <h3>前区预测号码</h3>
-            <div id="frontPredictionResult" style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; justify-content: center;">
-              <!-- 预测号码将通过JavaScript动态生成 -->
-            </div>
-            <div style="margin-top: 15px; text-align: center; color: #666; font-size: 14px;">
-              <p>基于8种算法综合分析得出</p>
-              <p id="frontPredictionInfo"></p>
+        <!-- 开奖信息卡片容器 -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 20px;">
+          <!-- 最新开奖信息卡片 -->
+          <div class="section">
+            <h3>最新开奖信息</h3>
+            <div id="latestDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+              <!-- 数据将通过JavaScript动态生成 -->
+              <div>加载中...</div>
             </div>
           </div>
           
-          <!-- 后区预测结果 -->
-          <div class="section" style="flex: 1;">
-            <h3>后区预测号码</h3>
-            <div id="backPredictionResult" style="display: flex; flex-wrap: wrap; gap: 15px; margin-top: 10px; justify-content: center;">
-              <!-- 预测号码将通过JavaScript动态生成 -->
+          <!-- 倒数2期开奖信息卡片 -->
+          <div class="section">
+            <h3>倒数2期开奖信息</h3>
+            <div id="secondLastDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+              <!-- 数据将通过JavaScript动态生成 -->
+              <div>加载中...</div>
             </div>
-            <div style="margin-top: 15px; text-align: center; color: #666; font-size: 14px;">
-              <p>基于8种算法综合分析得出</p>
-              <p id="backPredictionInfo"></p>
+          </div>
+          
+          <!-- 倒数3期开奖信息卡片 -->
+          <div class="section">
+            <h3>倒数3期开奖信息</h3>
+            <div id="thirdLastDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+              <!-- 数据将通过JavaScript动态生成 -->
+              <div>加载中...</div>
+            </div>
+          </div>
+          
+          <!-- 倒数4期开奖信息卡片 -->
+          <div class="section">
+            <h3>倒数4期开奖信息</h3>
+            <div id="fourthLastDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+              <!-- 数据将通过JavaScript动态生成 -->
+              <div>加载中...</div>
+            </div>
+          </div>
+          
+          <!-- 倒数5期开奖信息卡片 -->
+          <div class="section">
+            <h3>倒数5期开奖信息</h3>
+            <div id="fifthLastDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+              <!-- 数据将通过JavaScript动态生成 -->
+              <div>加载中...</div>
             </div>
           </div>
         </div>
         
-        <!-- 算法分析依据 -->
+        <!-- 总回测控制 -->
         <div class="section" style="margin-bottom: 20px;">
-          <h3>算法分析依据</h3>
-          <div id="algorithmAnalysis" style="overflow-x: auto;">
-            <table class="combination-table">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">总回测控制</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startAllBacktestBtn" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopAllBacktestBtn" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+              <button class="btn" id="copyAllBuyNumbersBtn" style="background-color: #2196F3; color: white;">复制推荐买号</button>
+              <button class="btn" id="saveBacktestResultsBtn" style="background-color: #FF9800; color: white;">保存回测结果</button>
+              <button class="btn" id="loadBacktestResultsBtn" style="background-color: #9C27B0; color: white;">加载回测结果</button>
+            </div>
+          </div>
+          <!-- 总进度显示 -->
+          <div id="totalProgress" style="margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px; display: none;">
+            <strong>总回测进度：</strong>
+            <span id="totalProgressText">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="totalProgressBar" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="totalProgressPercentage">0%</span> | 
+                <span id="totalCurrentPhase">正在准备...</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 推荐买号统计图表 -->
+        <div class="section" style="margin-bottom: 20px;">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">推荐买号统计</h3>
+            <button class="btn" id="refreshChartBtn" style="background-color: #2196F3; color: white;">刷新图表</button>
+          </div>
+          <!-- 图表容器 -->
+          <div id="buyNumberChartContainer" style="background-color: #f8f9fa; border-radius: 4px; padding: 15px; border: 1px solid #ddd;">
+            <canvas id="buyNumberChart" width="1200" height="400"></canvas>
+          </div>
+          <!-- 统计说明 -->
+          <div id="chartStats" style="margin-top: 10px; padding: 10px; background-color: #f0f0f0; border-radius: 4px; font-size: 12px; color: #666;"></div>
+        </div>
+        
+        <!-- 最新一期两球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">最新一期两球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnNewest" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnNewest" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          <!-- 进度显示 -->
+          <div id="progressNewest" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextNewest">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarNewest" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageNewest">0%</span> | 
+                <span id="currentPhaseNewest">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
               <thead>
                 <tr>
-                  <th>算法类型</th>
-                  <th>前区杀号数量</th>
-                  <th>后区杀号数量</th>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
                   <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下一期期号</th>
+                  <th>下一期前区推荐买号</th>
+                  <th>操作</th>
                 </tr>
               </thead>
-              <tbody id="algorithmResults">
-                <!-- 算法分析结果将通过JavaScript动态生成 -->
+              <tbody id="detailResultsNewest">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
               </tbody>
             </table>
           </div>
-        </div>
-        
-        <!-- 预测图表 -->
-        <div class="section">
-          <h3>预测数据分析图表</h3>
-          <div style="display: flex; gap: 20px; margin-top: 20px;">
-            <!-- 前区预测图表 -->
-            <div class="chart-container" style="flex: 1;">
-              <h4>前区号码杀号次数分布</h4>
-              <canvas id="frontPredictionChart" width="400" height="300"></canvas>
-            </div>
-            
-            <!-- 后区预测图表 -->
-            <div class="chart-container" style="flex: 1;">
-              <h4>后区号码杀号次数分布</h4>
-              <canvas id="backPredictionChart" width="400" height="300"></canvas>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionNewest" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentNewest" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
             </div>
           </div>
         </div>
+        
+        <!-- 倒数2期两球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">倒数2期两球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnSecondLast" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnSecondLast" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          
+          <!-- 进度显示 -->
+          <div id="progressSecondLast" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextSecondLast">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarSecondLast" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageSecondLast">0%</span> | 
+                <span id="currentPhaseSecondLast">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
+                  <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下下期期号</th>
+                  <th>下下期前区推荐买号</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResultsSecondLast">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionSecondLast" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentSecondLast" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 倒数3期两球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">倒数3期两球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnThirdLast" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnThirdLast" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          
+          <!-- 进度显示 -->
+          <div id="progressThirdLast" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextThirdLast">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarThirdLast" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageThirdLast">0%</span> | 
+                <span id="currentPhaseThirdLast">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
+                  <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下下下期期号</th>
+                  <th>下下下期前区推荐买号</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResultsThirdLast">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionThirdLast" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentThirdLast" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 倒数4期两球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">倒数4期两球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnFourthLast" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnFourthLast" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          
+          <!-- 进度显示 -->
+          <div id="progressFourthLast" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextFourthLast">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarFourthLast" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageFourthLast">0%</span> | 
+                <span id="currentPhaseFourthLast">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
+                  <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下下下下期期号</th>
+                  <th>下下下下期前区推荐买号</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResultsFourthLast">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionFourthLast" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentFourthLast" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 倒数5期两球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">倒数5期两球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnFifthLast" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnFifthLast" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          
+          <!-- 进度显示 -->
+          <div id="progressFifthLast" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextFifthLast">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarFifthLast" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageFifthLast">0%</span> | 
+                <span id="currentPhaseFifthLast">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
+                  <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下下下下下期期号</th>
+                  <th>下下下下下期前区推荐买号</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResultsFifthLast">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionFifthLast" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentFifthLast" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 近两期两球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">近两期两球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnNearTwoPeriods" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnNearTwoPeriods" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          
+          <!-- 进度显示 -->
+          <div id="progressNearTwoPeriods" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextNearTwoPeriods">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarNearTwoPeriods" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageNearTwoPeriods">0%</span> | 
+                <span id="currentPhaseNearTwoPeriods">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
+                  <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下一期期号</th>
+                  <th>下一期前区推荐买号</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResultsNearTwoPeriods">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionNearTwoPeriods" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentNearTwoPeriods" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 最新一期三球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">最新一期三球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnThreeBall" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnThreeBall" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          
+          <!-- 进度显示 -->
+          <div id="progressThreeBall" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextThreeBall">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarThreeBall" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageThreeBall">0%</span> | 
+                <span id="currentPhaseThreeBall">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
+                  <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下一期期号</th>
+                  <th>下一期前区推荐买号</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResultsThreeBall">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionThreeBall" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentThreeBall" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 倒数2期三球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">倒数2期三球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnSecondLastThreeBall" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnSecondLastThreeBall" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          
+          <!-- 进度显示 -->
+          <div id="progressSecondLastThreeBall" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextSecondLastThreeBall">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarSecondLastThreeBall" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageSecondLastThreeBall">0%</span> | 
+                <span id="currentPhaseSecondLastThreeBall">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
+                  <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下下期期号</th>
+                  <th>下下期前区推荐买号</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResultsSecondLastThreeBall">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionSecondLastThreeBall" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentSecondLastThreeBall" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 倒数3期三球组合平均率最高统计期详情 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">倒数3期三球组合平均率最高统计期详情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtnThirdLastThreeBall" style="background-color: #4CAF50; color: white;">开始回测</button>
+              <button class="btn" id="stopBacktestBtnThirdLastThreeBall" style="background-color: #f44336; color: white; display: none;">终止回测</button>
+            </div>
+          </div>
+          
+          <!-- 进度显示 -->
+          <div id="progressThirdLastThreeBall" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测进度：</strong>
+            <span id="progressTextThirdLastThreeBall">准备开始...</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBarThirdLastThreeBall" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentageThirdLastThreeBall">0%</span> | 
+                <span id="currentPhaseThirdLastThreeBall">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测方法</th>
+                  <th>回测期数</th>
+                  <th>统计期数</th>
+                  <th>平均正确率</th>
+                  <th>当前回测期号</th>
+                  <th>下下下期期号</th>
+                  <th>下下下期前区推荐买号</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResultsThirdLastThreeBall">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 推荐买号合集 -->
+          <div id="buyNumbersCollectionThirdLastThreeBall" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">前区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentThirdLastThreeBall" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+        </div>
+        
       </div>
     </div>
   </div>
 
   <script src="js/data.js"></script>
-  <script>
-    // 主题切换功能 - 仅从localStorage读取设置，不在此页面提供切换按钮
-    document.addEventListener('DOMContentLoaded', function() {
-      // 从localStorage读取主题设置
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.body.classList.add('dark-theme');
-      }
-    });
-  </script>
-  <script>
-    // 定义全局变量
-    let periodValue = '100'; // 默认统计期数
-    let latestDrawInfo = null;
-    
-    // 从接口获取最新开奖信息
-    async function huo_qu_zui_xin_kai_jiang() {
-      try {
-        const response = await fetch('http://localhost:18889/sql_zui_xin_yi_qi');
-        const result = await response.json();
-        
-        if (result.success) {
-          // 转换API返回格式为代码期望的格式
-          const latestDraw = result.latestDraw;
-          return {
-            issue: latestDraw.period,
-            drawDate: latestDraw.drawDate,
-            frontNumbers: latestDraw.firstZoneNumbers,
-            backNumbers: latestDraw.lastZoneNumbers
-          };
-        } else {
-          console.error('获取最新开奖信息失败:', result.message);
-          return null;
-        }
-      } catch (error) {
-        console.error('获取最新开奖信息失败:', error);
-        return null;
-      }
-    }
-    
-    // 获取两球组合分析数据
-    async function huo_qu_shuang_sha_fen_xi(period) {
-      try {
-        const response = await fetch(`http://localhost:18889/shuang_sha_fen_xi?period=${period}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-          
-          if (result.success) {
-            return result.data;
-          } else {
-            console.error('获取杀号分析数据失败：' + result.message);
-            return null;
-          }
-        } catch (error) {
-          console.error('获取杀号分析数据失败:', error);
-          return null;
-        }
-    }
-    
-    // 获取三球组合分析数据
-    async function huo_qu_san_qiu_fen_xi(period) {
-      try {
-        const response = await fetch(`http://localhost:18889/san_qiu_fen_xi?stats_period=${period}`);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const result = await response.json();
-          
-          if (result.success) {
-            return result.data;
-          } else {
-            console.error('获取三球分析数据失败：' + result.message);
-            return null;
-          }
-        } catch (error) {
-          console.error('获取三球分析数据失败:', error);
-          return null;
-        }
-    }
-    
-    // 渲染最新开奖信息
-    function renderLatestDrawInfo(drawInfo) {
-      if (!drawInfo) return;
-      
-      // 更新顶部快捷栏的期数显示
-      document.querySelector('.current-period').textContent = drawInfo.issue;
-      
-      // 处理日期格式，只显示年月日
-      let formattedDate = drawInfo.drawDate;
-      if (formattedDate && typeof formattedDate === 'string') {
-        // 处理ISO格式日期（如：2025-10-28T16:00:00.000Z）
-        if (formattedDate.includes('T')) {
-          formattedDate = formattedDate.split('T')[0];
-        }
-        // 处理包含空格的日期（如：2025-10-28 16:00:00）
-        else if (formattedDate.includes(' ')) {
-          formattedDate = formattedDate.split(' ')[0];
-        }
-      }
-      
-      const latestDrawInfo = document.getElementById('latestDrawInfo');
-      latestDrawInfo.innerHTML = `
-        <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
-          期号: ${drawInfo.issue}
-        </div>
-        <div>
-          开奖日期: ${formattedDate}
-        </div>
-        <div>
-          前区号码: ${drawInfo.frontNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ')}
-        </div>
-        <div>
-          后区号码: ${drawInfo.backNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}
-        </div>
-      `;
-    }
-    
-    // 执行所有算法分析
-    async function executeAllAlgorithms(period) {
-      const algorithms = [];
-      
-      // 1. 最新1期两球组合分析
-      const latestTwoBall = await huo_qu_shuang_sha_fen_xi(period);
-      if (latestTwoBall) {
-        algorithms.push({
-          name: '最新1期两球组合',
-          frontKillNumbers: Array.isArray(latestTwoBall.recommendedFrontKillNumbers) ? latestTwoBall.recommendedFrontKillNumbers : [],
-          backKillNumbers: Array.isArray(latestTwoBall.recommendedBackKillNumbers) ? latestTwoBall.recommendedBackKillNumbers : [],
-          period: period
-        });
-      }
-      
-      // 2. 最新1期三球组合分析
-      const latestThreeBall = await huo_qu_san_qiu_fen_xi(period);
-      if (latestThreeBall) {
-        algorithms.push({
-          name: '最新1期三球组合',
-          frontKillNumbers: Array.isArray(latestThreeBall.recommendedFrontKillNumbers) ? latestThreeBall.recommendedFrontKillNumbers : [],
-          backKillNumbers: [], // 三球组合分析目前只返回前区杀号
-          period: period
-        });
-      }
-      
-      // 3-8. 这里应该添加更多算法的调用，暂时使用模拟数据作为示例
-      // 实际实现时需要调用所有8种算法的API
-      // 由于目前API接口不完整，我们添加模拟数据来演示功能
-      const mockAlgorithms = [
-        {
-          name: '倒数2期两球组合',
-          frontKillNumbers: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
-          backKillNumbers: [1, 2, 3, 4]
-        },
-        {
-          name: '倒数3期两球组合',
-          frontKillNumbers: [2, 3, 4, 5, 6, 7, 8, 9, 10, 11],
-          backKillNumbers: [2, 3, 4, 5]
-        },
-        {
-          name: '倒数4期两球组合',
-          frontKillNumbers: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
-          backKillNumbers: [3, 4, 5, 6]
-        },
-        {
-          name: '倒数5期两球组合',
-          frontKillNumbers: [4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
-          backKillNumbers: [4, 5, 6, 7]
-        },
-        {
-          name: '倒数2期三球组合',
-          frontKillNumbers: [5, 6, 7, 8, 9, 10, 11, 12, 13, 14],
-          backKillNumbers: [5, 6, 7, 8]
-        },
-        {
-          name: '倒数3期三球组合',
-          frontKillNumbers: [6, 7, 8, 9, 10, 11, 12, 13, 14, 15],
-          backKillNumbers: [6, 7, 8, 9]
-        }
-      ];
-      
-      // 将模拟算法数据添加到结果中
-      mockAlgorithms.forEach(algo => {
-        algorithms.push({
-          name: algo.name,
-          frontKillNumbers: algo.frontKillNumbers,
-          backKillNumbers: algo.backKillNumbers,
-          period: period
-        });
-      });
-      
-      return algorithms;
-    }
-    
-    // 统计号码被推荐为杀号的次数
-    function countKillNumbers(algorithms) {
-      // 初始化杀号计数
-      const frontKillCounts = new Array(36).fill(0); // 1-35
-      const backKillCounts = new Array(13).fill(0); // 1-12
-      
-      // 遍历所有算法结果，统计每个号码被推荐为杀号的次数
-      algorithms.forEach(algorithm => {
-        // 确保算法结果包含有效的杀号数据
-        if (algorithm && Array.isArray(algorithm.frontKillNumbers)) {
-          // 统计前区杀号
-          algorithm.frontKillNumbers.forEach(num => {
-            if (typeof num === 'number' && num >= 1 && num <= 35) {
-              frontKillCounts[num]++;
-            }
-          });
-        }
-        
-        if (algorithm && Array.isArray(algorithm.backKillNumbers)) {
-          // 统计后区杀号
-          algorithm.backKillNumbers.forEach(num => {
-            if (typeof num === 'number' && num >= 1 && num <= 12) {
-              backKillCounts[num]++;
-            }
-          });
-        }
-      });
-      
-      return {
-        frontKillCounts: frontKillCounts,
-        backKillCounts: backKillCounts
-      };
-    }
-    
-    // 生成推荐原因
-    function generateRecommendationReason(number, killCount, rank, totalNumbers, type) {
-      let reason = `${type === 'front' ? '前区' : '后区'}号码 ${number}：`;
-      reason += `在${totalNumbers}个${type === 'front' ? '前区' : '后区'}号码中被推荐为杀号的次数最少，`;
-      reason += `仅被${killCount}种算法推荐为杀号，`;
-      reason += `排名第${rank}，`;
-      reason += `是本期最有可能中奖的${type === 'front' ? '前区' : '后区'}号码之一。`;
-      return reason;
-    }
-    
-    // 预测下期开奖号码
-    function predictNextDrawNumbers(killCounts) {
-      // 生成前区号码列表，按被推荐为杀号的次数升序排列
-      const frontNumbers = [];
-      for (let i = 1; i <= 35; i++) {
-        frontNumbers.push({
-          number: i,
-          killCount: typeof killCounts.frontKillCounts[i] === 'number' ? killCounts.frontKillCounts[i] : 0
-        });
-      }
-      
-      // 生成后区号码列表，按被推荐为杀号的次数升序排列
-      const backNumbers = [];
-      for (let i = 1; i <= 12; i++) {
-        backNumbers.push({
-          number: i,
-          killCount: typeof killCounts.backKillCounts[i] === 'number' ? killCounts.backKillCounts[i] : 0
-        });
-      }
-      
-      // 按杀号次数升序排序，杀号次数越少，越可能中奖
-      frontNumbers.sort((a, b) => a.killCount - b.killCount);
-      backNumbers.sort((a, b) => a.killCount - b.killCount);
-      
-      // 选择前5个前区号码和前2个后区号码作为预测结果，并添加推荐原因
-      const frontPrediction = frontNumbers.slice(0, 5).map((item, index) => ({
-        number: item.number,
-        killCount: item.killCount,
-        rank: index + 1,
-        reason: generateRecommendationReason(item.number, item.killCount, index + 1, 35, 'front')
-      })).sort((a, b) => a.number - b.number);
-      
-      const backPrediction = backNumbers.slice(0, 2).map((item, index) => ({
-        number: item.number,
-        killCount: item.killCount,
-        rank: index + 1,
-        reason: generateRecommendationReason(item.number, item.killCount, index + 1, 12, 'back')
-      })).sort((a, b) => a.number - b.number);
-      
-      return {
-        frontPrediction: frontPrediction,
-        backPrediction: backPrediction,
-        frontNumbers: frontNumbers,
-        backNumbers: backNumbers
-      };
-    }
-    
-    // 渲染预测结果
-    function renderPredictionResults(prediction, algorithms) {
-      // 渲染前区预测结果
-      const frontPredictionResult = document.getElementById('frontPredictionResult');
-      frontPredictionResult.innerHTML = '';
-      frontPredictionResult.style.display = 'flex';
-      frontPredictionResult.style.flexDirection = 'column';
-      frontPredictionResult.style.alignItems = 'center';
-      frontPredictionResult.style.gap = '15px';
-      
-      prediction.frontPrediction.forEach(pred => {
-        const predictionItem = document.createElement('div');
-        predictionItem.style.display = 'flex';
-        predictionItem.style.flexDirection = 'column';
-        predictionItem.style.alignItems = 'center';
-        predictionItem.style.gap = '5px';
-        
-        // 创建号码球
-        const ball = document.createElement('span');
-        ball.className = 'red-ball';
-        ball.style.fontSize = '24px';
-        ball.style.padding = '10px 15px';
-        ball.textContent = pred.number;
-        
-        // 创建推荐原因
-        const reason = document.createElement('div');
-        reason.className = 'prediction-reason';
-        reason.style.fontSize = '12px';
-        reason.style.color = '#666';
-        reason.style.textAlign = 'center';
-        reason.style.maxWidth = '200px';
-        reason.style.padding = '8px';
-        reason.style.borderRadius = '8px';
-        reason.style.background = 'rgba(223, 34, 32, 0.1)';
-        reason.style.lineHeight = '1.4';
-        reason.textContent = pred.reason;
-        
-        // 添加到容器
-        predictionItem.appendChild(ball);
-        predictionItem.appendChild(reason);
-        frontPredictionResult.appendChild(predictionItem);
-      });
-      
-      // 渲染前区预测信息
-      const frontPredictionInfo = document.getElementById('frontPredictionInfo');
-      frontPredictionInfo.textContent = `共分析 ${algorithms.length} 种算法，预测号码被推荐为杀号次数最少`;
-      
-      // 渲染后区预测结果
-      const backPredictionResult = document.getElementById('backPredictionResult');
-      backPredictionResult.innerHTML = '';
-      backPredictionResult.style.display = 'flex';
-      backPredictionResult.style.flexDirection = 'column';
-      backPredictionResult.style.alignItems = 'center';
-      backPredictionResult.style.gap = '15px';
-      
-      prediction.backPrediction.forEach(pred => {
-        const predictionItem = document.createElement('div');
-        predictionItem.style.display = 'flex';
-        predictionItem.style.flexDirection = 'column';
-        predictionItem.style.alignItems = 'center';
-        predictionItem.style.gap = '5px';
-        
-        // 创建号码球
-        const ball = document.createElement('span');
-        ball.className = 'blue-ball';
-        ball.style.fontSize = '24px';
-        ball.style.padding = '10px 15px';
-        ball.textContent = pred.number;
-        
-        // 创建推荐原因
-        const reason = document.createElement('div');
-        reason.className = 'prediction-reason';
-        reason.style.fontSize = '12px';
-        reason.style.color = '#666';
-        reason.style.textAlign = 'center';
-        reason.style.maxWidth = '200px';
-        reason.style.padding = '8px';
-        reason.style.borderRadius = '8px';
-        reason.style.background = 'rgba(164, 98, 248, 0.1)';
-        reason.style.lineHeight = '1.4';
-        reason.textContent = pred.reason;
-        
-        // 添加到容器
-        predictionItem.appendChild(ball);
-        predictionItem.appendChild(reason);
-        backPredictionResult.appendChild(predictionItem);
-      });
-      
-      // 渲染后区预测信息
-      const backPredictionInfo = document.getElementById('backPredictionInfo');
-      backPredictionInfo.textContent = `共分析 ${algorithms.length} 种算法，预测号码被推荐为杀号次数最少`;
-    }
-    
-    // 渲染算法分析结果
-    function renderAlgorithmResults(algorithms) {
-      const algorithmResults = document.getElementById('algorithmResults');
-      algorithmResults.innerHTML = '';
-      
-      algorithms.forEach(algorithm => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${algorithm.name}</td>
-          <td>${algorithm.frontKillNumbers.length}</td>
-          <td>${algorithm.backKillNumbers.length}</td>
-          <td>${algorithm.period === 'all' ? '全部期' : `最近${algorithm.period}期`}</td>
-        `;
-        algorithmResults.appendChild(tr);
-      });
-    }
-    
-    // 绘制前区预测图表
-    function drawFrontPredictionChart(frontNumbers) {
-      const canvas = document.getElementById('frontPredictionChart');
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      const isDarkTheme = document.body.classList.contains('dark-theme');
-      
-      // 清空画布
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // 设置图表样式
-      const chartWidth = canvas.width;
-      const chartHeight = canvas.height;
-      const padding = { top: 20, right: 20, bottom: 40, left: 40 };
-      const chartInnerWidth = chartWidth - padding.left - padding.right;
-      const chartInnerHeight = chartHeight - padding.top - padding.bottom;
-      
-      // 准备数据
-      const data = frontNumbers.slice(0, 10); // 只显示前10个最可能的号码
-      
-      // 计算最大值
-      const maxKillCount = Math.max(...frontNumbers.map(item => item.killCount), 1);
-      
-      // 绘制背景
-      ctx.fillStyle = isDarkTheme ? '#222' : '#fff';
-      ctx.fillRect(0, 0, chartWidth, chartHeight);
-      
-      // 绘制坐标轴
-      ctx.strokeStyle = isDarkTheme ? '#666' : '#333';
-      ctx.lineWidth = 1;
-      
-      // Y轴
-      ctx.beginPath();
-      ctx.moveTo(padding.left, padding.top);
-      ctx.lineTo(padding.left, chartHeight - padding.bottom);
-      ctx.stroke();
-      
-      // X轴
-      ctx.beginPath();
-      ctx.moveTo(padding.left, chartHeight - padding.bottom);
-      ctx.lineTo(chartWidth - padding.right, chartHeight - padding.bottom);
-      ctx.stroke();
-      
-      // 绘制Y轴刻度和标签
-      const yAxisSteps = 5;
-      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
-      ctx.font = '10px Arial';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      
-      for (let i = 0; i <= yAxisSteps; i++) {
-        const y = padding.top + (chartInnerHeight / yAxisSteps) * i;
-        const count = Math.round(maxKillCount * (1 - i / yAxisSteps));
-        
-        // 绘制刻度线
-        ctx.beginPath();
-        ctx.moveTo(padding.left - 5, y);
-        ctx.lineTo(padding.left, y);
-        ctx.stroke();
-        
-        // 绘制标签
-        ctx.fillText(count.toString(), padding.left - 10, y);
-      }
-      
-      // 绘制X轴标签
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      for (let i = 0; i < data.length; i++) {
-        const x = padding.left + (chartInnerWidth / data.length) * (i + 0.5);
-        const y = chartHeight - padding.bottom + 5;
-        ctx.fillText(data[i].number.toString(), x, y);
-      }
-      
-      // 绘制柱状图
-      const barWidth = chartInnerWidth / data.length * 0.8;
-      
-      data.forEach((item, index) => {
-        const barHeight = (item.killCount / maxKillCount) * chartInnerHeight;
-        const x = padding.left + (chartInnerWidth / data.length) * index + (chartInnerWidth / data.length - barWidth) / 2;
-        const y = chartHeight - padding.bottom - barHeight;
-        
-        // 颜色设置：杀号次数越少，颜色越深
-        const intensity = 1 - (item.killCount / maxKillCount);
-        ctx.fillStyle = `rgba(223, 34, 32, ${0.5 + intensity * 0.5})`;
-        
-        // 绘制柱子
-        ctx.fillRect(x, y, barWidth, barHeight);
-        
-        // 绘制数值
-        ctx.fillStyle = isDarkTheme ? '#fff' : '#333';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(item.killCount.toString(), x + barWidth / 2, y - 2);
-      });
-      
-      // 绘制统计期数信息
-      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'bottom';
-      const periodText = periodValue === 'all' ? '全部期' : `最近${periodValue}期`;
-      ctx.fillText(`统计期数: ${periodText}`, padding.left + 5, padding.top + 15);
-    }
-    
-    // 绘制后区预测图表
-    function drawBackPredictionChart(backNumbers) {
-      const canvas = document.getElementById('backPredictionChart');
-      if (!canvas) return;
-      
-      const ctx = canvas.getContext('2d');
-      const isDarkTheme = document.body.classList.contains('dark-theme');
-      
-      // 清空画布
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      // 设置图表样式
-      const chartWidth = canvas.width;
-      const chartHeight = canvas.height;
-      const padding = { top: 20, right: 20, bottom: 40, left: 40 };
-      const chartInnerWidth = chartWidth - padding.left - padding.right;
-      const chartInnerHeight = chartHeight - padding.top - padding.bottom;
-      
-      // 准备数据
-      const data = backNumbers.slice(0, 8); // 只显示前8个最可能的号码
-      
-      // 计算最大值
-      const maxKillCount = Math.max(...backNumbers.map(item => item.killCount), 1);
-      
-      // 绘制背景
-      ctx.fillStyle = isDarkTheme ? '#222' : '#fff';
-      ctx.fillRect(0, 0, chartWidth, chartHeight);
-      
-      // 绘制坐标轴
-      ctx.strokeStyle = isDarkTheme ? '#666' : '#333';
-      ctx.lineWidth = 1;
-      
-      // Y轴
-      ctx.beginPath();
-      ctx.moveTo(padding.left, padding.top);
-      ctx.lineTo(padding.left, chartHeight - padding.bottom);
-      ctx.stroke();
-      
-      // X轴
-      ctx.beginPath();
-      ctx.moveTo(padding.left, chartHeight - padding.bottom);
-      ctx.lineTo(chartWidth - padding.right, chartHeight - padding.bottom);
-      ctx.stroke();
-      
-      // 绘制Y轴刻度和标签
-      const yAxisSteps = 5;
-      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
-      ctx.font = '10px Arial';
-      ctx.textAlign = 'right';
-      ctx.textBaseline = 'middle';
-      
-      for (let i = 0; i <= yAxisSteps; i++) {
-        const y = padding.top + (chartInnerHeight / yAxisSteps) * i;
-        const count = Math.round(maxKillCount * (1 - i / yAxisSteps));
-        
-        // 绘制刻度线
-        ctx.beginPath();
-        ctx.moveTo(padding.left - 5, y);
-        ctx.lineTo(padding.left, y);
-        ctx.stroke();
-        
-        // 绘制标签
-        ctx.fillText(count.toString(), padding.left - 10, y);
-      }
-      
-      // 绘制X轴标签
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'top';
-      for (let i = 0; i < data.length; i++) {
-        const x = padding.left + (chartInnerWidth / data.length) * (i + 0.5);
-        const y = chartHeight - padding.bottom + 5;
-        ctx.fillText(data[i].number.toString(), x, y);
-      }
-      
-      // 绘制柱状图
-      const barWidth = chartInnerWidth / data.length * 0.8;
-      
-      data.forEach((item, index) => {
-        const barHeight = (item.killCount / maxKillCount) * chartInnerHeight;
-        const x = padding.left + (chartInnerWidth / data.length) * index + (chartInnerWidth / data.length - barWidth) / 2;
-        const y = chartHeight - padding.bottom - barHeight;
-        
-        // 颜色设置：杀号次数越少，颜色越深
-        const intensity = 1 - (item.killCount / maxKillCount);
-        ctx.fillStyle = `rgba(164, 98, 248, ${0.5 + intensity * 0.5})`;
-        
-        // 绘制柱子
-        ctx.fillRect(x, y, barWidth, barHeight);
-        
-        // 绘制数值
-        ctx.fillStyle = isDarkTheme ? '#fff' : '#333';
-        ctx.font = '10px Arial';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'bottom';
-        ctx.fillText(item.killCount.toString(), x + barWidth / 2, y - 2);
-      });
-      
-      // 绘制统计期数信息
-      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
-      ctx.font = '12px Arial';
-      ctx.textAlign = 'left';
-      ctx.textBaseline = 'bottom';
-      const periodText = periodValue === 'all' ? '全部期' : `最近${periodValue}期`;
-      ctx.fillText(`统计期数: ${periodText}`, padding.left + 5, padding.top + 15);
-    }
-    
-    // 主函数：执行所有预测逻辑
-    async function main() {
-      // 获取最新开奖信息
-      const latestDraw = await huo_qu_zui_xin_kai_jiang();
-      if (latestDraw) {
-        latestDrawInfo = latestDraw;
-        renderLatestDrawInfo(latestDraw);
-      }
-      
-      // 执行所有算法分析
-      const algorithms = await executeAllAlgorithms(periodValue);
-      
-      // 渲染算法分析结果
-      renderAlgorithmResults(algorithms);
-      
-      // 统计号码被推荐为杀号的次数
-      const killCounts = countKillNumbers(algorithms);
-      
-      // 预测下期开奖号码
-      const prediction = predictNextDrawNumbers(killCounts);
-      
-      // 渲染预测结果
-      renderPredictionResults(prediction, algorithms);
-      
-      // 绘制预测图表
-      drawFrontPredictionChart(prediction.frontNumbers);
-      drawBackPredictionChart(prediction.backNumbers);
-    }
-    
-    // 页面加载完成后执行主函数
-    window.addEventListener('load', async function() {
-      // 调用主函数执行预测
-      await main();
-      
-      // 为统计范围下拉选择框添加事件监听器
-      const periodDropdown = document.querySelector('.period-dropdown');
-      if (periodDropdown) {
-        periodDropdown.addEventListener('change', function() {
-          const selectedText = this.value;
-          
-          // 根据选择的文本确定对应的period值
-          if (selectedText === '最近100期') periodValue = '100';
-          else if (selectedText === '最近50期') periodValue = '50';
-          else if (selectedText === '最近35期') periodValue = '35';
-          else if (selectedText === '最近200期') periodValue = '200';
-          else if (selectedText === '最近300期') periodValue = '300';
-          else if (selectedText === '最近500期') periodValue = '500';
-          else if (selectedText === '最近1000期') periodValue = '1000';
-          else if (selectedText === '最近1500期') periodValue = '1500';
-          else if (selectedText === '最近2000期') periodValue = '2000';
-          else if (selectedText === '全部期') periodValue = 'all';
-          
-          // 重新执行预测
-          main();
-        });
-      }
-    });
-    
-    // 移动端侧边栏切换
-    function toggleSidebar() {
-      const sidebar = document.querySelector('.left-sidebar');
-      sidebar.classList.toggle('open');
-    }
-  </script>
+  <script src="js/xia_qi_kai_jiang_yu_ce.js"></script>
 </body>
 </html>

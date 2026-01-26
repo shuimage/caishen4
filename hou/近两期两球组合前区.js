@@ -96,36 +96,33 @@ router.post('/', async (req, res) => {
     
     for (const combo of combinations) {
       const comboStr = `${combo[0]}-${combo[1]}`;
-      const ball1 = combo[0]; // 第2期的球号
-      const ball2 = combo[1]; // 第1期的球号
+      const ball1 = combo[0]; // 第1球出现的期号（较小）
+      const ball2 = combo[1]; // 第2球出现的期号（较大，比第1球大1期）
       
       // 统计变量
       let matchCount = 0; // 组合出现次数
       const nextBallsCount = {}; // 下一期球号出现次数
       
       // 遍历历史数据，查找连续两期
-      // processedHistory已经按issue降序排列
-      for (let i = 0; i < processedHistory.length - 2; i++) {
-        const currentDraw = processedHistory[i];     // 当前期（第1期）
-        const nextDraw = processedHistory[i + 1];    // 下一期（第2期）
-        const nextNextDraw = processedHistory[i + 2]; // 下下期（第3期）
+      // processedHistory已经按issue降序排列，所以索引从大到小遍历，期号递增
+      for (let i = processedHistory.length - 1; i >= 2; i--) {
+        const prevDraw = processedHistory[i - 2]; // 下下期（期号最大）
+        const currentDraw = processedHistory[i - 1]; // 第2球出现的期号
+        const nextDraw = processedHistory[i]; // 第1球出现的期号（期号最小）
         
         // 检查是否存在连续两期：
-        // 下一期（第2期）出现ball1
-        // 当前期（第1期）出现ball2
-        // 注意：由于数据是按issue降序排列的，所以：
-        // i: 当前期，issue较大
-        // i+1: 下一期，issue较小
+        // 第1球出现的期号（i）出现ball1
+        // 第2球出现的期号（i-1）出现ball2
+        // 下下期（i-2）比第2球出现的期号大1期
         
         if (checkBallInDraw(nextDraw.red, ball1) && checkBallInDraw(currentDraw.red, ball2)) {
-          // 找到连续两期，统计下下期（第3期）的球号
+          // 找到连续两期，统计下下期（i-2）的球号
           matchCount++;
           
-          if (nextNextDraw) {
-            nextNextDraw.red.forEach(ball => {
-              nextBallsCount[ball] = (nextBallsCount[ball] || 0) + 1;
-            });
-          }
+          // 统计下下期（i-2）的球号
+          prevDraw.red.forEach(ball => {
+            nextBallsCount[ball] = (nextBallsCount[ball] || 0) + 1;
+          });
         }
       }
       

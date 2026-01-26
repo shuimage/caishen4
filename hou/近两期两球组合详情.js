@@ -74,29 +74,29 @@ router.post('/', async (req, res) => {
 
     const occurrenceRecords = [];
 
-    for (let i = 0; i < processedHistory.length - 2; i++) {
-      const currentDraw = processedHistory[i];
-      const nextDraw = processedHistory[i + 1];
-      const nextNextDraw = processedHistory[i + 2];
+    for (let i = 2; i < processedHistory.length; i++) {
+      const prevDraw = processedHistory[i - 2]; // 下下期（期号最大）
+      const currentDraw = processedHistory[i - 1]; // 第2球出现的期号
+      const nextDraw = processedHistory[i]; // 第1球出现的期号（期号最小）
 
       const isFrontZone = type === 'first' || type === 'front';
       const currentBalls = isFrontZone ? currentDraw.red : currentDraw.blue;
       const nextBalls = isFrontZone ? nextDraw.red : nextDraw.blue;
-      const nextNextBalls = isFrontZone ? nextNextDraw.red : nextNextDraw.blue;
+      const prevBalls = isFrontZone ? prevDraw.red : prevDraw.blue;
 
       if (checkBallInDraw(nextBalls, ball1) && checkBallInDraw(currentBalls, ball2)) {
         const record = {
-          prev_period: nextDraw.issue,
-          prev_draw_balls: nextBalls,
-          current_period: currentDraw.issue,
-          current_draw_balls: currentBalls,
-          next_period: nextNextDraw.issue,
-          next_draw_balls: nextNextBalls
+          prev_period: nextDraw.issue, // 第1球出现的期号（较小）
+          prev_draw_balls: nextBalls, // 第1球出现的所在期号的前区开奖号
+          current_period: currentDraw.issue, // 第2球出现的期号（比第1球大一期）
+          current_draw_balls: currentBalls, // 第2球出现的所在期号的前区开奖号
+          next_period: prevDraw.issue, // 下下期（比第2球大一期）
+          next_draw_balls: prevBalls // 下下期的前区开奖号
         };
 
         if (target_ball !== null && target_ball !== undefined) {
           const targetInt = parseInt(target_ball);
-          if (checkBallInDraw(nextNextBalls, targetInt)) {
+          if (checkBallInDraw(prevBalls, targetInt)) {
             occurrenceRecords.push(record);
           }
         } else {

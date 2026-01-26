@@ -31,7 +31,7 @@ function checkCombinationInDraw(drawNumbers, combination) {
 }
 
 // 接口：获取倒数3期两球组合详情
-router.post('/dao_shu_3_qi_liang_qiu_zu_he_xiang_qing', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     // 获取请求参数
     const { latest_period, type = 'front', combinations = [], stats_range = 100, target_ball = null } = req.body;

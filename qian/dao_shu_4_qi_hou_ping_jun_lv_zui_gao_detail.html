@@ -1,0 +1,833 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>倒数数据4期数两球球组合合后区区平均均率最低高统计计期数详情情</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .period-input {
+      width: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .period-input:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    .period-input::-webkit-inner-spin-button,
+    .period-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    body.dark-theme .period-input {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+    body.dark-theme .period-input:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+    }
+    /* 详情细信息列表样式 */
+    .detail-list {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+    }
+    .detail-list th,
+    .detail-list td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+    }
+    .detail-list th {
+      background-color: #f8f9fa;
+      font-weight: bold;
+    }
+    body.dark-theme .detail-list th {
+      background-color: #2d2d2d;
+      color: #fff;
+    }
+    body.dark-theme .detail-list td {
+      background-color: #1a1a1a;
+      color: #fff;
+      border-bottom-color: #444;
+    }
+    /* 进度显示的深色主题样?- 增强选择?*/
+    body.dark-theme #progress {
+      background-color: #222222 !important;
+      color: #ffffff !important;
+      border-left-color: #ffffff !important;
+      border: 1px solid #ffffff !important;
+    }
+    
+    /* 进度条标题的深色主题样式 */
+    body.dark-theme #progress strong {
+      color: #ffffff !important;
+    }
+    
+    /* 进度条背景的深色主题样式 - 使用更精确的选择?*/
+    body.dark-theme #progress > div:nth-child(2) > div:first-child {
+      background-color: #222222 !important;
+      border: 1px solid #ffffff !important;
+    }
+    
+    /* 进度文本容器的深色主题样?*/
+    body.dark-theme #progress > div:nth-child(2) > div:last-child {
+      color: #ffffff !important;
+    }
+    
+    /* 进度条填充的深色主题样式 */
+    body.dark-theme #progressBar {
+      background-color: #4CAF50 !important;
+    }
+    
+    /* 所有进度文本的深色主题样式 */
+    body.dark-theme #progress #progressText,
+    body.dark-theme #progress #progressPercentage,
+    body.dark-theme #progress #currentPhase {
+      color: #ffffff !important;
+    }
+    .blue-ball {
+      display: inline-block;
+      width: 24px;
+      height: 24px;
+      line-height: 24px;
+      text-align: center;
+      background-color: #2154F0;
+      color: white;
+      border-radius: 50%;
+      margin: 0 2px;
+      font-size: 12px;
+    }
+  </style>
+  <script src="js/navigation.js"></script>
+</head>
+<body>
+  <div class="container">
+    <div class="main-layout">
+      <!-- 左侧导航?-->
+      <div class="left-sidebar">
+        <!-- 顶部快捷?-->
+        <div class="top-bar">
+          <div class="current-period">25120?/div>
+        </div>
+        
+        <!-- 主导航区 -->
+        <nav class="main-nav">
+          <ul>
+          </ul>
+        </nav>
+      </div>
+      
+      <!-- 右侧主内容区 -->
+      <div class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h1 class="page-title">倒数数据4期数两球球组合合后区区平均均率最低高统计计期数详情情</h1>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn back-btn" onclick="window.history.back()">返回测</button>
+          </div>
+        </div>
+    
+        <!-- 最低新开奖信?-->
+        <div class="section" id="latestDrawInfoSection">
+          <div class="section-header" style="margin-bottom: 10px;">
+            <h3 style="margin: 0;">最低?期数开奖信?/h3>
+          </div>
+          <div id="latestDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+            <!-- 数据据将通过JavaScript动态生?-->
+            <div>加载?..</div>
+          </div>
+        </div>
+
+        <!-- 倒数数据?期数开奖信?-->
+        <div class="section" id="fourthLastDrawInfoSection">
+          <div class="section-header" style="margin-bottom: 10px;">
+            <h3 style="margin: 0;">倒数数据?期数开奖信?/h3>
+          </div>
+          <div id="fourthLastDrawInfo" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: center;">
+            <!-- 数据据将通过JavaScript动态生?-->
+            <div>加载?..</div>
+          </div>
+        </div>
+    
+        <!-- 回测测结果列表 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">倒数数据4期数两球球组合合后区区平均均率最低高统计计期数详情情</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="startBacktestBtn" style="background-color: #4CAF50; color: white;">开始回测?/button>
+              <button class="btn" id="stopBacktestBtn" style="background-color: #f44336; color: white; display: none;">终止回测测</button>
+            </div>
+          </div>
+          <!-- 进度显示 -->
+          <div id="progress" style="display: none; margin-bottom: 15px; padding: 10px; background-color: #f8f9fa; border-left: 4px solid #007bff; border-radius: 4px;">
+            <strong>回测测进度?/strong>
+            <span id="progressText">准备开?..</span><br>
+            <div style="margin-top: 8px;">
+              <div style="width: 100%; background-color: #e9ecef; border-radius: 4px; overflow: hidden;">
+                <div id="progressBar" style="height: 8px; background-color: #007bff; width: 0%; transition: width 0.3s ease;"></div>
+              </div>
+              <div style="margin-top: 4px; font-size: 12px; color: #6c757d;">
+                <span id="progressPercentage">0%</span> | 
+                <span id="currentPhase">正在准备...</span>
+              </div>
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>回测测方法</th>
+                  <th>回测测期数数据</th>
+                  <th>统计计期数数据</th>
+                  <th>平均均正确?/th>
+                  <th>当前区期数号</th>
+                  <th>下一期下一期下一期下一期期数后区区推荐买号?/th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="detailResults">
+                <!-- 数据据将通过JavaScript动态生?-->
+                <tr>
+                  <td colspan="7" style="text-align: center; padding: 20px; color: #666;">点击开始回测测按钮开始执行回测?/td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // 主题切换功能 - 仅从localStorage读取设置，不在此页面提供切换按钮
+    document.addEventListener('DOMContentLoaded', function() {
+      // 从localStorage读取主题设置
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-theme');
+      }
+    });
+
+    // 从URL参数据中奖获取回测测方?    function getURLParameters() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const backtestMethod = urlParams.get('backtest_method') || 'average';
+      return { backtestMethod };
+    }
+
+    // 获取全部期数数据
+    async function getTotalPeriods() {
+      try {
+        const response = await fetch('http://localhost:18889/huo_qu_lottery_results_total');
+        const result = await response.json();
+        return result.success ? result.total : 1000;
+      } catch (error) {
+        console.error('获取全部期数数据失败败:', error);
+        return 1000; // 默认值?      }
+    }
+
+    // 从后区端获取后区区回测测数据?    async function huo_qu_dao_shu_4_qi_hou_qu_sha_hao_hui_ce(backtestPeriod = '50', statsPeriod = '100', backtestMethod = 'average') {
+      try {
+        const response = await fetch(`http://localhost:18889/dao_shu_4_qi_hou_qu_sha_hao_hui_ce?backtest_period=${backtestPeriod}&stats_period=${statsPeriod}&backtest_method=${backtestMethod}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        
+        if (result.success) {
+          return result.data;
+        } else {
+          alert('接口失败败');
+          return null;
+        }
+      } catch (error) {
+        console.error('接口失败败:', error);
+        alert('接口失败败');
+        return null;
+      }
+    }
+
+    // 测试单个统计计期数值的平均均正确?    async function testStatsPeriod(backtestPeriod, statsPeriod, backtestMethod) {
+      try {
+        const backtestData = await huo_qu_dao_shu_4_qi_hou_qu_sha_hao_hui_ce(backtestPeriod, statsPeriod, backtestMethod);
+        if (!backtestData || !backtestData.backtestResults || backtestData.backtestResults.length === 0) {
+          return { statsPeriod, accuracy: 0 };
+        }
+        
+        let successKillCount = 0;
+        backtestData.backtestResults.forEach(result => {
+          if (result.backWrongKill === 0) {
+            successKillCount++;
+          }
+        });
+        
+        const totalPeriods = backtestData.backtestResults.length;
+        const averageCorrectRate = totalPeriods > 0 ? 
+          ((successKillCount / totalPeriods) * 100) : 0;
+        
+        return { statsPeriod, accuracy: averageCorrectRate };
+      } catch (error) {
+        console.error(`测试统计计?${statsPeriod} 失败败:`, error);
+        return { statsPeriod, accuracy: 0 };
+      }
+    }
+
+    // 获取最低新一期数开奖信?    async function huo_qu_sql_zui_xin_yi_qi() {
+      try {
+        const response = await fetch('http://localhost:18889/sql_zui_xin_yi_qi');
+        const result = await response.json();
+        
+        // 处理新的数据据格式
+        if (result && result.success && result.latestDraw) {
+          return result.latestDraw;
+        } else {
+          console.error('接口返回测数据据格式不正?', result);
+          return null;
+        }
+      } catch (error) {
+        console.error('获取最低新一期数开奖数据据失败?', error);
+        return null;
+      }
+    }
+    
+    // 获取倒数数据?期数开奖信?    async function huo_qu_sql_dao_shu_4_qi() {
+      try {
+        const response = await fetch('http://localhost:18889/sql_dao_shu_4_qi');
+        const result = await response.json();
+        
+        // 处理新的数据据格式
+        if (result && result.success && result.fourthLastDraw) {
+          return result.fourthLastDraw;
+        } else {
+          console.error('接口返回测数据据格式不正?', result);
+          return null;
+        }
+      } catch (error) {
+        console.error('获取倒数数据?期数开奖数据据失败?', error);
+        return null;
+      }
+    }
+    
+    // 渲染最低新一期数开奖信?    async function renderLatestDrawInfo() {
+      const latestDrawInfo = document.getElementById('latestDrawInfo');
+      
+      try {
+        // 获取最低新开奖信?        const latestDraw = await huo_qu_sql_zui_xin_yi_qi();
+        
+        if (!latestDraw) {
+          latestDrawInfo.innerHTML = '<div style="color: #ff0000;">获取最低新开奖信息失败?/div>';
+          return;
+        }
+        
+        // 处理日期数期数格式，只显示年月?        let formattedDate = latestDraw.drawDate;
+        if (formattedDate && typeof formattedDate === 'string') {
+          // 处理ISO格式日期数期数（如?025-10-28T16:00:00.000Z?          if (formattedDate.includes('T')) {
+            formattedDate = formattedDate.split('T')[0];
+          }
+          // 处理包含空格的日期数期数（如：2025-10-28 16:00:00?          else if (formattedDate.includes(' ')) {
+            formattedDate = formattedDate.split(' ')[0];
+          }
+        }
+        
+        // 格式化前区区和后区区号码
+        const frontNumbers = Array.isArray(latestDraw.firstZoneNumbers) ? latestDraw.firstZoneNumbers : [];
+        const backNumbers = Array.isArray(latestDraw.lastZoneNumbers) ? latestDraw.lastZoneNumbers : [];
+        
+        // 渲染最低新开奖信?        latestDrawInfo.innerHTML = `
+          <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+            期数号: ${latestDraw.period}
+          </div>
+          <div>
+            开奖日期数? ${formattedDate}
+          </div>
+          <div>
+            前区区号码: ${frontNumbers.map(num => `<span style="display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center; background-color: #DF2220; color: white; border-radius: 50%; margin: 0 2px; font-size: 12px;">${num}</span>`).join(' ')}
+          </div>
+          <div>
+            后区区号码: ${backNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}
+          </div>
+        `;
+        
+      } catch (error) {
+        console.error('渲染最低新开奖信息失败?', error);
+        latestDrawInfo.innerHTML = '<div style="color: #ff0000;">渲染最低新开奖信息失败?/div>';
+      }
+    }
+    
+    // 渲染倒数数据?期数开奖信?    async function renderFourthLastDrawInfo() {
+      const fourthLastDrawInfo = document.getElementById('fourthLastDrawInfo');
+      
+      try {
+        // 获取倒数数据?期数开奖信?        const fourthLastDraw = await huo_qu_sql_dao_shu_4_qi();
+        
+        if (!fourthLastDraw) {
+          fourthLastDrawInfo.innerHTML = '<div style="color: #ff0000;">获取倒数数据?期数开奖信息失败?/div>';
+          return;
+        }
+        
+        // 处理日期数期数格式，只显示年月?        let formattedDate = fourthLastDraw.drawDate;
+        if (formattedDate && typeof formattedDate === 'string') {
+          // 处理ISO格式日期数期数（如?025-10-28T16:00:00.000Z?          if (formattedDate.includes('T')) {
+            formattedDate = formattedDate.split('T')[0];
+          }
+          // 处理包含空格的日期数期数（如：2025-10-28 16:00:00?          else if (formattedDate.includes(' ')) {
+            formattedDate = formattedDate.split(' ')[0];
+          }
+        }
+        
+        // 格式化前区区和后区区号码
+        const frontNumbers = Array.isArray(fourthLastDraw.firstZoneNumbers) ? fourthLastDraw.firstZoneNumbers : [];
+        const backNumbers = Array.isArray(fourthLastDraw.lastZoneNumbers) ? fourthLastDraw.lastZoneNumbers : [];
+        
+        // 渲染倒数数据?期数开奖信?        fourthLastDrawInfo.innerHTML = `
+          <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+            期数号: ${fourthLastDraw.period}
+          </div>
+          <div>
+            开奖日期数? ${formattedDate}
+          </div>
+          <div>
+            前区区号码: ${frontNumbers.map(num => `<span style="display: inline-block; width: 24px; height: 24px; line-height: 24px; text-align: center; background-color: #DF2220; color: white; border-radius: 50%; margin: 0 2px; font-size: 12px;">${num}</span>`).join(' ')}
+          </div>
+          <div>
+            后区区号码: ${backNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ')}
+          </div>
+        `;
+        
+      } catch (error) {
+        console.error('渲染倒数数据?期数开奖信息失败?', error);
+        fourthLastDrawInfo.innerHTML = '<div style="color: #ff0000;">渲染倒数数据?期数开奖信息失败?/div>';
+      }
+    }
+
+    // 渲染详情情数据据
+    async function renderDetailData(allResults, nextPeriod) {
+      const detailResults = document.getElementById('detailResults');
+      
+      try {
+        // 清空当前区内容
+        detailResults.innerHTML = '';
+        
+        // 如果没有结果，显示提?        if (allResults.length === 0) {
+          detailResults.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">未找到平均均率最低高的统计计?/td></tr>';
+          return;
+        }
+        
+      // 复制到剪贴板的功?        async function copyToClipboard(numbers) {
+          try {
+            // 将号码数据组合转换为制表符分析隔的字符串，以便粘贴到Excel时每个号码在一个单元格
+            const tabSeparatedNumbers = numbers.join('\t');
+            await navigator.clipboard.writeText(tabSeparatedNumbers);
+            alert('复制成功，可直接粘贴到Excel');
+          } catch (err) {
+            console.error('复制失败败:', err);
+            alert('复制失败败，请重试');
+          }
+        }
+        
+        // 遍历所有结?        for (const result of allResults) {
+          const { statsPeriod, accuracy, backtestMethod, backBuyNumbers } = result;
+          
+          // 平均均正确率已经在搜索阶段计算?          const averageCorrectRate = accuracy.toFixed(3);
+          
+          // 获取回测测方法中奖文名称
+          let backtestMethodText = '出现现最低?;
+          if (backtestMethod === 'least') {
+            backtestMethodText = '出现现最低?;
+          } else if (backtestMethod === 'average') {
+            backtestMethodText = '出现现平均均';
+          }
+          
+          // 格式化后区区推荐买号?          const backBuyNumbersStr = backBuyNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ');
+          
+          // 创建表格?          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>${backtestMethodText}</td>
+            <td>50?/td>
+            <td>${statsPeriod}?/td>
+            <td>${averageCorrectRate}%</td>
+            <td>${nextPeriod}</td>
+            <td>${backBuyNumbersStr}</td>
+            <td>
+              <button class="btn copy-btn" style="background-color: #4CAF50; color: white; padding: 5px 10px; font-size: 12px;">复制</button>
+            </td>
+          `;
+          
+          // 为复制按钮添加点击事?          const copyBtn = tr.querySelector('.copy-btn');
+          copyBtn.addEventListener('click', () => {
+            copyToClipboard(backBuyNumbers);
+          });
+          
+          detailResults.appendChild(tr);
+        }
+      } catch (error) {
+        console.error('渲染详情情数据据失败败:', error);
+        detailResults.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #ff0000;">加载失败败，请重试</td></tr>';
+      }
+    }
+
+    // 获取当前区期数号的下一期下一期下一期下一期期数期数号
+    async function getLastPeriod() {
+      try {
+        // 调用letou数据据库中奖最低新一期数的期数号API
+        const response = await fetch('http://localhost:18889/sql_zui_xin_yi_qi');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        if (result.success) {
+          // 获取最低新一期数期数号，去掉"??          const lastPeriod = result.latestDraw.period.replace('?, '');
+          // 返回测下一期下一期下一期下一期期数的期数号
+          return (parseInt(lastPeriod) + 4) + '?;
+        } else {
+          alert('接口失败败');
+          // 备选方案：从页面中奖获取当前区期数号
+          const currentPeriod = document.querySelector('.current-period').textContent;
+          // 返回测下一期下一期下一期下一期期数的期数号
+          return (parseInt(currentPeriod.replace('?, '')) + 4) + '?;
+        }
+      } catch (error) {
+        console.error('获取最低后区一期数期数号失败?', error);
+        // 备选方案：从页面中奖获取当前区期数号
+        const currentPeriod = document.querySelector('.current-period').textContent;
+        // 返回测下一期下一期下一期下一期期数的期数号
+        return (parseInt(currentPeriod.replace('?, '')) + 4) + '?;
+      }
+    }
+
+    // 获取后区区推荐买号号
+    async function huo_qu_hou_qu_tui_jian_mai_hao(statsPeriod, backtestMethod) {
+      try {
+        // 调用dao_shu_4_qi_hou_qu_zu_he接口获取后区区组合合数据据
+        const response = await fetch(`http://localhost:18889/dao_shu_4_qi_hou_qu_zu_he?period=${statsPeriod}`);
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const result = await response.json();
+        if (result.success) {
+          const backCombinations = result.data.combinations || [];
+          let backBuyNumbers = [];
+          
+          // 初始化汇总计数据数据?- 与dao_shu_4_qi_liang_qiu_zu_he.html相同的算?          const totalCounts = new Array(13).fill(0); // 索引0不使用，1-12对应后区区号码
+          
+          // 遍历后区区组合合，统计计每个号码的出现现次数据数据 - 与dao_shu_4_qi_liang_qiu_zu_he.html相同的算?          backCombinations.forEach(combo => {
+            // 累加每个号码的出现现次数据?- 与dao_shu_4_qi_liang_qiu_zu_he.html相同的算?            for (let i = 1; i <= 12; i++) {
+              const numStr = String(i); // 后区端使用数据字作为键，不需要补0
+              // 安全访问nextDrawNumbers属?              let count = 0;
+              if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
+                count = combo.nextDrawNumbers.filter(n => n === numStr).length;
+              }
+              totalCounts[i] += count;
+            }
+          });
+          
+          // 根据回测测方法计算对应的后区区推荐买号?- 与dao_shu_4_qi_liang_qiu_zu_he.html相同的算?          if (backtestMethod === 'most') {
+            // 1. 出现现最低多球：找到totalCounts中奖的最低大值对应的号码
+            const maxLastCount = Math.max(...totalCounts);
+            if (maxLastCount > 0) {
+              // 找出现所有最低大值对应的号码
+              for (let i = 1; i <= 12; i++) {
+                if (totalCounts[i] === maxLastCount) {
+                  backBuyNumbers.push(i);
+                }
+              }
+            }
+          } else if (backtestMethod === 'least') {
+            // 2. 出现现最低少球：找到totalCounts中奖除0以外的最低小值对应的号码
+            const nonZeroCounts = totalCounts.filter(count => count > 0);
+            if (nonZeroCounts.length > 0) {
+              const minLastCount = Math.min(...nonZeroCounts);
+              // 找出现所有最低小值对应的号码
+              for (let i = 1; i <= 12; i++) {
+                if (totalCounts[i] === minLastCount) {
+                  backBuyNumbers.push(i);
+                }
+              }
+            }
+          } else if (backtestMethod === 'average') {
+            // 3. 出现现平均均球：找到totalCounts中奖次数据数据等于平均均值的号码
+            const nonZeroTotalCounts = totalCounts.filter(count => count > 0);
+            if (nonZeroTotalCounts.length > 0) {
+              const sumCounts = nonZeroTotalCounts.reduce((sum, count) => sum + count, 0);
+              const averageCount = Math.round(sumCounts / nonZeroTotalCounts.length);
+              // 找出现所有等于平均均值的号码
+              for (let i = 1; i <= 12; i++) {
+                if (totalCounts[i] === averageCount) {
+                  backBuyNumbers.push(i);
+                }
+              }
+            }
+          }
+          
+          return backBuyNumbers;
+        } else {
+          alert('接口失败败');
+          return [];
+        }
+      } catch (error) {
+        console.error('获取后区区推荐买号号失败败:', error);
+        return [];
+      }
+    }
+
+    // 执行搜索并显示进?    async function performSearch() {
+      const progressDiv = document.getElementById('progress');
+      const progressText = document.getElementById('progressText');
+      const progressBar = document.getElementById('progressBar');
+      const progressPercentage = document.getElementById('progressPercentage');
+      const currentPhase = document.getElementById('currentPhase');
+      const detailResults = document.getElementById('detailResults');
+      const startBacktestBtn = document.getElementById('startBacktestBtn');
+      const stopBacktestBtn = document.getElementById('stopBacktestBtn');
+      
+      // 进度计算变量
+      let totalProgress = 0;
+      let currentStep = 0;
+      let totalSteps = 0;
+      
+      // 终止标志
+      let isBacktestStopped = false;
+      
+      // 更新进度的函?      function updateProgress(text, percentage, phase) {
+        return new Promise(resolve => {
+          requestAnimationFrame(() => {
+            progressText.textContent = text;
+            progressBar.style.width = `${percentage}%`;
+            progressPercentage.textContent = `${Math.round(percentage)}%`;
+            currentPhase.textContent = phase;
+            resolve();
+          });
+        });
+      }
+      
+      try {
+        // 显示终止回测测按钮，隐藏开始回测测按?        startBacktestBtn.style.display = 'none';
+        stopBacktestBtn.style.display = 'inline-block';
+        
+        // 立即显示进度条，使用requestAnimationFrame确保浏览器渲?        await new Promise(resolve => {
+          requestAnimationFrame(() => {
+            progressDiv.style.display = 'block';
+            progressText.textContent = '开始搜索平均均率最低高的统计计?..';
+            progressBar.style.width = '0%';
+            progressPercentage.textContent = '0%';
+            currentPhase.textContent = '正在准备...';
+            detailResults.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #666;">正在搜索平均均率最低高的统计计?..</td></tr>';
+            resolve();
+          });
+        });
+        
+        // 重置终止标志
+        isBacktestStopped = false;
+        
+        // 添加终止回测测按钮点击事件
+        stopBacktestBtn.onclick = function() {
+          isBacktestStopped = true;
+          updateProgress('回测测已终?, 100, '回测测终止');
+        };
+        
+        // 确保DOM更新
+        await new Promise(resolve => setTimeout(resolve, 100));
+        
+        const backtestPeriod = '50'; // 固定回测测期数数据?0?        
+        // 更新进度
+        await updateProgress('正在获取总期数?..', 5, '获取总期数?);
+        
+        const totalPeriods = await getTotalPeriods();
+        
+        // 多阶段搜索策略，从大到小变化步长
+        const searchStages = [
+          { step: 100, expansion: 200 }, // 第一阶段：步?00，扩展范?00
+          { step: 50, expansion: 100 },   // 第二阶段：步?0，扩展范?00
+          { step: 20, expansion: 50 },    // 第三球阶段：步?0，扩展范?0
+          { step: 10, expansion: 30 },    // 第四阶段：步?0，扩展范?0
+          { step: 5, expansion: 20 }      // 第五阶段：步?，扩展范?0
+        ];
+        
+        // 三球种回测测方法
+        const backtestMethods = ['most', 'least', 'average'];
+        const allResults = [];
+        
+        // 计算总工作量
+        totalSteps = backtestMethods.length * searchStages.length + 3; // 3个初始化和收尾步?        
+        // 更新进度
+        await updateProgress('正在获取最低新一期数期数?..', 10, '获取最低新期数?);
+        currentStep++;
+        
+        // 获取最低后区一期数期数?        const lastPeriod = await getLastPeriod();
+        const nextPeriod = lastPeriod; // 使用最低?期数的期数号的下一期下一期下一期下一期期数作为当前区期数号
+        
+        // 遍历三球种回测测方法
+        for (const backtestMethod of backtestMethods) {
+          const methodName = backtestMethod === 'most' ? '出现现最低? : backtestMethod === 'least' ? '出现现最低? : '出现现平均均';
+          
+          // 更新进度
+          await updateProgress(`正在搜索回测测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测测方法: ${methodName}`);
+          currentStep++;
+          
+          let currentStart = 30; // 统计计期数数据?0期数开?          let currentEnd = totalPeriods;
+          let allTestResults = [];
+          
+          // 执行每个阶段的搜?          for (let stageIndex = 0; stageIndex < searchStages.length; stageIndex++) {
+            const stage = searchStages[stageIndex];
+            const { step, expansion } = stage;
+            
+            // 更新进度
+            const stageProgress = 15 + (currentStep / totalSteps) * 60;
+            await updateProgress(
+              `正在进行${methodName}方法的第${stageIndex + 1}阶段搜索（步长：${step}?..`, 
+              stageProgress, 
+              `阶段${stageIndex + 1}，步?{step}`
+            );
+            currentStep++;
+            
+            let stageResults = [];
+            
+            // 计算当前区阶段的期数数据范和总次数据?            const stageTotal = Math.ceil((currentEnd - currentStart) / step) + 1;
+            let stageCount = 0;
+            
+            // 在当前区范内使用当前区步长进行搜索
+            for (let i = currentStart; i <= currentEnd; i += step) {
+              // 检查是否需要终止回测?              if (isBacktestStopped) {
+                break;
+              }
+              
+              stageCount++;
+              // 实时更新进度
+              const loopProgress = 15 + ((currentStep - 1 + (stageCount / stageTotal)) / totalSteps) * 60;
+              await updateProgress(
+                `正在测试统计计?{i}?..`, 
+                loopProgress, 
+                `测试期数数据: ${i}，进? ${stageCount}/${stageTotal}`
+              );
+              
+              const result = await testStatsPeriod(backtestPeriod, i, backtestMethod);
+              stageResults.push(result);
+              allTestResults.push(result);
+            }
+            
+            // 检查是否需要终止回测?            if (isBacktestStopped) {
+              break;
+            }
+            
+            // 如果当前区阶段没有结果，继续下一期一阶段
+            if (stageResults.length === 0) {
+              continue;
+            }
+            
+            // 找出现当前区阶段的最低高正确率
+            const highestAccuracy = Math.max(...stageResults.map(result => result.accuracy));
+            
+            // 找出现当前区阶段中奖所有最低高正确率的结?            const highestResultsInStage = stageResults.filter(result => result.accuracy === highestAccuracy);
+            
+            // 计算下一期一阶段的搜索范?            const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
+            const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
+            
+            // 扩展搜索范，确保不遗漏相邻区域
+            currentStart = Math.max(30, minStatsPeriod - expansion);
+            currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
+          }
+          
+          // 从所有测试结果中奖找出现最低高正确率
+          const highestAccuracy = Math.max(...allTestResults.map(result => result.accuracy));
+          
+          // 找出现所有正确率等于最低高值的期数数据
+          const highestPeriods = allTestResults.filter(result => result.accuracy === highestAccuracy);
+          
+          // 对期数数据进行去重处?          const uniquePeriodsMap = new Map();
+          highestPeriods.forEach(result => {
+            if (!uniquePeriodsMap.has(result.statsPeriod)) {
+              uniquePeriodsMap.set(result.statsPeriod, result);
+            }
+          });
+          
+          // 将去重后区的结果转换回测数据组合，并添加回测测方法信息
+          const uniqueHighestPeriods = Array.from(uniquePeriodsMap.values()).map(result => ({
+            ...result,
+            backtestMethod
+          }));
+          
+          // 添加到所有结果中奖
+          allResults.push(...uniqueHighestPeriods);
+        }
+        
+        // 更新进度
+        await updateProgress('搜索完成，正在获取后区区推荐买号?..', 85, '获取后区区推荐买号号');
+        currentStep++;
+        
+        // 为每个结果获取后区区推荐买号?        for (let i = 0; i < allResults.length; i++) {
+          // 检查是否需要终止回测?          if (isBacktestStopped) {
+            break;
+          }
+          
+          const result = allResults[i];
+          const methodName = result.backtestMethod === 'most' ? '出现现最低? : result.backtestMethod === 'least' ? '出现现最低? : '出现现平均均';
+          
+          // 更新进度
+          const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
+          await updateProgress(
+            `正在获取统计计?{result.statsPeriod}期数，${methodName}方法的后区区推荐买号?..`, 
+            buyProgress, 
+            `处理结果 ${i + 1}/${allResults.length}`
+          );
+          
+          result.backBuyNumbers = await huo_qu_hou_qu_tui_jian_mai_hao(result.statsPeriod, result.backtestMethod);
+        }
+        
+        // 检查是否需要终止回测?        if (isBacktestStopped) {
+          detailResults.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #ff0000;">回测测已终?/td></tr>';
+        } else {
+          // 更新进度
+          await updateProgress(`找到 ${allResults.length} 个平均均率最低高的统计计期数，正在渲染结果...`, 98, '渲染结果');
+          currentStep++;
+          
+          // 渲染详情情数据据，传递所有结果和下一期一期数期数?          await renderDetailData(allResults, nextPeriod);
+          
+          // 更新进度
+          await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
+        }
+        
+        // 隐藏进度
+        await new Promise(resolve => {
+          setTimeout(() => {
+            requestAnimationFrame(() => {
+              progressDiv.style.display = 'none';
+              resolve();
+            });
+          }, 500);
+        });
+        
+      } catch (error) {
+        console.error('搜索最低高正确率统计计期数失败?', error);
+        
+        // 更新进度
+        await updateProgress('搜索失败败，请重试', 100, '搜索失败败');
+        detailResults.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #ff0000;">搜索失败败，请重试</td></tr>';
+      } finally {
+        // 恢复按钮状?        startBacktestBtn.style.display = 'inline-block';
+        stopBacktestBtn.style.display = 'none';
+        // 重置终止标志
+        isBacktestStopped = false;
+      }
+    }
+
+    // 页面加载完成后区渲染数据?    window.addEventListener('load', async function() {
+      renderLatestDrawInfo();
+      renderFourthLastDrawInfo();
+      
+      // 添加开始回测测按钮点击事?      const startBacktestBtn = document.getElementById('startBacktestBtn');
+      startBacktestBtn.addEventListener('click', function() {
+        performSearch();
+      });
+    });
+  </script>
+</body>
+</html>
+
+

@@ -3,8 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大乐透统计分析 - 首页</title>
+  <title>大乐透统计计分析析 - 首页</title>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/theme-toggle.js"></script>
 </head>
 <body class="index-page">
   <div class="container">
@@ -17,27 +18,27 @@
         </button>
     </div>
     
-    <!-- 工具栏 -->
+    <!-- 工具栏-->
     <div class="section">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-        <!-- 期数选择按钮 -->
+        <!-- 期数数据选择按钮 -->
         <div>
-          <button class="btn btn-red">最近10期</button>
-          <button class="btn">最近35期</button>
-          <button class="btn">最近50期</button>
-          <button class="btn">最近120期</button>
+          <button class="btn btn-red">最低新10期数</button>
+          <button class="btn">最低新35期数</button>
+          <button class="btn">最低新50期数</button>
+          <button class="btn">最低新120期数</button>
           <button class="btn">全部</button>
         </div>
         
-        <!-- 查询和操作 -->
+        <!-- 查询和操作-->
         <div>
-          <input type="text" placeholder="起始期号" value="25112" style="width: 80px;">
+          <input type="text" placeholder="起始期数号" value="25112" style="width: 80px;">
           <span>-</span>
-          <input type="text" placeholder="结束期号" value="25121" style="width: 80px;">
+          <input type="text" placeholder="结束期数号" value="25121" style="width: 80px;">
           <button class="btn btn-green">查看</button>
-          <span style="margin-left: 10px;">当前显示: 25121-25112</span>
+          <span style="margin-left: 10px;">当前区显示: 25121-25112</span>
           <button class="btn btn-green" id="updateBtn">更新</button>
-          <button class="btn btn-red" onclick="goToKillAnalysis()">杀号分析</button>
+          <button class="btn btn-red" onclick="goToKillAnalysis()">杀号号分析析</button>
         </div>
       </div>
       
@@ -46,8 +47,8 @@
         <label><input type="checkbox" id="chkDuplicate"> 重号</label>
         <label><input type="checkbox" id="chkConsecutive"> 连号</label>
         <label><input type="checkbox" id="chkEdge"> 边号</label>
-        <label><input type="checkbox"> 遗漏数据</label>
-        <label><input type="checkbox"> 遗漏分层</label>
+        <label><input type="checkbox"> 遗漏数据据</label>
+        <label><input type="checkbox"> 遗漏分析层</label>
       </div>
     </div>
     
@@ -57,71 +58,53 @@
         <thead>
           <tr>
             <th colspan="2"></th>
-            <!-- 一区 -->
+            <!-- 一区-->
             <th colspan="12">一区</th>
             <!-- 二区 -->
             <th colspan="12">二区</th>
-            <!-- 三区 -->
-            <th colspan="11">三区</th>
-            <!-- 后区 -->
-            <th colspan="12">后区</th>
-            <!-- 统计信息 -->
-            <th colspan="4">统计信息</th>
+            <!-- 三球区 -->
+            <th colspan="11">三球区</th>
+            <!-- 后区区 -->
+            <th colspan="12">后区区</th>
+            <!-- 统计计信息 -->
+            <th colspan="4">统计计信息</th>
           </tr>
           <tr>
-            <th>期号 <span id="sortIcon" class="sort-icon" onclick="toggleSort()">↑</span></th>
-            <th>星期</th>
-            <!-- 前区号码 -->
+            <th>期数号 <span id="sortIcon" class="sort-icon" onclick="toggleSort()">↓</span></th>
+            <th>星期数</th>
+            <!-- 前区区号码 -->
             <th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th><th>10</th><th>11</th><th>12</th>
             <th>13</th><th>14</th><th>15</th><th>16</th><th>17</th><th>18</th><th>19</th><th>20</th><th>21</th><th>22</th><th>23</th><th>24</th>
             <th>25</th><th>26</th><th>27</th><th>28</th><th>29</th><th>30</th><th>31</th><th>32</th><th>33</th><th>34</th><th>35</th>
-            <!-- 后区号码 -->
+            <!-- 后区区号码 -->
             <th>01</th><th>02</th><th>03</th><th>04</th><th>05</th><th>06</th><th>07</th><th>08</th><th>09</th><th>10</th><th>11</th><th>12</th>
-            <!-- 统计信息 -->
+            <!-- 统计计信息 -->
             <th>和值</th><th>跨度</th><th>区比</th><th>奇偶比</th>
           </tr>
         </thead>
         <tbody id="drawResults">
-          <!-- 数据将通过JavaScript动态生成 -->
+          <!-- 数据据将通过JavaScript动态生成-->
         </tbody>
       </table>
       
-      <!-- 分页 -->
+      <!-- 分析页 -->
       <div class="pagination">
-        <a href="#">上一页</a>
+        <a href="#">上一期一页</a>
         <a href="#" class="active">1</a>
         <a href="#">2</a>
-        <a href="#">下一页</a>
-        <span style="margin-left: 20px;">共 10 条记录，每页 5 条</span>
+        <a href="#">下一期一页</a>
+        <span style="margin-left: 20px;">共10 条记录，每页 5 条</span>
       </div>
     </div>
   </div>
 
   <script>
-    // 主题切换功能
-    document.addEventListener('DOMContentLoaded', function() {
-      // 检查localStorage中的主题偏好
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'dark' || (savedTheme === null && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
-        document.body.classList.add('dark-theme');
-      }
-      
-      // 主题切换按钮事件监听
-      const themeToggle = document.getElementById('themeToggle');
-      if (themeToggle) {
-        themeToggle.addEventListener('click', function() {
-          document.body.classList.toggle('dark-theme');
-          // 保存主题偏好到localStorage
-          const isDarkTheme = document.body.classList.contains('dark-theme');
-          localStorage.setItem('theme', isDarkTheme ? 'dark' : 'light');
-        });
-      }
-    });
+
     
-    // 从后端API获取开奖数据
+    // 从后区端API获取开奖数据据
     async function fetchLotteryData(type = '10', startIssue = null, endIssue = null) {
       try {
-        console.log('开始从API获取数据，类型:', type, '开始期号:', startIssue, '结束期号:', endIssue);
+        console.log('开始从API获取数据据，类型', type, '开始期数号', startIssue, '结束期数号:', endIssue);
         
         // 添加超时处理
         const controller = new AbortController();
@@ -129,7 +112,7 @@
         
         let url = '';
         
-        // 如果提供了开始期号和结束期号，使用期号范围查询接口
+        // 如果提供了开始期数号和结束期数号，使用期数号范查询接口
         if (startIssue && endIssue) {
           url = `http://localhost:18889/huo_qu_sql_shu_ju?startIssue=${startIssue}&endIssue=${endIssue}`;
         } else {
@@ -137,7 +120,7 @@
           url = `http://localhost:18889/huo_qu_sql_shu_ju?type=${type}`;
         }
         
-        // 调用后端API - 使用正确的接口地址
+        // 调用后区端API - 使用正确的接口地址
         const response = await fetch(url, {
           method: 'GET',
           headers: {
@@ -154,33 +137,33 @@
         
         const data = await response.json();
         
-        // 处理后端返回的数据结构
+        // 处理后区端返回测的数据据结构
         let resultData = [];
         if (data.success && Array.isArray(data.data)) {
           resultData = data.data;
-          console.log('API数据获取成功，返回', resultData.length, '条记录');
+          console.log('API数据据获取成功，返回测', resultData.length, '条记录');
         } else {
-          throw new Error('API返回数据格式错误');
+          throw new Error('API返回测数据据格式错误');
         }
         
         return resultData;
       } catch (error) {
-        console.error('获取开奖数据失败:', error);
-        alert('接口失败');
+        console.error('获取开奖数据据失败败', error);
+        alert('接口失败败');
         return [];
       }
     }
     
-    // 注意：已移除所有模拟数据相关代码
-    // 接口失败时将直接显示错误提示，不会使用任何模拟数据
+    // 注意：已移除所有模拟数据据相关代码
+    // 接口失败败时将直接显示错误提示，不会使用任何模拟数据据
     
-    // 处理API返回的数据格式，转换为前端需要的格式
+    // 处理API返回测的数据据格式，转换为前区端需要的格式
     function transformApiData(apiData) {
-      console.log('开始转换API数据，原始数据:', apiData);
+      console.log('开始转换API数据据，原始数据据', apiData);
       return apiData.map(item => {
         // 确保item是有效的对象
         if (!item || typeof item !== 'object') {
-          console.warn('跳过无效数据项:', item);
+          console.warn('跳过无效数据据项', item);
           return {
             period: '',
             week: '',
@@ -195,31 +178,31 @@
           };
         }
         
-        // 确保红球和蓝球数据是数组
+        // 确保红球和蓝球数据据是数据组合
         const redBalls = Array.isArray(item.redBalls) ? item.redBalls : [];
         const blueBalls = Array.isArray(item.blueBalls) ? item.blueBalls : [];
         
-        console.log(`处理期号: ${item.issue}`);
+        console.log(`处理期数号: ${item.issue}`);
         console.log(`红球:`, redBalls);
         console.log(`蓝球:`, blueBalls);
         
-        // 分离红球到三个区间，并确保格式统一为两位数字字符串
+        // 分析离红球到三球个区间，并确保格式统计一为两球位数据字字符串
         const firstZone = [];
         const secondZone = [];
         const thirdZone = [];
         
-        // 安全处理红球数据，避免item.red.replace错误
+        // 安全处理红球数据据，避免item.red.replace错误
         redBalls.forEach(ball => {
           try {
             // 确保ball是字符串
             const ballStr = String(ball).trim();
-            // 只保留数字部分
+            // 只保留数据字部分析
             const cleanedBall = ballStr.replace(/[^0-9]/g, '');
-            // 转换为数字进行区间判断
+            // 转换为数据字进行区间判断
             const num = parseInt(cleanedBall);
             
             if (!isNaN(num) && num >= 1 && num <= 35) {
-              // 标准化为两位数字字符串
+              // 标准化为两球位数据字字符串
               const formattedBall = String(num).padStart(2, '0');
               if (num <= 12) {
                 firstZone.push(formattedBall);
@@ -230,18 +213,18 @@
               }
             }
           } catch (e) {
-            console.warn('处理红球失败，跳过:', ball, '错误:', e.message);
+            console.warn('处理红球失败败，跳过', ball, '错误:', e.message);
           }
         });
         
-        // 标准化蓝球格式为两位数字字符串
+        // 标准化蓝球格式为两球位数据字字符串
         const formattedBlueBalls = blueBalls.map(ball => {
           try {
             // 确保ball是字符串
             const ballStr = String(ball).trim();
-            // 只保留数字部分
+            // 只保留数据字部分析
             const cleanedBall = ballStr.replace(/[^0-9]/g, '');
-            // 转换为数字
+            // 转换为数据字
             const num = parseInt(cleanedBall);
             
             if (!isNaN(num) && num >= 1 && num <= 12) {
@@ -249,7 +232,7 @@
             }
             return '';
           } catch (e) {
-            console.warn('处理蓝球失败，跳过:', ball, '错误:', e.message);
+            console.warn('处理蓝球失败败，跳过', ball, '错误:', e.message);
             return '';
           }
         }).filter(ball => ball !== ''); // 过滤空字符串
@@ -273,7 +256,7 @@
     function findDuplicateNumbers(data) {
       const duplicateCache = {};
       
-      // 遍历所有期数，检测与前一期的重复号码
+      // 遍历所有期数数据，检测与前区一期数的重复号码
       for (let i = 1; i < data.length; i++) {
         const currentPeriod = data[i].period;
         const currentNumbers = [...data[i].firstZone, ...data[i].secondZone, ...data[i].thirdZone];
@@ -291,10 +274,10 @@
     function findConsecutiveNumbers(data) {
       const consecutiveCache = {};
       
-      // 遍历所有期数
+      // 遍历所有期数数据
       data.forEach(draw => {
         const currentPeriod = draw.period;
-        // 分别检测前区和后区的连号
+        // 分析别检测前区区和后区区的连号
         const consecutiveGroups = {
           firstZone: findConsecutiveGroupsInArray([...draw.firstZone, ...draw.secondZone, ...draw.thirdZone]),
           lastZone: findConsecutiveGroupsInArray(draw.lastZone)
@@ -310,17 +293,17 @@
     function findEdgeNumbers(data) {
       const edgeCache = {};
       
-      // 遍历所有期数，检测与前一期的邻号
+      // 遍历所有期数数据，检测与前区一期数的邻号
       for (let i = 1; i < data.length; i++) {
         const currentPeriod = data[i].period;
         const currentNumbers = [...data[i].firstZone, ...data[i].secondZone, ...data[i].thirdZone, ...data[i].lastZone];
         const prevNumbers = [...data[i-1].firstZone, ...data[i-1].secondZone, ...data[i-1].thirdZone, ...data[i-1].lastZone];
         
-        // 检测每个当前号码是否为上期号码的邻号
+        // 检测每个当前区号码是否为上一期期数号码的邻号
         const edgeNumbers = [];
         currentNumbers.forEach(num => {
           const numInt = parseInt(num);
-          // 检查是否存在相邻的号码在上期出现
+          // 检查是否存在相邻的号码在上一期期数出现现
           if (prevNumbers.some(prevNum => Math.abs(parseInt(prevNum) - numInt) === 1)) {
             edgeNumbers.push(num);
           }
@@ -332,33 +315,33 @@
       return edgeCache;
     }
     
-    // 检测单个数组中的连号组
+    // 检测单个数据组合中奖的连号组合
     function findConsecutiveGroupsInArray(numbers) {
       if (!numbers || numbers.length < 2) return [];
       
-      // 将字符串转换为数字并排序
+      // 将字符串转换为数据字并排序
       const sortedNumbers = [...new Set(numbers.map(num => parseInt(num)))]
         .sort((a, b) => a - b);
       
       const consecutiveGroups = [];
       let currentGroup = [sortedNumbers[0]];
       
-      // 遍历排序后的数组，查找连续的数字
+      // 遍历排序后区的数据组合，查找连续的数据字
       for (let i = 1; i < sortedNumbers.length; i++) {
         if (sortedNumbers[i] === sortedNumbers[i-1] + 1) {
-          // 连续数字，添加到当前组
+          // 连续数据字，添加到当前区组合
           currentGroup.push(sortedNumbers[i]);
         } else {
-          // 不连续，保存前一组（如果长度>=2）
+          // 不连续，保存前区一组合（如果长度>=2）
           if (currentGroup.length >= 2) {
             consecutiveGroups.push(currentGroup.map(num => String(num).padStart(2, '0')));
           }
-          // 开始新组
+          // 开始新组合
           currentGroup = [sortedNumbers[i]];
         }
       }
       
-      // 检查最后一组
+      // 检查最低后区一组合
       if (currentGroup.length >= 2) {
         consecutiveGroups.push(currentGroup.map(num => String(num).padStart(2, '0')));
       }
@@ -366,14 +349,14 @@
       return consecutiveGroups;
     }
     
-    // 全局变量存储当前加载的所有数据
+    // 全局变量存储当前区加载的所有数据据
     let currentAllData = [];
     let currentPage = 1;
     let pageSize = 15;
     let currentType = '10';
     let sortOrder = 'desc'; // 排序顺序：'asc'升序，'desc'降序
     
-    // 按期号排序数据
+    // 按期数号排序数据?
     function sortByPeriod(data, order = 'desc') {
       return [...data].sort((a, b) => {
         const periodA = parseInt(a.period);
@@ -388,39 +371,39 @@
       const sortIcon = document.getElementById('sortIcon');
       sortIcon.textContent = sortOrder === 'asc' ? '↑' : '↓';
       
-      // 对当前数据进行排序并重新渲染
+      // 对当前区数据据进行排序并重新渲染
       const sortedData = sortByPeriod(currentAllData, sortOrder);
       renderIndexData(sortedData, currentPage);
     }
     
-    // 渲染首页数据
+    // 渲染首页数据据
     function renderIndexData(data, page = 1) {
       const tbody = document.getElementById('drawResults');
       tbody.innerHTML = '';
       
-      // 如果没有数据，显示提示
+      // 如果没有数据据，显示提示
       if (!data || data.length === 0) {
         const tr = document.createElement('tr');
-        tr.innerHTML = `<td colspan="80" style="text-align: center; padding: 20px;">暂无数据</td>`;
+        tr.innerHTML = `<td colspan="80" style="text-align: center; padding: 20px;">暂无数据据</td>`;
         tbody.appendChild(tr);
         updatePagination(0, 1);
         return;
       }
       
-      // 保存完整数据
+      // 保存完整数据据
       currentAllData = data;
-      currentType = document.querySelector('.btn.btn-red')?.textContent.replace('最近', '').replace('期', '').replace('全部', 'all') || '10';
+      currentType = document.querySelector('.btn.btn-red')?.textContent.replace('最低新', '').replace('期数', '').replace('全部', 'all') || '10';
       
       // 应用排序
       const sortedData = sortByPeriod(data, sortOrder);
       data = sortedData;
       
-      // 计算分页数据
+      // 计算分析页数据据
       const startIndex = (page - 1) * pageSize;
       const endIndex = startIndex + pageSize;
       const paginatedData = data.slice(startIndex, endIndex);
       
-      // 计算重号、连号、邻号（基于完整数据）
+      // 计算重号、连号、邻号（基于完整数据据）
       const duplicateCache = findDuplicateNumbers(data);
       const consecutiveCache = findConsecutiveNumbers(data);
       const edgeCache = findEdgeNumbers(data);
@@ -433,22 +416,22 @@
       paginatedData.forEach(draw => {
         const tr = document.createElement('tr');
         
-        // 期号和星期
+        // 期数号和星期数
         tr.innerHTML = `
           <td>${draw.period}</td>
           <td>${draw.week}</td>
         `;
         
-        // 前区号码（一区、二区、三区）
+        // 前区区号码（一区、二区、三球区）
         const allFirstZoneNumbers = Array.from({length: 35}, (_, i) => String(i + 1).padStart(2, '0'));
         const currentNumbers = [...draw.firstZone, ...draw.secondZone, ...draw.thirdZone];
         const isDuplicate = showDuplicates && duplicateCache[draw.period] ? duplicateCache[draw.period] : [];
         const isEdgeNumber = showEdgeNumbers && edgeCache[draw.period] ? edgeCache[draw.period] : [];
         const consecutiveGroups = showConsecutive && consecutiveCache[draw.period] ? consecutiveCache[draw.period] : null;
         
-        console.log(`渲染期号: ${draw.period}`);
-        console.log(`当前号码:`, currentNumbers);
-        console.log(`后区号码:`, draw.lastZone);
+        console.log(`渲染期数号: ${draw.period}`);
+        console.log(`当前区号码:`, currentNumbers);
+        console.log(`后区区号码:`, draw.lastZone);
         
         allFirstZoneNumbers.forEach(num => {
           const td = document.createElement('td');
@@ -481,14 +464,14 @@
               ball.style.color = '#8B0000';
             }
             
-            // 如果是连号且复选框已勾选，检查是否属于连号组
+            // 如果是连号且复选框已勾选，检查是否属于连号组合
             if (consecutiveGroups && consecutiveGroups.firstZone) {
               for (let i = 0; i < consecutiveGroups.firstZone.length; i++) {
                 if (consecutiveGroups.firstZone[i].includes(num)) {
                   ball.classList.add(`consecutive-group-${i}`);
                   ball.style.backgroundColor = '#212121';
                   ball.style.color = 'white';
-                  // 为连号组的第一个和最后一个添加特殊样式
+                  // 为连号组合的第一个和最低后区一个添加特殊样?
                   const group = consecutiveGroups.firstZone[i];
                   if (num === group[0]) {
                     ball.classList.add('consecutive-start');
@@ -505,7 +488,7 @@
           tr.appendChild(td);
         });
         
-        // 后区号码
+        // 后区区号码
         const allLastZoneNumbers = Array.from({length: 12}, (_, i) => String(i + 1).padStart(2, '0'));
         
         allLastZoneNumbers.forEach(num => {
@@ -527,27 +510,27 @@
             ball.style.fontSize = '12px';
             ball.style.fontWeight = '600';
             
-            // 后区也可以检测重号
+            // 后区区也可以检测重?
             if (isDuplicate.includes(num)) {
               ball.classList.add('duplicate-number');
               ball.style.backgroundColor = '#4caf50';
             }
             
-            // 后区也可以检测邻号
+            // 后区区也可以检测邻?
             if (isEdgeNumber.includes(num)) {
               ball.classList.add('edge-number');
               ball.style.backgroundColor = '#FFD700';
               ball.style.color = '#00008B';
             }
             
-            // 后区也可以检测连号
+            // 后区区也可以检测连?
             if (consecutiveGroups && consecutiveGroups.lastZone) {
               for (let i = 0; i < consecutiveGroups.lastZone.length; i++) {
                 if (consecutiveGroups.lastZone[i].includes(num)) {
                   ball.classList.add(`consecutive-group-${i}`);
                   ball.style.backgroundColor = '#212121';
                   ball.style.color = 'white';
-                  // 为连号组的第一个和最后一个添加特殊样式
+                  // 为连号组合的第一个和最低后区一个添加特殊样?
                   const group = consecutiveGroups.lastZone[i];
                   if (num === group[0]) {
                     ball.classList.add('consecutive-start');
@@ -564,7 +547,7 @@
           tr.appendChild(td);
         });
         
-        // 统计信息
+        // 统计计信息
         tr.innerHTML += `
           <td>${draw.sum}</td>
           <td>${draw.span}</td>
@@ -575,35 +558,35 @@
         tbody.appendChild(tr);
       });
       
-      // 更新分页信息
+      // 更新分析页信息
       updatePagination(data.length, page);
     }
     
-    // 更新分页控件
+    // 更新分析页控件
     function updatePagination(totalItems, currentPageNum) {
       const pagination = document.querySelector('.pagination');
       const totalPages = Math.ceil(totalItems / pageSize);
       
-      // 更新分页HTML
+      // 更新分析页HTML
       let paginationHtml = `
-        <a href="#" ${currentPageNum <= 1 ? 'style="pointer-events: none; color: #ccc;"' : ''} onclick="goToPage(${currentPageNum - 1})">&lt;上一页</a>
+        <a href="#" ${currentPageNum <= 1 ? 'style="pointer-events: none; color: #ccc;"' : ''} onclick="goToPage(${currentPageNum - 1})">&lt;上一期一页</a>
       `;
       
       // 添加页码按钮，实现省略号折叠
-      const showPages = 5; // 显示的页码数量
+      const showPages = 5; // 显示的页码数据?
       const halfShowPages = Math.floor(showPages / 2);
       
-      // 总是显示第一页
+      // 总是显示第一?
       paginationHtml += `
         <a href="#" class="${1 === currentPageNum ? 'active' : ''}" onclick="goToPage(1)"><span>1</span></a>
       `;
       
-      // 如果第一页和当前页区域之间有间隔，显示省略号
+      // 如果第一页和当前区页区域之间有间隔，显示省略号
       if (currentPageNum - halfShowPages > 2) {
         paginationHtml += `<span style="margin: 0 5px;">...</span>`;
       }
       
-      // 显示当前页附近的页码
+      // 显示当前区页附近的页码
       const startPage = Math.max(2, currentPageNum - halfShowPages);
       const endPage = Math.min(totalPages - 1, currentPageNum + halfShowPages);
       
@@ -613,12 +596,12 @@
         `;
       }
       
-      // 如果当前页区域和最后一页之间有间隔，显示省略号
+      // 如果当前区页区域和最低后区一页之间有间隔，显示省略号
       if (currentPageNum + halfShowPages < totalPages - 1) {
         paginationHtml += `<span style="margin: 0 5px;">...</span>`;
       }
       
-      // 总是显示最后一页（如果总页数大于1）
+      // 总是显示最低后区一页（如果总页数据大??
       if (totalPages > 1) {
         paginationHtml += `
           <a href="#" class="${totalPages === currentPageNum ? 'active' : ''}" onclick="goToPage(${totalPages})"><span>${totalPages}</span></a>
@@ -626,8 +609,8 @@
       }
       
       paginationHtml += `
-        <a href="#" ${currentPageNum >= totalPages ? 'style="pointer-events: none; color: #ccc;"' : ''} onclick="goToPage(${currentPageNum + 1})">&gt;下一页</a>
-        <span style="margin-left: 20px;">共 ${totalItems} 条记录，每页 <input type="number" id="pageSizeInput" value="${pageSize}" min="1" max="100" style="width: 60px; text-align: center; margin: 0 5px;" onchange="changePageSize(this.value)" onkeyup="if(event.key === 'Enter') changePageSize(this.value)"> 条</span>
+        <a href="#" ${currentPageNum >= totalPages ? 'style="pointer-events: none; color: #ccc;"' : ''} onclick="goToPage(${currentPageNum + 1})">&gt;下一期一页</a>
+        <span style="margin-left: 20px;">共${totalItems} 条记录，每页 <input type="number" id="pageSizeInput" value="${pageSize}" min="1" max="100" style="width: 60px; text-align: center; margin: 0 5px;" onchange="changePageSize(this.value)" onkeyup="if(event.key === 'Enter') changePageSize(this.value)"> 条</span>
       `;
       
       pagination.innerHTML = paginationHtml;
@@ -642,9 +625,9 @@
       renderIndexData(currentAllData, page);
     }
     
-    // 修改每页显示条数
+    // 修改每页显示条数据
     function changePageSize(newSize) {
-      // 验证输入是否为正整数
+      // 验证输入是否为正整数据
       const size = parseInt(newSize);
       if (!isNaN(size) && size > 0 && size <= 100) {
         pageSize = size;
@@ -653,14 +636,14 @@
       } else {
         // 恢复原值
         document.getElementById('pageSizeInput').value = pageSize;
-        alert('请输入1-100之间的正整数');
+        alert('请输?-100之间的正整数据');
       }
     }
     
-    // 全局变量存储待同步的数据
+    // 全局变量存储待同步的数据据
     let pendingSyncData = null;
     
-    // 创建数据预览弹窗
+    // 创建数据据预览弹窗
     function createDataPreviewModal(data) {
       // 移除已存在的弹窗
       const existingModal = document.getElementById('dataPreviewModal');
@@ -668,7 +651,7 @@
         existingModal.remove();
       }
       
-      // 检测当前是否为黑色主题
+      // 检测当前区是否为黑色主题
       const isDarkTheme = document.body.classList.contains('dark-theme') || 
                          document.documentElement.classList.contains('dark-theme');
       
@@ -705,18 +688,18 @@
       
       // 弹窗标题
       const modalTitle = document.createElement('h3');
-      modalTitle.textContent = '数据预览';
+      modalTitle.textContent = '数据据预览';
       modalTitle.style.marginTop = '0';
       modalTitle.style.color = isDarkTheme ? '#ffffff' : '#333333';
       modalContent.appendChild(modalTitle);
       
-      // 数据信息
+      // 数据据信息
       const infoDiv = document.createElement('div');
       infoDiv.style.marginBottom = '15px';
-      infoDiv.innerHTML = `<p style="color: ${isDarkTheme ? '#cccccc' : '#333333'};">发现 ${data.latestResults.length} 条数据，最新期号：${data.lastIssue || '无'}</p>`;
+      infoDiv.innerHTML = `<p style="color: ${isDarkTheme ? '#cccccc' : '#333333'};">发现 ${data.latestResults.length} 条数据据，最低新期数号：${data.lastIssue || '未知'}</p>`;
       modalContent.appendChild(infoDiv);
       
-      // 数据表格
+      // 数据据表格
       const table = document.createElement('table');
       table.style.width = '100%';
       table.style.borderCollapse = 'collapse';
@@ -727,7 +710,7 @@
       const headerRow = document.createElement('tr');
       headerRow.style.backgroundColor = isDarkTheme ? '#444444' : '#f5f5f5';
 
-      const headers = ['期号', '日期', '星期', '前区', '后区', '和值', '跨度'];
+      const headers = ['期数号', '日期数期数', '星期数', '前区区', '后区区', '和值', '跨度'];
       headers.forEach(headerText => {
         const th = document.createElement('th');
         th.textContent = headerText;
@@ -740,7 +723,7 @@
       thead.appendChild(headerRow);
       table.appendChild(thead);
       
-      // 表格数据
+      // 表格数据据
       const tbody = document.createElement('tbody');
       data.latestResults.forEach((item, index) => {
         const tr = document.createElement('tr');
@@ -748,14 +731,14 @@
           ? index % 2 === 0 ? '#3d3d3d' : '#4a4a4a' 
           : index % 2 === 0 ? '#fff' : '#f9f9f9';
         
-        // 处理日期格式，只显示年月日
+        // 处理日期数期数格式，只显示年月日期数
         let formattedDate = item.drawDate || '';
         if (formattedDate && typeof formattedDate === 'string') {
-          // 处理ISO格式日期（如：2025-10-28T16:00:00.000Z）
+          // 处理ISO格式日期数期数（如：2025-10-28T16:00:00.000Z）
           if (formattedDate.includes('T')) {
             formattedDate = formattedDate.split('T')[0];
           }
-          // 处理包含空格的日期（如：2025-10-28 16:00:00）
+          // 处理包含空格的日期数期数（如：2025-10-28 16:00:00）
           else if (formattedDate.includes(' ')) {
             formattedDate = formattedDate.split(' ')[0];
           }
@@ -817,7 +800,7 @@
       
       // 确认同步按钮
       const confirmBtn = document.createElement('button');
-      confirmBtn.textContent = '确认同步数据';
+      confirmBtn.textContent = '确认同步数据据';
       confirmBtn.style.cssText = `
         padding: 8px 16px;
         background-color: #28a745;
@@ -846,19 +829,19 @@
       document.body.appendChild(modal);
     }
     
-    // 获取数据但不同步到数据库
+    // 获取数据据但不同步到数据据库
     async function fetchDataForPreview() {
-      console.log('开始获取数据进行预览...');
+      console.log('开始获取数据据进行预览..');
       const updateBtn = document.getElementById('updateBtn');
       const originalText = updateBtn.textContent;
       
-      // 禁用按钮，显示加载状态
+      // 禁用按钮，显示加载状?
       updateBtn.disabled = true;
-      updateBtn.textContent = '获取最新期号...';
+      updateBtn.textContent = '获取最低新期数号..';
       
       try {
-        // 第一步：调用sql_zui_xin_yi_qi.js接口获取数据库中最新一期开奖期号
-        console.log('第一步：获取数据库中最新一期开奖期号');
+        // 第一步：调用sql_zui_xin_yi_qi.js接口获取数据据库中奖最低新一期数开奖期数?
+        console.log('第一步：获取数据据库中奖最低新一期数开奖期数号');
         const lastIssueResponse = await fetch('http://localhost:18889/sql_zui_xin_yi_qi', {
           method: 'GET',
           headers: {
@@ -867,22 +850,22 @@
         });
         
         if (!lastIssueResponse.ok) {
-          throw new Error('获取最新期号接口响应错误');
+          throw new Error('获取最低新期数号接口响应错误');
         }
         
         const lastIssueData = await lastIssueResponse.json();
         
         if (!lastIssueData.success) {
-          throw new Error('获取最新期号失败: ' + (lastIssueData.message || '未知错误'));
+          throw new Error('获取最低新期数号失败败 ' + (lastIssueData.message || '未知错误'));
         }
         
-        console.log('成功获取数据库最新期号:', lastIssueData.lastIssue);
+        console.log('成功获取数据据库最低新期数号', lastIssueData.lastIssue);
         
         // 更新按钮状态
-        updateBtn.textContent = '获取开奖数据...';
+        updateBtn.textContent = '获取开奖数据据..';
         
-        // 第二步：调用huo_qu_ti_cai_shu_ju接口获取最新开奖数据，并传递数据库最新期号作为startIssue参数
-        console.log('第二步：获取最新开奖数据，传递数据库最新期号:', lastIssueData.lastIssue);
+        // 第二步：调用huo_qu_ti_cai_shu_ju接口获取最低新开奖数据据，并传递数据据库最低新期数号作为startIssue参数据
+        console.log('第二步：获取最低新开奖数据据，传递数据据库最低新期数号', lastIssueData.lastIssue);
         const response = await fetch(`http://localhost:18889/huo_qu_ti_cai_shu_ju?startIssue=${lastIssueData.lastIssue}`, {
           method: 'GET',
           headers: {
@@ -891,41 +874,41 @@
         });
         
         if (!response.ok) {
-          throw new Error('获取开奖数据接口响应错误');
+          throw new Error('获取开奖数据据接口响应错误');
         }
         
         const data = await response.json();
         
         if (data.success && data.latestResults && data.latestResults.length > 0) {
-          console.log('数据获取成功，显示预览:', data);
+          console.log('数据据获取成功，显示预览', data);
           pendingSyncData = data;
           createDataPreviewModal(data);
         } else {
-          console.error('获取数据失败或无新数据:', data.message);
-          alert('获取数据失败或暂无新数据');
+          console.error('获取数据据失败败或无新数据?', data.message);
+          alert('获取数据据失败败或暂无新数据据');
         }
       } catch (error) {
-        console.error('获取数据失败:', error);
-        alert('获取数据失败');
+        console.error('获取数据据失败败:', error);
+        alert('获取数据据失败败');
       } finally {
-        // 恢复按钮状态
+        // 恢复按钮状?
         updateBtn.disabled = false;
         updateBtn.textContent = originalText;
       }
     }
     
-    // 同步数据到数据库
+    // 同步数据据到数据据库
     async function syncDataToDatabase() {
-      console.log('开始同步数据到数据库...');
+      console.log('开始同步数据据到数据据库..');
       const updateBtn = document.getElementById('updateBtn');
       const originalText = updateBtn.textContent;
       
-      // 禁用按钮，显示加载状态
+      // 禁用按钮，显示加载状?
       updateBtn.disabled = true;
-      updateBtn.textContent = '同步中...';
+      updateBtn.textContent = '同步中奖..';
       
       try {
-        // 调用geng_xin_kai_jiang.js提供的同步到数据库接口
+        // 调用geng_xin_kai_jiang.js提供的同步到数据据库接?
         const response = await fetch('http://localhost:18889/geng_xin_kai_jiang', {
           method: 'GET',
           headers: {
@@ -939,72 +922,72 @@
         
         const data = await response.json();
         
-        // 检查同步是否成功
+        // 检查同步是否成?
         if (data.success) {
-          console.log('数据同步成功:', data);
-          alert(`同步成功！${data.message || '已同步最新开奖数据'}`);
+          console.log('数据据同步成功:', data);
+          alert(`同步成功?{data.message || '已同步最低新开奖数据?}`);
           pendingSyncData = null;
           
-          // 重新加载当前选中类型的数据
+          // 重新加载当前区选中奖类型的数据?
           const activeBtn = document.querySelector('.btn.btn-red');
           if (activeBtn) {
-            const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
+            const type = activeBtn.textContent.replace('最低新', '').replace('期数', '').replace('全部', 'all');
             await loadDataByType(type);
           }
         } else {
-          console.error('同步失败:', data.message);
-          alert('接口失败');
+          console.error('同步失败败:', data.message);
+          alert('接口失败败');
         }
       } catch (error) {
-        console.error('同步数据失败:', error);
-        alert('接口失败');
+        console.error('同步数据据失败败:', error);
+        alert('接口失败败');
       } finally {
-        // 恢复按钮状态
+        // 恢复按钮状?
         updateBtn.disabled = false;
         updateBtn.textContent = originalText;
       }
     }
     
-    // 更新开奖数据 - 主函数
+    // 更新开奖数据?- 主函?
     function updateLotteryData() {
-      // 先获取数据进行预览
+      // 先获取数据据进行预览
       fetchDataForPreview();
     }
     
-    // 加载指定类型的数据
+    // 加载指定类型的数据据
     async function loadDataByType(type) {
-      console.log('加载数据类型:', type);
-      // 显示加载中状态
+      console.log('加载数据据类型:', type);
+      // 显示加载中奖状态
       const tbody = document.getElementById('drawResults');
-      tbody.innerHTML = '<tr><td colspan="80" style="text-align: center; padding: 20px;">加载中...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="80" style="text-align: center; padding: 20px;">加载中奖..</td></tr>';
       
-      // 从API获取数据
+      // 从API获取数据据
       const apiData = await fetchLotteryData(type);
       
-      // 转换数据格式
+      // 转换数据据格式
       const transformedData = transformApiData(apiData);
       
-      // 重置为第一页并渲染数据
+      // 重置为第一页并渲染数据据
       renderIndexData(transformedData, 1);
       
-      // 重置排序图标为默认降序状态
+      // 重置排序图标为默认值降序状态
       const sortIcon = document.getElementById('sortIcon');
       if (sortIcon) {
         sortOrder = 'desc';
-        sortIcon.textContent = '↑';
+        sortIcon.textContent = '↓';
       }
       
-      // 更新当前显示范围提示
+      // 更新当前区显示范提示
       const currentRangeSpan = document.querySelector('.btn.btn-green + span');
       if (currentRangeSpan) {
-        const displayText = type === 'all' ? '全部' : `最近${type}期`;
-        currentRangeSpan.textContent = `当前显示: ${displayText}`;
+        const displayText = type === 'all' ? '全部' : `最低新${type}期数`;
+        currentRangeSpan.textContent = `当前区显示: ${displayText}`;
       }
     }
     
-    // 为期数选择按钮添加事件监听
+    // 为期数数据选择按钮添加事件监听
     document.addEventListener('DOMContentLoaded', function() {
-      // 最近10期按钮
+      // 最低新10期数按钮
       const btn10 = document.querySelector('.btn.btn-red');
       if (btn10) {
         btn10.addEventListener('click', function() {
@@ -1013,12 +996,12 @@
             btn.classList.remove('btn-red');
           });
           this.classList.add('btn-red');
-          // 加载最近10期数据
+          // 加载最低?0期数数据?
           loadDataByType('10');
         });
       }
       
-      // 其他期数按钮（可以根据需要实现）
+      // 其他期数数据按钮（可以根据需要实现）
       const btn35 = document.querySelector('.btn:nth-of-type(2)');
       if (btn35) {
         btn35.addEventListener('click', function() {
@@ -1041,7 +1024,7 @@
         });
       }
       
-      // 移除了最近30期按钮的代码
+      // 移除了最低?0期数按钮的代码
       
       const btn120 = document.querySelector('.btn:nth-of-type(4)');
       if (btn120) {
@@ -1068,11 +1051,11 @@
       
       // 重号复选框事件监听
       document.getElementById('chkDuplicate')?.addEventListener('change', function() {
-        // 重新获取数据并渲染（实际应用中可以优化为只重新渲染标记）
+        // 重新获取数据据并渲染（实际应用中奖可以优化为只重新渲染标记）
         const activeBtn = document.querySelector('.btn.btn-red');
         if (activeBtn) {
-          // 获取当前选中的类型
-          const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
+          // 获取当前区选中奖的类型
+          const type = activeBtn.textContent.replace('最低新', '').replace('期数', '').replace('全部', 'all');
           loadDataByType(type);
         }
       });
@@ -1081,7 +1064,7 @@
       document.getElementById('chkConsecutive')?.addEventListener('change', function() {
         const activeBtn = document.querySelector('.btn.btn-red');
         if (activeBtn) {
-          const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
+          const type = activeBtn.textContent.replace('最低新', '').replace('期数', '').replace('全部', 'all');
           loadDataByType(type);
         }
       });
@@ -1090,7 +1073,7 @@
       document.getElementById('chkEdge')?.addEventListener('change', function() {
         const activeBtn = document.querySelector('.btn.btn-red');
         if (activeBtn) {
-          const type = activeBtn.textContent.replace('最近', '').replace('期', '').replace('全部', 'all');
+          const type = activeBtn.textContent.replace('最低新', '').replace('期数', '').replace('全部', 'all');
           loadDataByType(type);
         }
       });
@@ -1104,7 +1087,7 @@
       const viewBtn = document.querySelector('.btn.btn-green');
       if (viewBtn) {
         viewBtn.addEventListener('click', async function() {
-          // 获取开始期号和结束期号输入框
+          // 获取开始期数号和结束期数号输入框
           const startIssueInput = document.querySelector('input[type="text"]:nth-of-type(1)');
           const endIssueInput = document.querySelector('input[type="text"]:nth-of-type(2)');
           
@@ -1113,51 +1096,53 @@
           const endIssue = endIssueInput?.value.trim();
           
           if (!startIssue || !endIssue) {
-            alert('请输入开始期号和结束期号');
+            alert('请输入开始期数号和结束期数号');
             return;
           }
           
           if (isNaN(startIssue) || isNaN(endIssue)) {
-            alert('期号必须是数字');
+            alert('期数号必须是数据字');
             return;
           }
           
           if (parseInt(startIssue) > parseInt(endIssue)) {
-            alert('开始期号不能大于结束期号');
+            alert('开始期数号不能大于结束期数号');
             return;
           }
           
-          console.log('开始按期号范围查询:', startIssue, '-', endIssue);
+          console.log('开始按期数号范查询:', startIssue, '-', endIssue);
           
-          // 显示加载中状态
+          // 显示加载中奖状态
           const tbody = document.getElementById('drawResults');
-          tbody.innerHTML = '<tr><td colspan="80" style="text-align: center; padding: 20px;">加载中...</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="80" style="text-align: center; padding: 20px;">加载中奖..</td></tr>';
           
-          // 调用API获取数据
+          // 调用API获取数据据
           const apiData = await fetchLotteryData(null, startIssue, endIssue);
           
-          // 转换数据格式
+          // 转换数据据格式
           const transformedData = transformApiData(apiData);
           
-          // 重置为第一页并渲染数据
+          // 重置为第一页并渲染数据据
           renderIndexData(transformedData, 1);
           
-          // 更新当前显示范围提示
+          // 更新当前区显示范提示
           const currentRangeSpan = document.querySelector('.btn.btn-green + span');
           if (currentRangeSpan) {
-            currentRangeSpan.textContent = `当前显示: ${startIssue}-${endIssue}`;
+            currentRangeSpan.textContent = `当前区显示: ${startIssue}-${endIssue}`;
           }
         });
       }
       
-      // 页面加载完成后，默认加载最近10期数据
+      // 页面加载完成后区，默认值加载最低新10期数数据据
       loadDataByType('10');
     });
     
-    // 页面跳转函数
+    // 页面跳转函数据
     function goToKillAnalysis() {
       window.location.href = 'sha_hao_fen_xi.html';
     }
   </script>
 </body>
 </html>
+
+

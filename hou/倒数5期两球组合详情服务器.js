@@ -1,15 +1,11 @@
 // 倒数5期两球组合详情服务器 - 支持查询倒数5期两球组合在下下下下下期的出现情况
 const express = require('express');
-const cors = require('cors');
 const { query } = require('./数据库配置.js');
 
-const app = express();
-
-// 启用CORS
-app.use(cors());
+const router = express.Router();
 
 // 解析JSON请求体
-app.use(express.json());
+router.use(express.json());
 
 // 处理球号数据，确保格式一致
 function processBalls(balls) {
@@ -35,7 +31,7 @@ function checkCombinationInDraw(drawNumbers, combination) {
 }
 
 // 接口：获取倒数5期两球组合详情
-app.post('/', async (req, res) => {
+router.post('/', async (req, res) => {
   try {
     // 获取请求参数
     const { latest_period, type = 'front', combinations = [], stats_range = 100, target_ball = null } = req.body;
@@ -246,29 +242,12 @@ app.post('/', async (req, res) => {
 });
 
 // 健康检查接口
-app.get('/health', (req, res) => {
+router.get('/health', (req, res) => {
   res.status(200).json({
     status: 'ok',
     message: '倒数5期两球组合详情服务运行正常'
   });
 });
 
-// 全局错误处理中间件
-app.use((err, req, res, next) => {
-  console.error('服务器错误:', err);
-  res.status(500).json({
-    success: false,
-    message: '服务器内部错误'
-  });
-});
-
-// 注释掉服务器启动代码，避免单独启动服务器
-/*
-const PORT = 18896;
-app.listen(PORT, () => {
-  console.log(`倒数5期两球组合详情服务已启动，监听端口 ${PORT}`);
-});
-*/
-
-// 导出app以便在主服务器中使用
-module.exports = app;
+// 导出router以便在主服务器中使用
+module.exports = router;

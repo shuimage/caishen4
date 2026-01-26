@@ -15,3 +15,7 @@
 新增左侧导航菜单
 在所有包含左侧导航栏的HTML文件中添加"倒数4期两球组合分析"菜单项，点击跳转到`dao_shu_4_qi_liang_qiu_zu_he.html`页面。
 添加后，所有包含左侧导航栏的页面都将显示"倒数4期两球组合分析"菜单，点击后可以跳转到对应的页面，方便用户在不同分析页面之间切换。
+
+新增倒数4期两球组合详情
+新增倒数4期两球组合详情，功能要跟“倒数2期两球组合详情”类似
+http://localhost:8080/dao_shu_5_qi_liang_qiu_zu_he.html那么这个页选择统计范围为“最近500期”时的“前区两球组合统计”列表，6和33组合号，01球出现次数是8，这个统计正确吗？为什么与这个页http://localhost:8080/dao_shu_5_qi_liang_qiu_zu_he_xiang_qing.html?combination=6-33-1&type=first&stats_range=500，统计的条数不一致
