@@ -1,0 +1,10 @@
+-- 创建回测结果表
+CREATE TABLE IF NOT EXISTS backtest_results (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  cache_key VARCHAR(255) NOT NULL UNIQUE,
+  backtest_results TEXT NOT NULL,
+  current_period VARCHAR(20) DEFAULT NULL,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  INDEX idx_cache_key (cache_key)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

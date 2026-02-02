@@ -526,6 +526,7 @@ app.use('/dao_shu_3_qi_san_qiu_mai_hao_hui_ce', daoShu3QiSanQiuQianQuMaiHaoHuiCe
 app.use('/huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce', daoShu2QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数2期两球后区买号回测路由
 app.use('/huo_qu_dao_shu_3_qi_hou_mai_hao_hui_ce', daoShu3QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数3期两球后区买号回测路由
 app.use('/huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce', daoShu4QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数4期两球后区买号回测路由
+app.use('/dao_shu_4_qi_hou_mai_hao_hui_ce', daoShu4QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数4期两球后区买号回测路由（兼容前端请求路径）
 app.use('/huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce', daoShu5QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数5期两球后区买号回测路由
 app.use('/dao_shu_5_qi_hou_mai_hao_hui_ce', daoShu5QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数5期两球后区买号回测路由（兼容前端请求路径）
 // 注册幻圆回测路由
