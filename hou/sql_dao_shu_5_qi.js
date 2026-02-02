@@ -33,25 +33,29 @@ async function getFifthLastDatabaseDrawInfo() {
       if (typeof firstZoneNumbers === 'string') {
         // 尝试多种可能的字符串格式解析
         if (firstZoneNumbers.includes(',')) {
-          firstZoneNumbers = firstZoneNumbers.split(',').map(num => num.trim());
+          firstZoneNumbers = firstZoneNumbers.split(',').map(num => num.trim().replace(/[^\d]/g, ''));
         } else if (firstZoneNumbers.includes(' ')) {
-          firstZoneNumbers = firstZoneNumbers.split(' ').filter(num => num.trim() !== '');
+          firstZoneNumbers = firstZoneNumbers.split(' ').filter(num => num.trim() !== '').map(num => num.replace(/[^\d]/g, ''));
         } else {
           // 如果没有分隔符，尝试正则匹配数字
           firstZoneNumbers = (firstZoneNumbers.match(/\d+/g) || []).map(num => num);
         }
+        // 过滤空字符串
+        firstZoneNumbers = firstZoneNumbers.filter(num => num !== '');
       }
       
       if (typeof lastZoneNumbers === 'string') {
         // 尝试多种可能的字符串格式解析
         if (lastZoneNumbers.includes(',')) {
-          lastZoneNumbers = lastZoneNumbers.split(',').map(num => num.trim());
+          lastZoneNumbers = lastZoneNumbers.split(',').map(num => num.trim().replace(/[^\d]/g, ''));
         } else if (lastZoneNumbers.includes(' ')) {
-          lastZoneNumbers = lastZoneNumbers.split(' ').filter(num => num.trim() !== '');
+          lastZoneNumbers = lastZoneNumbers.split(' ').filter(num => num.trim() !== '').map(num => num.replace(/[^\d]/g, ''));
         } else {
           // 如果没有分隔符，尝试正则匹配数字
           lastZoneNumbers = (lastZoneNumbers.match(/\d+/g) || []).map(num => num);
         }
+        // 过滤空字符串
+        lastZoneNumbers = lastZoneNumbers.filter(num => num !== '');
       }
       
       // 格式化日期为YYYY-MM-DD格式

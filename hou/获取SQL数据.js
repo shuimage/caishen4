@@ -59,36 +59,38 @@ async function huo_qu_sql_shu_ju(req, res) {
       // 处理数据格式
       const formattedData = rows.map(row => {
         // 解析红球数据
-        let redBalls = [];
-        const red = row.red;
-        if (red) {
-            try {
-                if (Array.isArray(red)) {
-                    redBalls = red;
-                } else if (typeof red === 'string') {
-                    const cleanStr = red.replace(/^["'](.*)["']$/, '$1');
-                    redBalls = cleanStr.split(/[,，]/).map(ball => ball.trim()).filter(ball => ball);
-                }
-            } catch (error) {
-                console.error('解析红球数据异常:', error);
-            }
-        }
-        
-        // 解析蓝球数据
-        let blueBalls = [];
-        const blue = row.blue;
-        if (blue) {
-            try {
-                if (Array.isArray(blue)) {
-                    blueBalls = blue;
-                } else if (typeof blue === 'string') {
-                    const cleanStr = blue.replace(/^["'](.*)["']$/, '$1');
-                    blueBalls = cleanStr.split(/[,，]/).map(ball => ball.trim()).filter(ball => ball);
-                }
-            } catch (error) {
-                console.error('解析蓝球数据异常:', error);
-            }
-        }
+      let redBalls = [];
+      const red = row.red;
+      if (red) {
+          try {
+              if (Array.isArray(red)) {
+                  redBalls = red;
+              } else if (typeof red === 'string') {
+                  // 移除可能的引号和方括号
+                  const cleanStr = red.replace(/^["'\[](.*)["'\]]$/, '$1');
+                  redBalls = cleanStr.split(/[,，]/).map(ball => ball.trim()).filter(ball => ball);
+              }
+          } catch (error) {
+              console.error('解析红球数据异常:', error);
+          }
+      }
+      
+      // 解析蓝球数据
+      let blueBalls = [];
+      const blue = row.blue;
+      if (blue) {
+          try {
+              if (Array.isArray(blue)) {
+                  blueBalls = blue;
+              } else if (typeof blue === 'string') {
+                  // 移除可能的引号和方括号
+                  const cleanStr = blue.replace(/^["'\[](.*)["'\]]$/, '$1');
+                  blueBalls = cleanStr.split(/[,，]/).map(ball => ball.trim()).filter(ball => ball);
+              }
+          } catch (error) {
+              console.error('解析蓝球数据异常:', error);
+          }
+      }
       
       return {
         issue: row.issue,
@@ -164,8 +166,8 @@ async function huo_qu_sql_shu_ju(req, res) {
               if (Array.isArray(red)) {
                   redBalls = red;
               } else if (typeof red === 'string') {
-                  // 移除可能的引号
-                  const cleanStr = red.replace(/^["'](.*)["']$/, '$1');
+                  // 移除可能的引号和方括号
+                  const cleanStr = red.replace(/^["'\[](.*)["'\]]$/, '$1');
                   
                   // 尝试基本的逗号分割
                   redBalls = cleanStr.split(/[,，]/).map(ball => ball.trim()).filter(ball => ball);
@@ -187,8 +189,8 @@ async function huo_qu_sql_shu_ju(req, res) {
               if (Array.isArray(blue)) {
                   blueBalls = blue;
               } else if (typeof blue === 'string') {
-                  // 移除可能的引号
-                  const cleanStr = blue.replace(/^["'](.*)["']$/, '$1');
+                  // 移除可能的引号和方括号
+                  const cleanStr = blue.replace(/^["'\[](.*)["'\]]$/, '$1');
                   
                   // 尝试基本的逗号分割
                   blueBalls = cleanStr.split(/[,，]/).map(ball => ball.trim()).filter(ball => ball);

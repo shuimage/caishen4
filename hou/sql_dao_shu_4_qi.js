@@ -37,25 +37,22 @@ async function getFourthLastDraw() {
     let lastZoneNumbers = [];
     
     try {
-      // 解析前区号码（从red字段中获取）
-      if (Array.isArray(fourthLastDraw.red)) {
-        firstZoneNumbers = fourthLastDraw.red.map(num => typeof num === 'string' ? parseInt(num) : num);
-      } else if (typeof fourthLastDraw.red === 'string') {
-        const numbers = fourthLastDraw.red.match(/\d+/g);
-        if (numbers) {
-          firstZoneNumbers = numbers.map(num => parseInt(num));
-        }
+      // 完全重写号码处理逻辑，确保能正确处理所有类型的号码数据
+      function extractNumbers(data) {
+        if (!data) return [];
+        
+        // 将数据转换为字符串
+        const dataStr = String(data);
+        
+        // 使用正则表达式提取所有数字
+        const numbers = dataStr.match(/\d+/g) || [];
+        
+        return numbers;
       }
       
-      // 解析后区号码（从blue字段中获取）
-      if (Array.isArray(fourthLastDraw.blue)) {
-        lastZoneNumbers = fourthLastDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
-      } else if (typeof fourthLastDraw.blue === 'string') {
-        const numbers = fourthLastDraw.blue.match(/\d+/g);
-        if (numbers) {
-          lastZoneNumbers = numbers.map(num => parseInt(num));
-        }
-      }
+      // 提取前区和后区号码
+      firstZoneNumbers = extractNumbers(fourthLastDraw.red);
+      lastZoneNumbers = extractNumbers(fourthLastDraw.blue);
     } catch (e) {
       console.error('解析号码失败:', e);
     }

@@ -16,9 +16,18 @@ function processBalls(balls) {
   if (typeof balls === 'string') {
     return balls.split(' ')
       .filter(ball => ball.trim() !== '')
-      .map(ball => String(ball).padStart(2, '0'));
+      .map(ball => {
+        // 移除非数字字符，只保留数字
+        const cleanBall = ball.replace(/[^\d]/g, '');
+        return cleanBall ? String(cleanBall).padStart(2, '0') : null;
+      })
+      .filter(Boolean); // 过滤掉null值
   } else if (Array.isArray(balls)) {
-    return balls.map(ball => String(ball).padStart(2, '0'));
+    return balls.map(ball => {
+      // 移除非数字字符，只保留数字
+      const cleanBall = String(ball).replace(/[^\d]/g, '');
+      return cleanBall ? String(cleanBall).padStart(2, '0') : null;
+    }).filter(Boolean); // 过滤掉null值
   }
   return [];
 }
@@ -61,11 +70,11 @@ async function getFifthLastFrontZoneAnalysis(period) {
     try {
       // 使用processBalls函数处理号码，确保格式一致
       const processedBalls = processBalls(fifthLastDraw.red);
-      // 转换回数字数组
-      frontNumbers = processedBalls.map(num => parseInt(num));
+      // 转换回数字数组，并过滤掉非数字值
+      frontNumbers = processedBalls.map(num => parseInt(num)).filter(num => !isNaN(num));
       // 确保frontNumbers至少有一些号码，否则记录错误
       if (!frontNumbers.length) {
-        console.error('Failed to extract front numbers from:', fifthLastDraw.red);
+        console.error('Failed to extract valid front numbers from:', fifthLastDraw.red);
       }
     } catch (e) {
       console.error('Error extracting red numbers:', e);
@@ -109,7 +118,10 @@ async function getFifthLastFrontZoneAnalysis(period) {
         // 确保小球在前，大球在后，保持一致性
         const ball1 = Math.min(frontNumbers[i], frontNumbers[j]);
         const ball2 = Math.max(frontNumbers[i], frontNumbers[j]);
-        frontCombinations.push(`${ball1}-${ball2}`);
+        // 确保ball1和ball2都是有效的数字
+        if (!isNaN(ball1) && !isNaN(ball2)) {
+          frontCombinations.push(`${ball1}-${ball2}`);
+        }
       }
     }
 

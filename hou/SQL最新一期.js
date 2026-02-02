@@ -28,31 +28,6 @@ async function getLastDatabaseDrawInfo() {
       console.log('前区号码:', firstZoneNumbers);
       console.log('后区号码:', lastZoneNumbers);
       
-      // 处理可能的字符串形式的号码数据
-      if (typeof firstZoneNumbers === 'string') {
-        // 尝试多种可能的字符串格式解析
-        if (firstZoneNumbers.includes(',')) {
-          firstZoneNumbers = firstZoneNumbers.split(',').map(num => num.trim());
-        } else if (firstZoneNumbers.includes(' ')) {
-          firstZoneNumbers = firstZoneNumbers.split(' ').filter(num => num.trim() !== '');
-        } else {
-          // 如果没有分隔符，尝试正则匹配数字
-          firstZoneNumbers = (firstZoneNumbers.match(/\d+/g) || []).map(num => num);
-        }
-      }
-      
-      if (typeof lastZoneNumbers === 'string') {
-        // 尝试多种可能的字符串格式解析
-        if (lastZoneNumbers.includes(',')) {
-          lastZoneNumbers = lastZoneNumbers.split(',').map(num => num.trim());
-        } else if (lastZoneNumbers.includes(' ')) {
-          lastZoneNumbers = lastZoneNumbers.split(' ').filter(num => num.trim() !== '');
-        } else {
-          // 如果没有分隔符，尝试正则匹配数字
-          lastZoneNumbers = (lastZoneNumbers.match(/\d+/g) || []).map(num => num);
-        }
-      }
-      
       // 格式化日期为YYYY-MM-DD格式
       let formattedDate = drawData.draw_date;
       if (formattedDate instanceof Date) {
@@ -64,14 +39,34 @@ async function getLastDatabaseDrawInfo() {
         }
       }
       
+      // 完全重写号码处理逻辑，确保能正确处理所有类型的号码数据
+      function extractNumbers(data) {
+        if (!data) return [];
+        
+        // 将数据转换为字符串
+        const dataStr = String(data);
+        
+        // 使用正则表达式提取所有数字
+        const numbers = dataStr.match(/\d+/g) || [];
+        
+        return numbers;
+      }
+      
+      // 提取前区和后区号码
+      const finalFirstZoneNumbers = extractNumbers(drawData.red);
+      const finalLastZoneNumbers = extractNumbers(drawData.blue);
+      
+      console.log('处理后的前区号码:', finalFirstZoneNumbers);
+      console.log('处理后的后区号码:', finalLastZoneNumbers);
+      
       // 创建响应数据
       responseData = {
         success: true,
         latestDraw: {
           period: drawData.issue,
           drawDate: formattedDate,
-          firstZoneNumbers: firstZoneNumbers,
-          lastZoneNumbers: lastZoneNumbers
+          firstZoneNumbers: finalFirstZoneNumbers,
+          lastZoneNumbers: finalLastZoneNumbers
         },
         lastIssue: drawData.issue  // 添加lastIssue字段，供前端使用
       };
