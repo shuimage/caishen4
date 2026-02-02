@@ -305,12 +305,44 @@ function renderLatestDrawInfo(latestDraws) {
       }
     }
     
+    // 处理前区号码
+    let frontNumbersHtml = '';
+    if (Array.isArray(draw.red)) {
+      frontNumbersHtml = draw.red.map(num => `<span class="red-ball">${num}</span>`).join(' ');
+    } else if (typeof draw.red === 'string') {
+      // 处理字符串格式的号码
+      const numbers = draw.red.match(/\d+/g);
+      if (numbers) {
+        frontNumbersHtml = numbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
+      } else {
+        frontNumbersHtml = draw.red;
+      }
+    } else {
+      frontNumbersHtml = draw.red || '';
+    }
+    
+    // 处理后区号码
+    let backNumbersHtml = '';
+    if (Array.isArray(draw.blue)) {
+      backNumbersHtml = draw.blue.map(num => `<span class="blue-ball">${num}</span>`).join(' ');
+    } else if (typeof draw.blue === 'string') {
+      // 处理字符串格式的号码
+      const numbers = draw.blue.match(/\d+/g);
+      if (numbers) {
+        backNumbersHtml = numbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ');
+      } else {
+        backNumbersHtml = draw.blue;
+      }
+    } else {
+      backNumbersHtml = draw.blue || '';
+    }
+    
     html += `
       <div style="margin-bottom: 10px;">
         <strong>第${index + 1}期：</strong>
         期号：${draw.period || draw.issue} 开奖日期：${formattedDate} <br>
-        前区号码：${Array.isArray(draw.red) ? draw.red.map(num => `<span class="red-ball">${num}</span>`).join(' ') : draw.red} <br>
-        后区号码：${Array.isArray(draw.blue) ? draw.blue.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : draw.blue}
+        前区号码：${frontNumbersHtml} <br>
+        后区号码：${backNumbersHtml}
       </div>
     `;
   });

@@ -862,9 +862,12 @@
         // 直接使用后端提供的count字段
         const totalCount = combo.count || 0;
         
+        // 确保combo.combo是有效的
+        const comboText = combo.combo && combo.combo !== 'NaN-NaN' ? combo.combo : '无效组合';
+        
         const tr = document.createElement('tr');
         tr.innerHTML = `
-          <td class="combination-cell" data-combination="${combo.combo}">${combo.combo}</td>
+          <td class="combination-cell" data-combination="${comboText}">${comboText}</td>
           <td class="count">${totalCount}</td>
         `;
         

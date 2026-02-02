@@ -8,6 +8,18 @@ document.addEventListener('DOMContentLoaded', function() {
   
   // 调用主函数初始化页面数据
   main();
+  
+  // 添加倒数2期两球组合开始回测按钮点击事件
+  const startBacktestBtn2 = document.getElementById('startBacktestBtn2');
+  if (startBacktestBtn2) {
+    startBacktestBtn2.addEventListener('click', performSearch2);
+  }
+  
+  // 添加倒数3期两球组合开始回测按钮点击事件
+  const startBacktestBtn3 = document.getElementById('startBacktestBtn3');
+  if (startBacktestBtn3) {
+    startBacktestBtn3.addEventListener('click', performSearch3);
+  }
 });
 
 // 获取全部期数
@@ -1132,35 +1144,21 @@ async function performSearch2() {
       // 更新进度
       await updateProgress('正在处理回测结果，过滤重复推荐...', 92, '处理结果');
       
-      // 按回测方法和平均正确率分组
-      const groupedResults = {};
+      // 按回测方法、平均正确率、前区推荐买号分组
+      const groupedResults = new Map();
       allResults.forEach(result => {
-        const key = `${result.backtestMethod}_${result.accuracy}`;
-        if (!groupedResults[key]) groupedResults[key] = [];
-        groupedResults[key].push(result);
+        // 生成分组键：回测方法_平均正确率_前区推荐买号
+        const buyNumbersKey = result.frontBuyNumbers.sort().join(',');
+        const key = `${result.backtestMethod}_${result.accuracy}_${buyNumbersKey}`;
+        
+        // 每个分组只保留一条记录
+        if (!groupedResults.has(key)) {
+          groupedResults.set(key, result);
+        }
       });
       
-      // 处理每个分组，保留唯一推荐买号结果
-      const filteredResults = [];
-      for (const key in groupedResults) {
-        const group = groupedResults[key];
-        if (group.length === 1) {
-          filteredResults.push(group[0]);
-          continue;
-        }
-        
-        // 对于同方法同正确率的结果，按推荐买号分组
-        const buyNumbersMap = new Map();
-        group.forEach(result => {
-          const buyNumbersKey = result.frontBuyNumbers.sort().join(',');
-          if (!buyNumbersMap.has(buyNumbersKey)) {
-            buyNumbersMap.set(buyNumbersKey, result);
-          }
-        });
-        
-        // 将分组结果添加到过滤结果中
-        filteredResults.push(...buyNumbersMap.values());
-      }
+      // 将分组结果转换为数组
+      const filteredResults = Array.from(groupedResults.values());
       
       // 更新进度
       await updateProgress(`找到 ${filteredResults.length} 个平均率最低的统计期，正在渲染结果...`, 98, '渲染结果');
@@ -1458,3 +1456,222 @@ async function performSearch3() {
     
     // 确保DOM更新
     await new Promise(resolve => setTimeout(resolve, 100));
+    
+    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 更新进度
+    await updateProgress('正在获取总期数...', 5, '获取总期数');
+    
+    const totalPeriods = await getTotalPeriods();
+    
+    // 多阶段搜索策略，从大到小变化步长
+    const searchStages = [
+      { step: 100, expansion: 200 }, // 第一阶段：步长100，扩展范围200
+      { step: 50, expansion: 100 },   // 第二阶段：步长50，扩展范围100
+      { step: 20, expansion: 50 },    // 第三阶段：步长20，扩展范围50
+      { step: 10, expansion: 30 },    // 第四阶段：步长10，扩展范围30
+      { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
+    ];
+    
+    // 三种回测方法
+    const backtestMethods = ['most', 'least', 'average'];
+    const allResults = [];
+    
+    // 计算总工作量
+    totalSteps = backtestMethods.length * searchStages.length + 3; // 3个初始化和收尾步骤
+    // 更新进度
+    await updateProgress('正在获取最新一期期号...', 10, '获取最新期号');
+    currentStep++;
+    
+    // 获取最后一期期号
+    const lastPeriod = await getLastPeriod3();
+    const nextPeriod = lastPeriod; // 使用最新一期的期号的下下下期作为当前期号
+    
+    // 遍历三种回测方法
+    for (const backtestMethod of backtestMethods) {
+      const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+      
+      // 更新进度
+      await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
+      currentStep++;
+      
+      let currentStart = 20;
+      let currentEnd = totalPeriods;
+      let allTestResults = [];
+      
+      // 执行每个阶段的搜索
+      for (let stageIndex = 0; stageIndex < searchStages.length; stageIndex++) {
+        const stage = searchStages[stageIndex];
+        const { step, expansion } = stage;
+        
+        // 更新进度
+        const stageProgress = 15 + (currentStep / totalSteps) * 60;
+        await updateProgress(
+          `正在进行${methodName}方法的第${stageIndex + 1}阶段搜索（步长：${step}期）...`, 
+          stageProgress, 
+          `阶段${stageIndex + 1}，步长${step}`
+        );
+        currentStep++;
+        
+        let stageResults = [];
+        
+        // 计算当前阶段的期数范围和总次数
+        const stageTotal = Math.ceil((currentEnd - currentStart) / step) + 1;
+        let stageCount = 0;
+        
+        // 在当前范围内使用当前步长进行搜索
+        for (let i = currentStart; i <= currentEnd; i += step) {
+          // 检查是否需要终止回测
+          if (isBacktestStopped) {
+            break;
+          }
+          
+          stageCount++;
+          // 实时更新进度
+          const loopProgress = 15 + ((currentStep - 1 + (stageCount / stageTotal)) / totalSteps) * 60;
+          await updateProgress(
+            `正在测试统计期${i}期...`, 
+            loopProgress, 
+            `测试期数: ${i}，进度 ${stageCount}/${stageTotal}`
+          );
+          
+          const result = await testStatsPeriod3(backtestPeriod, i, backtestMethod);
+          stageResults.push(result);
+          allTestResults.push(result);
+        }
+        
+        // 检查是否需要终止回测
+        if (isBacktestStopped) {
+          break;
+        }
+        
+        // 如果当前阶段没有结果，继续下一阶段
+        if (stageResults.length === 0) {
+          continue;
+        }
+        
+        // 找出当前阶段的最低正确率
+        const lowestAccuracy = Math.min(...stageResults.map(result => result.accuracy));
+        
+        // 找出当前阶段中所有最低正确率的结果
+        const lowestResultsInStage = stageResults.filter(result => result.accuracy === lowestAccuracy);
+        
+        // 计算下一阶段的搜索范围
+        const minStatsPeriod = Math.min(...lowestResultsInStage.map(result => result.statsPeriod));
+        const maxStatsPeriod = Math.max(...lowestResultsInStage.map(result => result.statsPeriod));
+        
+        // 扩展搜索范围，确保不遗漏相邻区域
+        currentStart = Math.max(20, minStatsPeriod - expansion);
+        currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
+      }
+      
+      // 检查是否需要终止回测
+      if (isBacktestStopped) {
+        break;
+      }
+      
+      // 从所有测试结果中找出最低正确率
+      const lowestAccuracy = Math.min(...allTestResults.map(result => result.accuracy));
+      
+      // 找出所有正确率等于最低值的期数
+      const lowestPeriods = allTestResults.filter(result => result.accuracy === lowestAccuracy);
+      
+      // 对期数进行去重处理
+      const uniquePeriodsMap = new Map();
+      lowestPeriods.forEach(result => {
+        if (!uniquePeriodsMap.has(result.statsPeriod)) {
+          uniquePeriodsMap.set(result.statsPeriod, result);
+        }
+      });
+      
+      // 将去重后的结果转换回数组，并添加回测方法信息
+      const uniqueLowestPeriods = Array.from(uniquePeriodsMap.values()).map(result => ({
+        ...result,
+        backtestMethod
+      }));
+      
+      // 添加到所有结果中
+      allResults.push(...uniqueLowestPeriods);
+    }
+    
+    // 更新进度
+    await updateProgress('搜索完成，正在获取前区推荐买号...', 85, '获取前区推荐买号');
+    currentStep++;
+    
+    // 为每个结果获取前区推荐买号
+    for (let i = 0; i < allResults.length; i++) {
+      // 检查是否需要终止回测
+      if (isBacktestStopped) {
+        break;
+      }
+      
+      const result = allResults[i];
+      const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
+      
+      // 更新进度
+      const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
+      await updateProgress(
+        `正在获取统计期${result.statsPeriod}期，${methodName}方法的前区推荐买号...`, 
+        buyProgress, 
+        `处理结果 ${i + 1}/${allResults.length}`
+      );
+      
+      result.frontBuyNumbers = await huo_qu_dao_shu_3_qi_qian_qu_tui_jian_mai_hao(result.statsPeriod, result.backtestMethod);
+    }
+    
+    // 检查是否需要终止回测
+    if (isBacktestStopped) {
+      detailResults.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
+    } else {
+      // 更新进度
+      await updateProgress('正在处理回测结果，过滤重复推荐...', 92, '处理结果');
+      
+      // 按回测方法、平均正确率、前区推荐买号分组
+      const groupedResults = new Map();
+      allResults.forEach(result => {
+        // 生成分组键：回测方法_平均正确率_前区推荐买号
+        const buyNumbersKey = result.frontBuyNumbers.sort().join(',');
+        const key = `${result.backtestMethod}_${result.accuracy}_${buyNumbersKey}`;
+        
+        // 每个分组只保留一条记录
+        if (!groupedResults.has(key)) {
+          groupedResults.set(key, result);
+        }
+      });
+      
+      // 将分组结果转换为数组
+      const filteredResults = Array.from(groupedResults.values());
+      
+      // 更新进度
+      await updateProgress(`找到 ${filteredResults.length} 个平均率最低的统计期，正在渲染结果...`, 98, '渲染结果');
+      currentStep++;
+      
+      // 渲染详情数据，传递过滤后的结果和下一期期号
+      await renderDetailData3(filteredResults, nextPeriod);
+      
+      // 更新进度
+      await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
+    }
+    
+    // 隐藏进度
+    await new Promise(resolve => {
+      setTimeout(() => {
+        // 直接更新DOM元素，不依赖requestAnimationFrame
+        progressDiv.style.display = 'none';
+        resolve();
+      }, 500);
+    });
+    
+  } catch (error) {
+    console.error('搜索最低正确率统计期失败', error);
+    
+    // 更新进度
+    await updateProgress('搜索失败，请重试', 100, '搜索失败');
+    detailResults.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #ff0000;">搜索失败，请重试</td></tr>';
+  } finally {
+    // 恢复按钮状态
+    startBacktestBtn.style.display = 'inline-block';
+    stopBacktestBtn.style.display = 'none';
+    // 重置终止标志
+    isBacktestStopped = false;
+  }
+}
