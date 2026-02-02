@@ -2,7 +2,7 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 8080;
+const PORT = 8081;
 const PUBLIC_DIR = path.resolve(__dirname); // 使用绝对路径
 
 // 添加CORS支持和日志功能的增强服务器

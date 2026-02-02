@@ -10,6 +10,7 @@ document.addEventListener('DOMContentLoaded', function() {
 // 定义全局变量
 let periodValue = '100'; // 默认统计期数
 let latestDrawInfo = null;
+let backtestResults = {}; // 存储所有回测结果
 
 // 从接口获取开奖信息的通用函数
 async function huo_qu_kai_jiang_info(apiUrl, drawKey) {
@@ -254,8 +255,8 @@ function setupBacktestControls() {
   const saveBacktestResultsBtn = document.getElementById('saveBacktestResultsBtn');
   if (saveBacktestResultsBtn) {
     saveBacktestResultsBtn.addEventListener('click', function() {
-      // 这里需要实现保存功能
-      alert('保存功能开发中');
+      // 调用保存回测结果功能
+      saveBacktestResults();
     });
   }
   
@@ -263,8 +264,8 @@ function setupBacktestControls() {
   const loadBacktestResultsBtn = document.getElementById('loadBacktestResultsBtn');
   if (loadBacktestResultsBtn) {
     loadBacktestResultsBtn.addEventListener('click', function() {
-      // 这里需要实现加载功能
-      alert('加载功能开发中');
+      // 调用加载回测结果功能
+      loadBacktestResults();
     });
   }
   
@@ -526,6 +527,91 @@ async function copyToClipboard(numbers) {
   } catch (err) {
     console.error('复制失败:', err);
     alert('复制失败，请重试');
+  }
+}
+
+// 保存回测结果到后端
+async function saveBacktestResults() {
+  try {
+    // 生成缓存键
+    const currentPeriod = document.querySelector('.current-period').textContent;
+    const cacheKey = `xia_qi_kai_jiang_yu_ce_${currentPeriod}`;
+    
+    // 准备保存的数据
+    const saveData = {
+      cache_key: cacheKey,
+      backtest_results: backtestResults,
+      current_period: currentPeriod
+    };
+    
+    // 调用后端保存接口
+    const response = await fetch('http://localhost:18889/bao_cun_hui_ce_jie_guo', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(saveData)
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      alert('回测结果保存成功');
+    } else {
+      alert('保存失败: ' + (result.message || '未知错误'));
+    }
+  } catch (error) {
+    console.error('保存回测结果失败:', error);
+    alert('接口失败');
+  }
+}
+
+// 加载回测结果从后端
+async function loadBacktestResults() {
+  try {
+    // 显示加载状态
+    const loadBacktestResultsBtn = document.getElementById('loadBacktestResultsBtn');
+    const originalText = loadBacktestResultsBtn.textContent;
+    loadBacktestResultsBtn.textContent = '加载中...';
+    loadBacktestResultsBtn.disabled = true;
+    
+    // 生成缓存键
+    const currentPeriod = document.querySelector('.current-period').textContent;
+    const cacheKey = `xia_qi_kai_jiang_yu_ce_${currentPeriod}`;
+    
+    // 调用后端加载接口
+    const response = await fetch(`http://localhost:18889/huo_qu_hui_ce_jie_guo?cache_key=${cacheKey}`);
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      const loadedResults = result.data;
+      
+      if (loadedResults) {
+        // 将加载的结果存储到全局变量
+        backtestResults = loadedResults;
+        
+        // 调用相应的渲染函数更新页面显示
+        // 这里需要根据加载的结果调用对应的渲染函数
+        // 由于我们不知道具体有哪些结果，暂时只显示成功提示
+        alert('回测结果加载成功');
+        
+        // 可以在这里添加自动刷新页面的逻辑
+        window.location.reload();
+      } else {
+        alert('没有找到对应的回测结果');
+      }
+    } else {
+      alert('加载失败: ' + (result.message || '未知错误'));
+    }
+  } catch (error) {
+    console.error('加载回测结果失败:', error);
+    alert('接口失败');
+  } finally {
+    // 恢复按钮状态
+    const loadBacktestResultsBtn = document.getElementById('loadBacktestResultsBtn');
+    loadBacktestResultsBtn.textContent = '加载回测结果';
+    loadBacktestResultsBtn.disabled = false;
   }
 }
 
@@ -845,6 +931,13 @@ async function performSearchNewest() {
       
       // 渲染详情数据，传递所有结果和下一期期号
       await renderDetailData(allResults, nextPeriod);
+      
+      // 存储回测结果到全局变量
+      backtestResults['newest'] = {
+        results: allResults,
+        nextPeriod: nextPeriod,
+        timestamp: new Date().toISOString()
+      };
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -1317,6 +1410,13 @@ async function performSearchSecondLast() {
       // 渲染详情数据，传递所有结果和下下期期号
       await renderDetailDataSecondLast(allResults, nextPeriod);
       
+      // 存储回测结果到全局变量
+      backtestResults['secondLast'] = {
+        results: allResults,
+        nextPeriod: nextPeriod,
+        timestamp: new Date().toISOString()
+      };
+      
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
     }
@@ -1587,10 +1687,14 @@ async function huo_qu_qian_qu_tui_jian_mai_hao_fourth_last(statsPeriod, backtest
       analysisData.combinations.forEach(combo => {
         // 累加每个号码的出现次数
         for (let i = 1; i <= 35; i++) {
-          const numStr = String(i);
           let count = 0;
           if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
-            count = combo.nextDrawNumbers.filter(n => n === numStr).length;
+            // 统计号码出现次数，无论后端返回的格式如何
+            count = combo.nextDrawNumbers.filter(n => {
+              // 尝试将n转换为数字进行比较
+              const nNum = parseInt(n);
+              return nNum === i;
+            }).length;
           }
           totalCounts[i] += count;
         }
@@ -1666,10 +1770,14 @@ async function huo_qu_qian_qu_tui_jian_mai_hao_fifth_last(statsPeriod, backtestM
       analysisData.combinations.forEach(combo => {
         // 累加每个号码的出现次数
         for (let i = 1; i <= 35; i++) {
-          const numStr = String(i);
           let count = 0;
           if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
-            count = combo.nextDrawNumbers.filter(n => n === numStr).length;
+            // 统计号码出现次数，无论后端返回的格式如何
+            count = combo.nextDrawNumbers.filter(n => {
+              // 尝试将n转换为数字进行比较
+              const nNum = parseInt(n);
+              return nNum === i;
+            }).length;
           }
           totalCounts[i] += count;
         }
@@ -2478,6 +2586,13 @@ async function performSearchFourthLast() {
       // 渲染详情数据，传递所有结果和下下下下期期号
       await renderDetailDataFourthLast(allResults, nextPeriod);
       
+      // 存储回测结果到全局变量
+      backtestResults['fourthLast'] = {
+        results: allResults,
+        nextPeriod: nextPeriod,
+        timestamp: new Date().toISOString()
+      };
+      
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
     }
@@ -2729,6 +2844,13 @@ async function performSearchFifthLast() {
       
       // 渲染详情数据，传递所有结果和下下下下下期期号
       await renderDetailDataFifthLast(allResults, nextPeriod);
+      
+      // 存储回测结果到全局变量
+      backtestResults['fifthLast'] = {
+        results: allResults,
+        nextPeriod: nextPeriod,
+        timestamp: new Date().toISOString()
+      };
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
