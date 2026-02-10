@@ -68,12 +68,53 @@ function calculateFrontBuyNumbers(combinations, combinationStats, backtestMethod
       break;
       
     case 'most':
-    default:
       // 出现最多：找出出现次数最多的号码
       const maxCount = Math.max(...Object.values(totalNumberCounts));
       for (const [num, count] of Object.entries(totalNumberCounts)) {
         if (count === maxCount && count > 0) {
           buyNumbers.push(parseInt(num));
+        }
+      }
+      break;
+      
+    default:
+      // 处理排名方法（如 rank1, rank2 等）
+      if (backtestMethod.startsWith('rank')) {
+        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+        if (rankMatch) {
+          const targetRank = parseInt(rankMatch[1]);
+          
+          // 计算排名
+          const rankMap = {};
+          const sortedNumbers = [];
+          for (const [num, count] of Object.entries(totalNumberCounts)) {
+            sortedNumbers.push({ number: parseInt(num), count: count });
+          }
+          // 按出现次数降序排序
+          sortedNumbers.sort((a, b) => b.count - a.count);
+          // 计算排名
+          let currentRank = 1;
+          for (let i = 0; i < sortedNumbers.length; i++) {
+            if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+              currentRank++;
+            }
+            rankMap[sortedNumbers[i].number] = currentRank;
+          }
+          
+          // 找出对应排名的号码
+          for (const [num, rank] of Object.entries(rankMap)) {
+            if (rank === targetRank) {
+              buyNumbers.push(parseInt(num));
+            }
+          }
+        }
+      } else {
+        // 默认使用出现最多的方法
+        const maxCount = Math.max(...Object.values(totalNumberCounts));
+        for (const [num, count] of Object.entries(totalNumberCounts)) {
+          if (count === maxCount && count > 0) {
+            buyNumbers.push(parseInt(num));
+          }
         }
       }
       break;
@@ -101,8 +142,9 @@ async function dao_shu_5_qi_mai_hao_hui_ce(backtest_period, stats_period, backte
     
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
-    if (!validMethods.includes(backtest_method)) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')}`);
+    // 允许排名方法（如 rank1, rank2 等）
+    if (!validMethods.includes(backtest_method) && !backtest_method.match(/^rank(\d+)$/)) {
+      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')} 或排名方法（如 rank1, rank2 等）`);
     }
 
     // 获取历史数据用于回测

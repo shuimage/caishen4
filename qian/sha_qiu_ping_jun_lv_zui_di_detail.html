@@ -425,10 +425,18 @@
             backtestMethodText = '出现最少';
           } else if (backtestMethod === 'average') {
             backtestMethodText = '出现平均';
+          } else if (backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：显示为"排名第X"
+            const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            backtestMethodText = `排名第${rank}`;
           }
           
-          // 格式化前区推荐买号
-          const frontBuyNumbersStr = frontBuyNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
+          // 格式化前区推荐买号，如果为空则不显示
+          let frontBuyNumbersStr = '';
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbersStr = frontBuyNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
+          }
           
           // 创建表格行
           const tr = document.createElement('tr');
@@ -503,6 +511,9 @@
             }
           });
           
+          // 检查totalCounts是否全为0
+          const hasNonZeroCounts = totalCounts.some(count => count > 0);
+          
           // 根据回测方法计算对应的前区推荐买号 - 与sha_hao_fen_xi.html完全相同
           if (backtestMethod === 'most') {
             // 1. 出现最多球：找到totalCounts中的最大值对应的号码
@@ -513,6 +524,11 @@
                 if (totalCounts[i] === maxFirstCount) {
                   frontBuyNumbers.push(i);
                 }
+              }
+            } else if (!hasNonZeroCounts) {
+              // 如果totalCounts全为0，返回所有前区号码
+              for (let i = 1; i <= 35; i++) {
+                frontBuyNumbers.push(i);
               }
             }
           } else if (backtestMethod === 'least') {
@@ -525,6 +541,11 @@
                 if (totalCounts[i] === minFirstCount) {
                   frontBuyNumbers.push(i);
                 }
+              }
+            } else if (!hasNonZeroCounts) {
+              // 如果totalCounts全为0，返回所有前区号码
+              for (let i = 1; i <= 35; i++) {
+                frontBuyNumbers.push(i);
               }
             }
           } else if (backtestMethod === 'average') {
@@ -539,17 +560,91 @@
                   frontBuyNumbers.push(i);
                 }
               }
+            } else if (!hasNonZeroCounts) {
+              // 如果totalCounts全为0，返回所有前区号码
+              for (let i = 1; i <= 35; i++) {
+                frontBuyNumbers.push(i);
+              }
+            }
+          } else if (backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：根据排名选择号码
+            const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            
+            // 按出现次数降序排序号码（包括出现次数为0的号码）
+            const sortedNumbers = [];
+            for (let i = 1; i <= 35; i++) {
+              sortedNumbers.push({ num: i, count: totalCounts[i] });
+            }
+            sortedNumbers.sort((a, b) => b.count - a.count);
+            
+            // 计算每个号码的实际排名
+            const rankedNumbers = [];
+            let currentRank = 1;
+            let prevCount = null;
+            
+            for (let i = 0; i < sortedNumbers.length; i++) {
+              const item = sortedNumbers[i];
+              // 如果当前号码的计数与前一个不同，更新排名
+              if (item.count !== prevCount) {
+                currentRank = i + 1;
+                prevCount = item.count;
+              }
+              // 添加排名信息
+              rankedNumbers.push({ ...item, rank: currentRank });
+            }
+            
+            // 找出所有排名等于指定排名的号码
+            for (const item of rankedNumbers) {
+              if (item.rank === rank) {
+                frontBuyNumbers.push(item.num);
+              }
+            }
+            
+            // 如果没有找到对应排名的号码
+            if (frontBuyNumbers.length === 0) {
+              if (!hasNonZeroCounts) {
+                // 如果totalCounts全为0，返回所有前区号码
+                for (let i = 1; i <= 35; i++) {
+                  frontBuyNumbers.push(i);
+                }
+              } else if (rankedNumbers.length > 0) {
+                // 如果有非零计数，但没有找到对应排名的号码，返回排名最接近的号码
+                // 找到排名小于等于指定排名的最大排名
+                let closestRank = 1;
+                for (const item of rankedNumbers) {
+                  if (item.rank <= rank && item.rank > closestRank) {
+                    closestRank = item.rank;
+                  }
+                }
+                // 返回所有排名等于closestRank的号码
+                for (const item of rankedNumbers) {
+                  if (item.rank === closestRank) {
+                    frontBuyNumbers.push(item.num);
+                  }
+                }
+              }
+            }
+          }
+          
+          // 确保始终返回非空数组
+          if (frontBuyNumbers.length === 0) {
+            // 如果所有条件都不满足，返回所有前区号码作为默认值
+            for (let i = 1; i <= 35; i++) {
+              frontBuyNumbers.push(i);
             }
           }
           
           return frontBuyNumbers;
         } else {
           alert('接口失败');
-          return [];
+          // 接口失败时返回所有前区号码作为默认值
+          return Array.from({ length: 35 }, (_, i) => i + 1);
         }
       } catch (error) {
         console.error('获取前区推荐买号失败:', error);
-        return [];
+        // 错误时返回所有前区号码作为默认值
+        return Array.from({ length: 35 }, (_, i) => i + 1);
       }
     }
 
@@ -628,8 +723,12 @@
           { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
         ];
         
-        // 三种回测方法
+        // 回测方法：包含传统方法和排名方法
         const backtestMethods = ['most', 'least', 'average'];
+        // 添加排名方法
+        for (let i = 1; i <= 30; i++) {
+          backtestMethods.push(`rank${i}`);
+        }
         const allResults = [];
         
         // 计算总工作量
@@ -645,13 +744,25 @@
         
         // 遍历三种回测方法
         for (const backtestMethod of backtestMethods) {
-          const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+          // 获取回测方法中文名称
+          let methodName = '出现最多';
+          if (backtestMethod === 'least') {
+            methodName = '出现最少';
+          } else if (backtestMethod === 'average') {
+            methodName = '出现平均';
+          } else if (backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：显示为"排名第X"
+            const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            methodName = `排名第${rank}`;
+          }
           
           // 更新进度
           await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
           currentStep++;
           
-          let currentStart = 20;
+          // 根据回测方法设置不同的起始期数
+          let currentStart = backtestMethod.match(/^rank(\d+)$/) ? 200 : 20;
           let currentEnd = totalPeriods;
           let allTestResults = [];
           
@@ -717,7 +828,9 @@
             const maxStatsPeriod = Math.max(...lowestResultsInStage.map(result => result.statsPeriod));
             
             // 扩展搜索范围，确保不遗漏相邻区域
-            currentStart = Math.max(20, minStatsPeriod - expansion);
+            // 根据回测方法设置不同的最小限制值
+            const minLimit = backtestMethod.match(/^rank(\d+)$/) ? 200 : 20;
+            currentStart = Math.max(minLimit, minStatsPeriod - expansion);
             currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
           }
           
@@ -757,7 +870,18 @@
           }
           
           const result = allResults[i];
-          const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
+          // 获取回测方法中文名称
+          let methodName = '出现最多';
+          if (result.backtestMethod === 'least') {
+            methodName = '出现最少';
+          } else if (result.backtestMethod === 'average') {
+            methodName = '出现平均';
+          } else if (result.backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：显示为"排名第X"
+            const rankMatch = result.backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            methodName = `排名第${rank}`;
+          }
           
           // 更新进度
           const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
@@ -774,12 +898,29 @@
         if (isBacktestStopped) {
           detailResults.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
         } else {
+          // 过滤回测结果：如果回测方法相同且下一期前区推荐买号相同，只保留一条
+          const uniqueResultsMap = new Map();
+          
+          allResults.forEach(result => {
+            // 基于回测方法和下一期前区推荐买号（排序后）创建唯一键
+            const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+            const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+            
+            // 只保留第一条出现的结果
+            if (!uniqueResultsMap.has(uniqueKey)) {
+              uniqueResultsMap.set(uniqueKey, result);
+            }
+          });
+          
+          // 将过滤后的结果转换回数组
+          const filteredResults = Array.from(uniqueResultsMap.values());
+          
           // 更新进度
-          await updateProgress(`找到 ${allResults.length} 个平均率最低的统计期，正在渲染结果...`, 98, '渲染结果');
+          await updateProgress(`找到 ${filteredResults.length} 个平均率最低的统计期，正在渲染结果...`, 98, '渲染结果');
           currentStep++;
           
-          // 渲染详情数据，传递所有结果和下一期期号
-          await renderDetailData(allResults, nextPeriod);
+          // 渲染详情数据，传递过滤后的结果和下一期期号
+          await renderDetailData(filteredResults, nextPeriod);
           
           // 更新进度
           await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');

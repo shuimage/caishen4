@@ -2,11 +2,18 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 8081;
+const PORT = 8080;
 const PUBLIC_DIR = path.resolve(__dirname); // 使用绝对路径
 
 // 添加CORS支持和日志功能的增强服务器
 const server = http.createServer((req, res) => {
+  // 处理favicon.ico请求
+  if (req.url === '/favicon.ico') {
+    res.writeHead(204);
+    res.end();
+    return;
+  }
+  
   // 记录详细请求信息
   console.log('===== 新请求 =====');
   console.log(`请求URL: ${req.url}`);
