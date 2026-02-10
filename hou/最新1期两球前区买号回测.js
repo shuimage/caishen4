@@ -41,42 +41,82 @@ function calculateFrontBuyNumbers(combinations, combinationStats, backtestMethod
   const nonZeroCounts = Object.values(totalNumberCounts).filter(count => count > 0);
   const buyNumbers = [];
   
-  switch (backtestMethod) {
-    case 'least':
-      // 出现最少：找出出现次数最少的号码
-      if (nonZeroCounts.length > 0) {
-        const minCount = Math.min(...nonZeroCounts);
+  // 检查是否为排名方法
+  const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+  if (rankMatch) {
+    // 排名方法：根据排名选择号码
+    const rank = parseInt(rankMatch[1]);
+    
+    // 按出现次数降序排序号码
+    const sortedNumbers = Object.entries(totalNumberCounts)
+      .map(([num, count]) => ({ num: parseInt(num), count }))
+      .filter(item => item.count > 0)
+      .sort((a, b) => b.count - a.count);
+    
+    // 获取指定排名的号码
+    if (sortedNumbers.length >= rank) {
+      // 计算每个号码的实际排名
+      const rankedNumbers = [];
+      let currentRank = 1;
+      let prevCount = null;
+      
+      for (let i = 0; i < sortedNumbers.length; i++) {
+        const item = sortedNumbers[i];
+        // 如果当前号码的计数与前一个不同，更新排名
+        if (item.count !== prevCount) {
+          currentRank = i + 1;
+          prevCount = item.count;
+        }
+        // 添加排名信息
+        rankedNumbers.push({ ...item, rank: currentRank });
+      }
+      
+      // 找出所有排名等于指定排名的号码
+      for (const item of rankedNumbers) {
+        if (item.rank === rank) {
+          buyNumbers.push(item.num);
+        }
+      }
+    }
+  } else {
+    // 传统方法
+    switch (backtestMethod) {
+      case 'least':
+        // 出现最少：找出出现次数最少的号码
+        if (nonZeroCounts.length > 0) {
+          const minCount = Math.min(...nonZeroCounts);
+          for (const [num, count] of Object.entries(totalNumberCounts)) {
+            if (count === minCount && count > 0) {
+              buyNumbers.push(parseInt(num));
+            }
+          }
+        }
+        break;
+        
+      case 'average':
+        // 出现平均：找出出现次数等于平均值的号码
+        if (nonZeroCounts.length > 0) {
+          const sumCounts = nonZeroCounts.reduce((sum, count) => sum + count, 0);
+          const averageCount = Math.round(sumCounts / nonZeroCounts.length);
+          for (const [num, count] of Object.entries(totalNumberCounts)) {
+            if (count === averageCount && count > 0) {
+              buyNumbers.push(parseInt(num));
+            }
+          }
+        }
+        break;
+        
+      case 'most':
+      default:
+        // 出现最多：找出出现次数最多的号码
+        const maxCount = Math.max(...Object.values(totalNumberCounts));
         for (const [num, count] of Object.entries(totalNumberCounts)) {
-          if (count === minCount && count > 0) {
+          if (count === maxCount && count > 0) {
             buyNumbers.push(parseInt(num));
           }
         }
-      }
-      break;
-      
-    case 'average':
-      // 出现平均：找出出现次数等于平均值的号码
-      if (nonZeroCounts.length > 0) {
-        const sumCounts = nonZeroCounts.reduce((sum, count) => sum + count, 0);
-        const averageCount = Math.round(sumCounts / nonZeroCounts.length);
-        for (const [num, count] of Object.entries(totalNumberCounts)) {
-          if (count === averageCount && count > 0) {
-            buyNumbers.push(parseInt(num));
-          }
-        }
-      }
-      break;
-      
-    case 'most':
-    default:
-      // 出现最多：找出出现次数最多的号码
-      const maxCount = Math.max(...Object.values(totalNumberCounts));
-      for (const [num, count] of Object.entries(totalNumberCounts)) {
-        if (count === maxCount && count > 0) {
-          buyNumbers.push(parseInt(num));
-        }
-      }
-      break;
+        break;
+    }
   }
   
   return buyNumbers;
@@ -101,8 +141,13 @@ async function huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, back
     
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
-    if (!validMethods.includes(backtest_method)) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')}`);
+    const validRankMethods = [];
+    for (let i = 1; i <= 30; i++) {
+      validRankMethods.push(`rank${i}`);
+    }
+    const allValidMethods = [...validMethods, ...validRankMethods];
+    if (!allValidMethods.includes(backtest_method)) {
+      throw new Error(`无效的回测方法参数，必须是以下值之一：${allValidMethods.join(', ')}`);
     }
 
     // 获取历史数据用于回测

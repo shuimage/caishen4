@@ -102,7 +102,8 @@ async function huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, back
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
     if (!validMethods.includes(backtest_method)) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')}`);
+      console.warn(`无效的回测方法参数: ${backtest_method}，使用默认值 'most'`);
+      backtest_method = 'most';
     }
 
     // 获取历史数据用于回测

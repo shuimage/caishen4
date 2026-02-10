@@ -446,6 +446,44 @@ async function renderKillAnalysisData(period = '100') {
   
   firstZoneCombinations.appendChild(summaryTr);
   
+  // 添加排名行
+  const rankTr = document.createElement('tr');
+  rankTr.className = 'summary-row';
+  rankTr.innerHTML = `
+    <td class="summary-cell">排名</td>
+    <td class="count summary-cell"></td>
+  `;
+  
+  // 计算排名
+  const rankMap = {};
+  const sortedNumbers = [];
+  for (let i = 1; i <= 35; i++) {
+    sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
+  }
+  // 按出现次数降序排序
+  sortedNumbers.sort((a, b) => b.count - a.count);
+  // 计算排名
+  let currentRank = 1;
+  for (let i = 0; i < sortedNumbers.length; i++) {
+    if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+      currentRank++;
+    }
+    rankMap[sortedNumbers[i].number] = currentRank;
+  }
+  
+  // 添加35个排名单元格
+  for (let i = 1; i <= 35; i++) {
+    const td = document.createElement('td');
+    const rank = rankMap[i];
+    if (rank) {
+      td.textContent = rank;
+      td.className = 'highlight summary-highlight';
+    }
+    rankTr.appendChild(td);
+  }
+  
+  firstZoneCombinations.appendChild(rankTr);
+  
   // 绘制前区图表
   await drawFrontZoneChart(totalCounts, period);
   // 更新全局汇总数据
@@ -523,6 +561,44 @@ async function renderKillAnalysisData(period = '100') {
   }
   
   lastZoneCombinations.appendChild(backSummaryTr);
+  
+  // 添加排名行
+  const backRankTr = document.createElement('tr');
+  backRankTr.className = 'summary-row';
+  backRankTr.innerHTML = `
+    <td class="summary-cell">排名</td>
+    <td class="count summary-cell"></td>
+  `;
+  
+  // 计算排名
+  const backRankMap = {};
+  const backSortedNumbers = [];
+  for (let i = 1; i <= 12; i++) {
+    backSortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
+  }
+  // 按出现次数降序排序
+  backSortedNumbers.sort((a, b) => b.count - a.count);
+  // 计算排名
+  let backCurrentRank = 1;
+  for (let i = 0; i < backSortedNumbers.length; i++) {
+    if (i > 0 && backSortedNumbers[i].count !== backSortedNumbers[i - 1].count) {
+      backCurrentRank++;
+    }
+    backRankMap[backSortedNumbers[i].number] = backCurrentRank;
+  }
+  
+  // 添加12个排名单元格
+  for (let i = 1; i <= 12; i++) {
+    const td = document.createElement('td');
+    const rank = backRankMap[i];
+    if (rank) {
+      td.textContent = rank;
+      td.className = 'highlight summary-highlight';
+    }
+    backRankTr.appendChild(td);
+  }
+  
+  lastZoneCombinations.appendChild(backRankTr);
   
   // 绘制后区图表
   await drawBackZoneChart(backTotalCounts, period);
@@ -845,6 +921,23 @@ async function drawFrontZoneChart(totalCounts, periodValue) {
       break;
   }
   
+  // 计算排名：基于出现次数，最多的为1，顺序排名不跳过数字
+  // 先创建一个副本并按出现次数降序排序
+  const sortedByCount = [...data].sort((a, b) => b.count - a.count);
+  // 计算排名
+  const rankMap = {};
+  let currentRank = 1;
+  for (let i = 0; i < sortedByCount.length; i++) {
+    if (i > 0 && sortedByCount[i].count !== sortedByCount[i - 1].count) {
+      currentRank++;
+    }
+    rankMap[sortedByCount[i].number] = currentRank;
+  }
+  // 为原始数据添加排名
+  data.forEach(item => {
+    item.rank = rankMap[item.number];
+  });
+  
   // 计算最大值
   const maxCount = Math.max(...data.map(item => item.count), 1);
   
@@ -894,7 +987,7 @@ async function drawFrontZoneChart(totalCounts, periodValue) {
   ctx.textBaseline = 'top';
   for (let i = 0; i < data.length; i++) {
     const x = padding.left + (chartInnerWidth / data.length) * (i + 0.5);
-    const y = chartHeight - padding.bottom + 5;
+    const y = chartHeight - padding.bottom + 15;
     ctx.fillText(data[i].number.toString(), x, y);
   }
   
@@ -928,6 +1021,20 @@ async function drawFrontZoneChart(totalCounts, periodValue) {
     if (item.count > 0) {
       ctx.fillText(item.count.toString(), x + barWidth / 2, y - 2);
     }
+    
+    // 绘制排名
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`${item.rank}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
+    
+    // 绘制排名
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`${item.rank}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
   });
   
   // 绘制统计期数信息
@@ -1002,6 +1109,23 @@ async function drawBackZoneChart(backTotalCounts, periodValue) {
       break;
   }
   
+  // 计算排名：基于出现次数，最多的为1，顺序排名不跳过数字
+  // 先创建一个副本并按出现次数降序排序
+  const sortedByCount = [...data].sort((a, b) => b.count - a.count);
+  // 计算排名
+  const rankMap = {};
+  let currentRank = 1;
+  for (let i = 0; i < sortedByCount.length; i++) {
+    if (i > 0 && sortedByCount[i].count !== sortedByCount[i - 1].count) {
+      currentRank++;
+    }
+    rankMap[sortedByCount[i].number] = currentRank;
+  }
+  // 为原始数据添加排名
+  data.forEach(item => {
+    item.rank = rankMap[item.number];
+  });
+  
   // 计算最大值
   const maxCount = Math.max(...data.map(item => item.count), 1);
   
@@ -1051,7 +1175,7 @@ async function drawBackZoneChart(backTotalCounts, periodValue) {
   ctx.textBaseline = 'top';
   data.forEach((item, index) => {
     const x = padding.left + (chartInnerWidth / data.length) * (index + 0.5);
-    const y = chartHeight - padding.bottom + 5;
+    const y = chartHeight - padding.bottom + 15;
     ctx.fillText(item.number.toString(), x, y);
   });
   
@@ -1085,6 +1209,13 @@ async function drawBackZoneChart(backTotalCounts, periodValue) {
     if (item.count > 0) {
       ctx.fillText(item.count.toString(), x + barWidth / 2, y - 2);
     }
+    
+    // 绘制排名
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '10px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'bottom';
+    ctx.fillText(`${item.rank}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
   });
   
   // 绘制统计期数信息

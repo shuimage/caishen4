@@ -84,9 +84,18 @@
     }
   </style>
   <script src="js/navigation.js"></script>
-  <script src="js/theme-toggle.js"></script>
 </head>
 <body>
+  <script>
+    // 主题切换功能 - 仅从localStorage读取设置，不在此页面提供切换按钮
+    document.addEventListener('DOMContentLoaded', function() {
+      // 从localStorage读取主题设置
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-theme');
+      }
+    });
+  </script>
   <div class="container">
     <div class="main-layout">
       <!-- 左侧导航区 -->
@@ -137,11 +146,6 @@
           <h1 class="page-title">最新一期两球组合分析</h1>
           <div style="display: flex; gap: 10px; align-items: center;">
             <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
-            <button id="themeToggle" class="theme-toggle" title="切换主题">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-              </svg>
-            </button>
           </div>
         </div>
     
