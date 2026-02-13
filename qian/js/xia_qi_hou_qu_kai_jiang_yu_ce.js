@@ -322,6 +322,44 @@ window.addEventListener('load', async function() {
               }
             }
           }
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：根据排名选择号码
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          
+          // 按出现次数降序排序号码（包括出现次数为0的号码）
+          const sortedNumbers = [];
+          for (let i = 1; i <= 12; i++) {
+            sortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
+          }
+          sortedNumbers.sort((a, b) => b.count - a.count);
+          
+          // 计算每个号码的实际排名
+          const rankMap = {};
+          let currentRank = 1;
+          
+          for (let i = 0; i < sortedNumbers.length; i++) {
+            if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+              currentRank++;
+            }
+            rankMap[sortedNumbers[i].number] = currentRank;
+          }
+          
+          // 找出所有排名等于指定排名的号码
+          for (let i = 1; i <= 12; i++) {
+            if (rankMap[i] === rank) {
+              backBuyNumbers.push(i);
+            }
+          }
+        }
+        
+        // 对于排名方法，如果没有找到对应排名的号码，返回空数组
+        // 对于其他方法，如果没有找到对应号码，返回所有后区号码作为默认值
+        if (backBuyNumbers.length === 0 && !backtestMethod.match(/^rank(\d+)$/)) {
+          // 如果所有条件都不满足，返回所有后区号码作为默认值
+          for (let i = 1; i <= 12; i++) {
+            backBuyNumbers.push(i);
+          }
         }
         
         return backBuyNumbers;
@@ -565,21 +603,30 @@ window.addEventListener('load', async function() {
         return;
       }
       
-      // 过滤结果：如果平均正确率相同，下一期后区推荐买号相同，则任意显示一条
-      // 如果平均正确率相同，下一期后区推荐买号不同，则都要显示
-      const filteredResults = [];
-      const seenResults = new Set();
+      // 过滤回测结果：如果回测方法相同，正确率也相同，下一期后区推荐买号的值也相同，则任意显示一个
+      const uniqueResultsMap = new Map();
       
-      for (const result of allResults) {
-        const { backtestMethod, accuracy, backBuyNumbers } = result;
-        // 生成唯一键：回测方法 + 平均正确率(保留3位小数) + 后区推荐买号排序后用逗号连接
-        const key = `${backtestMethod}_${accuracy.toFixed(3)}_${backBuyNumbers.sort((a, b) => a - b).join(',')}`;
+      allResults.forEach(result => {
+        // 基于回测方法、正确率和下一期后区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.backBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${result.accuracy.toFixed(3)}_${sortedBuyNumbers.join('_')}`;
         
-        if (!seenResults.has(key)) {
-          seenResults.add(key);
-          filteredResults.push(result);
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
         }
-      }
+      });
+      
+      // 将过滤后的结果转换回数组
+      let filteredResults = Array.from(uniqueResultsMap.values());
+      
+      // 过滤掉下一期后区推荐买号为空的结果
+      filteredResults = filteredResults.filter(result => {
+        return result.backBuyNumbers && result.backBuyNumbers.length > 0;
+      });
+      
+      // 按平均正确率降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
       
       // 遍历过滤后的结果
       for (const result of filteredResults) {
@@ -594,6 +641,11 @@ window.addEventListener('load', async function() {
           backtestMethodText = '出现最少';
         } else if (backtestMethod === 'average') {
           backtestMethodText = '出现平均';
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          backtestMethodText = `排名第${rank}`;
         }
         
         // 格式化后区推荐买号
@@ -693,13 +745,15 @@ window.addEventListener('load', async function() {
       const searchStages = [
         { step: 100, expansion: 200 }, // 第一阶段：步长100，扩展范围200
         { step: 50, expansion: 100 },   // 第二阶段：步长50，扩展范围100
-        { step: 20, expansion: 50 },    // 第三阶段：步长20，扩展范围50
-        { step: 10, expansion: 30 },    // 第四阶段：步长10，扩展范围30
-        { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
+        { step: 10, expansion: 30 }     // 第三阶段：步长10，扩展范围30
       ];
       
-      // 三种回测方法
-      const backtestMethods = ['most', 'least', 'average'];
+      // 回测方法：只包含排名方法
+      const backtestMethods = [];
+      // 添加排名方法
+      for (let i = 1; i <= 12; i++) {
+        backtestMethods.push(`rank${i}`);
+      }
       const allResults = [];
       
       // 计算总工作量
@@ -713,15 +767,27 @@ window.addEventListener('load', async function() {
       const lastPeriod = await getLastPeriod();
       const nextPeriod = (parseInt(lastPeriod) + 1) + '期'; // 使用最近期的期号+1作为下一期期号
       
-      // 遍历三种回测方法
+      // 遍历回测方法
       for (const backtestMethod of backtestMethods) {
-        const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+        // 获取回测方法中文名称
+        let methodName = '出现最多';
+        if (backtestMethod === 'least') {
+          methodName = '出现最少';
+        } else if (backtestMethod === 'average') {
+          methodName = '出现平均';
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          methodName = `排名第${rank}`;
+        }
         
         // 更新进度
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        let currentStart = 20;
+        // 所有回测方法都从1500期开始
+        let currentStart = 1500;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -787,7 +853,9 @@ window.addEventListener('load', async function() {
           const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
           
           // 扩展搜索范围，确保不遗漏相邻区域
-          currentStart = Math.max(20, minStatsPeriod - expansion);
+          // 所有回测方法都使用1500期作为最小限制
+          const minLimit = 1500;
+          currentStart = Math.max(minLimit, minStatsPeriod - expansion);
           currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
         }
         
@@ -836,7 +904,18 @@ window.addEventListener('load', async function() {
           }
           
           const result = allResults[i];
-          const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
+          // 获取回测方法中文名称
+          let methodName = '出现最多';
+          if (result.backtestMethod === 'least') {
+            methodName = '出现最少';
+          } else if (result.backtestMethod === 'average') {
+            methodName = '出现平均';
+          } else if (result.backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：显示为"排名第X"
+            const rankMatch = result.backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            methodName = `排名第${rank}`;
+          }
           
           // 更新进度
           const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
@@ -902,21 +981,30 @@ window.addEventListener('load', async function() {
         return;
       }
       
-      // 过滤结果：如果平均正确率相同，下下期后区推荐买号相同，则任意显示一条
-      // 如果平均正确率相同，下下期后区推荐买号不同，则都要显示
-      const filteredResults = [];
-      const seenResults = new Set();
+      // 过滤回测结果：如果回测方法相同，正确率也相同，下下期后区推荐买号的值也相同，则任意显示一个
+      const uniqueResultsMap = new Map();
       
-      for (const result of allResults) {
-        const { backtestMethod, accuracy, backBuyNumbers } = result;
-        // 生成唯一键：回测方法 + 平均正确率(保留3位小数) + 后区推荐买号排序后用逗号连接
-        const key = `${backtestMethod}_${accuracy.toFixed(3)}_${backBuyNumbers.sort((a, b) => a - b).join(',')}`;
+      allResults.forEach(result => {
+        // 基于回测方法、正确率和下下期后区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.backBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${result.accuracy.toFixed(3)}_${sortedBuyNumbers.join('_')}`;
         
-        if (!seenResults.has(key)) {
-          seenResults.add(key);
-          filteredResults.push(result);
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
         }
-      }
+      });
+      
+      // 将过滤后的结果转换回数组
+      let filteredResults = Array.from(uniqueResultsMap.values());
+      
+      // 过滤掉下下期后区推荐买号为空的结果
+      filteredResults = filteredResults.filter(result => {
+        return result.backBuyNumbers && result.backBuyNumbers.length > 0;
+      });
+      
+      // 按平均正确率降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
       
       // 遍历过滤后的结果
       for (const result of filteredResults) {
@@ -977,21 +1065,30 @@ window.addEventListener('load', async function() {
         return;
       }
       
-      // 过滤结果：如果平均正确率相同，下下下期后区推荐买号相同，则任意显示一条
-      // 如果平均正确率相同，下下下期后区推荐买号不同，则都要显示
-      const filteredResults = [];
-      const seenResults = new Set();
+      // 过滤回测结果：如果回测方法相同，正确率也相同，下下下期后区推荐买号的值也相同，则任意显示一个
+      const uniqueResultsMap = new Map();
       
-      for (const result of allResults) {
-        const { backtestMethod, accuracy, backBuyNumbers } = result;
-        // 生成唯一键：回测方法 + 平均正确率(保留3位小数) + 后区推荐买号排序后用逗号连接
-        const key = `${backtestMethod}_${accuracy.toFixed(3)}_${backBuyNumbers.sort((a, b) => a - b).join(',')}`;
+      allResults.forEach(result => {
+        // 基于回测方法、正确率和下下下期后区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.backBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${result.accuracy.toFixed(3)}_${sortedBuyNumbers.join('_')}`;
         
-        if (!seenResults.has(key)) {
-          seenResults.add(key);
-          filteredResults.push(result);
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
         }
-      }
+      });
+      
+      // 将过滤后的结果转换回数组
+      let filteredResults = Array.from(uniqueResultsMap.values());
+      
+      // 过滤掉下下下期后区推荐买号为空的结果
+      filteredResults = filteredResults.filter(result => {
+        return result.backBuyNumbers && result.backBuyNumbers.length > 0;
+      });
+      
+      // 按平均正确率降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
       
       // 遍历过滤后的结果
       for (const result of filteredResults) {
@@ -1052,21 +1149,27 @@ window.addEventListener('load', async function() {
         return;
       }
       
-      // 过滤结果：如果平均正确率相同，下下下下期后区推荐买号相同，则任意显示一条
-      // 如果平均正确率相同，下下下下期后区推荐买号不同，则都要显示
+      // 过滤结果：过滤空推荐号码并实现去重
       const filteredResults = [];
       const seenResults = new Set();
       
       for (const result of allResults) {
-        const { backtestMethod, accuracy, backBuyNumbers } = result;
-        // 生成唯一键：回测方法 + 平均正确率(保留3位小数) + 后区推荐买号排序后用逗号连接
-        const key = `${backtestMethod}_${accuracy.toFixed(3)}_${backBuyNumbers.sort((a, b) => a - b).join(',')}`;
+        // 如果是排名方法且没有找到对应排名的号码（返回空数组），则跳过该结果
+        if (result.backtestMethod.match(/^rank(\d+)$/) && result.backBuyNumbers.length === 0) {
+          continue;
+        }
         
-        if (!seenResults.has(key)) {
-          seenResults.add(key);
+        // 去重：使用回测方法、正确率和推荐买号的组合作为唯一标识
+        const buyNumbersKey = result.backBuyNumbers.sort((a, b) => a - b).join(',');
+        const resultKey = `${result.backtestMethod}-${result.accuracy.toFixed(3)}-${buyNumbersKey}`;
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
           filteredResults.push(result);
         }
       }
+      
+      // 按平均正确率进行降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
       
       // 遍历过滤后的结果
       for (const result of filteredResults) {
@@ -1081,6 +1184,11 @@ window.addEventListener('load', async function() {
           backtestMethodText = '出现最少';
         } else if (backtestMethod === 'average') {
           backtestMethodText = '出现平均';
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          backtestMethodText = `排名第${rank}`;
         }
         
         // 格式化后区推荐买号
@@ -1127,21 +1235,27 @@ window.addEventListener('load', async function() {
         return;
       }
       
-      // 过滤结果：如果平均正确率相同，下下下下下期后区推荐买号相同，则任意显示一条
-      // 如果平均正确率相同，下下下下下期后区推荐买号不同，则都要显示
+      // 过滤结果：过滤空推荐号码并实现去重
       const filteredResults = [];
       const seenResults = new Set();
       
       for (const result of allResults) {
-        const { backtestMethod, accuracy, backBuyNumbers } = result;
-        // 生成唯一键：回测方法 + 平均正确率(保留3位小数) + 后区推荐买号排序后用逗号连接
-        const key = `${backtestMethod}_${accuracy.toFixed(3)}_${backBuyNumbers.sort((a, b) => a - b).join(',')}`;
+        // 如果是排名方法且没有找到对应排名的号码（返回空数组），则跳过该结果
+        if (result.backtestMethod.match(/^rank(\d+)$/) && result.backBuyNumbers.length === 0) {
+          continue;
+        }
         
-        if (!seenResults.has(key)) {
-          seenResults.add(key);
+        // 去重：使用回测方法、正确率和推荐买号的组合作为唯一标识
+        const buyNumbersKey = result.backBuyNumbers.sort((a, b) => a - b).join(',');
+        const resultKey = `${result.backtestMethod}-${result.accuracy.toFixed(3)}-${buyNumbersKey}`;
+        if (!seenResults.has(resultKey)) {
+          seenResults.add(resultKey);
           filteredResults.push(result);
         }
       }
+      
+      // 按平均正确率进行降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
       
       // 遍历过滤后的结果
       for (const result of filteredResults) {
@@ -1156,6 +1270,11 @@ window.addEventListener('load', async function() {
           backtestMethodText = '出现最少';
         } else if (backtestMethod === 'average') {
           backtestMethodText = '出现平均';
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          backtestMethodText = `排名第${rank}`;
         }
         
         // 格式化后区推荐买号
@@ -1485,8 +1604,36 @@ window.addEventListener('load', async function() {
           }
         });
         
-        // 根据回测方法计算对应的后区推荐买号 - 与dao_shu_3_qi_liang_qiu_zu_he.html完全相同
-        if (backtestMethod === 'most') {
+        // 排名方法：根据排名选择号码
+        if (backtestMethod.match(/^rank(\d+)$/)) {
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          
+          // 按出现次数降序排序号码（包括出现次数为0的号码） - 与dao_shu_3_qi_liang_qiu_zu_he.html完全一致
+          const sortedNumbers = [];
+          for (let i = 1; i <= 12; i++) {
+            sortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
+          }
+          sortedNumbers.sort((a, b) => b.count - a.count);
+          
+          // 计算每个号码的实际排名 - 与dao_shu_3_qi_liang_qiu_zu_he.html完全一致
+          const rankMap = {};
+          let currentRank = 1;
+          
+          for (let i = 0; i < sortedNumbers.length; i++) {
+            if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+              currentRank++;
+            }
+            rankMap[sortedNumbers[i].number] = currentRank;
+          }
+          
+          // 找出所有排名等于指定排名的号码
+          for (let i = 1; i <= 12; i++) {
+            if (rankMap[i] === rank) {
+              backBuyNumbers.push(i);
+            }
+          }
+        } else if (backtestMethod === 'most') {
           // 1. 出现最多球：找到backTotalCounts中的最大值对应的号码
           const maxLastCount = Math.max(...backTotalCounts);
           if (maxLastCount > 0) {
@@ -1556,13 +1703,46 @@ window.addEventListener('load', async function() {
         backCombinations.forEach(combo => {
           // 累加每个号码的出现次数
           for (let i = 1; i <= 12; i++) {
-            const count = combo.numberCounts[i] || 0;
+            const numStr = String(i); // 后端使用数字作为键，不需要补0
+            let count = 0;
+            if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
+              count = combo.nextDrawNumbers.filter(n => n === numStr).length;
+            }
             backTotalCounts[i] += count;
           }
         });
         
-        // 根据回测方法计算对应的后区推荐买号 - 与dao_shu_4_qi_liang_qiu_zu_he.html完全相同
-        if (backtestMethod === 'most') {
+        // 排名方法：根据排名获取对应的号码
+        if (backtestMethod.startsWith('rank')) {
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          if (rankMatch) {
+            const targetRank = parseInt(rankMatch[1]);
+            
+            // 计算排名 - 与dao_shu_4_qi_liang_qiu_zu_he.html完全相同
+            const backRankMap = {};
+            const backSortedNumbers = [];
+            for (let i = 1; i <= 12; i++) {
+              backSortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
+            }
+            // 按出现次数降序排序
+            backSortedNumbers.sort((a, b) => b.count - a.count);
+            // 计算排名
+            let backCurrentRank = 1;
+            for (let i = 0; i < backSortedNumbers.length; i++) {
+              if (i > 0 && backSortedNumbers[i].count !== backSortedNumbers[i - 1].count) {
+                backCurrentRank++;
+              }
+              backRankMap[backSortedNumbers[i].number] = backCurrentRank;
+            }
+            
+            // 找出对应排名的号码
+            for (let i = 1; i <= 12; i++) {
+              if (backRankMap[i] === targetRank) {
+                backBuyNumbers.push(i);
+              }
+            }
+          }
+        } else if (backtestMethod === 'most') {
           // 1. 出现最多球：找到backTotalCounts中的最大值对应的号码
           const maxLastCount = Math.max(...backTotalCounts);
           if (maxLastCount > 0) {
@@ -1637,8 +1817,37 @@ window.addEventListener('load', async function() {
           }
         });
         
-        // 根据回测方法计算对应的后区推荐买号 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-        if (backtestMethod === 'most') {
+        // 排名方法：根据排名获取对应的号码
+        if (backtestMethod.startsWith('rank')) {
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          if (rankMatch) {
+            const targetRank = parseInt(rankMatch[1]);
+            
+            // 计算排名 - 与其他函数完全相同
+            const backRankMap = {};
+            const backSortedNumbers = [];
+            for (let i = 1; i <= 12; i++) {
+              backSortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
+            }
+            // 按出现次数降序排序
+            backSortedNumbers.sort((a, b) => b.count - a.count);
+            // 计算排名
+            let backCurrentRank = 1;
+            for (let i = 0; i < backSortedNumbers.length; i++) {
+              if (i > 0 && backSortedNumbers[i].count !== backSortedNumbers[i - 1].count) {
+                backCurrentRank++;
+              }
+              backRankMap[backSortedNumbers[i].number] = backCurrentRank;
+            }
+            
+            // 找出对应排名的号码
+            for (let i = 1; i <= 12; i++) {
+              if (backRankMap[i] === targetRank) {
+                backBuyNumbers.push(i);
+              }
+            }
+          }
+        } else if (backtestMethod === 'most') {
           // 1. 出现最多球：找到backTotalCounts中的最大值对应的号码
           const maxLastCount = Math.max(...backTotalCounts);
           if (maxLastCount > 0) {
@@ -1752,15 +1961,17 @@ window.addEventListener('load', async function() {
       
       // 多阶段搜索策略，从大到小变化步长
       const searchStages = [
-        { step: 100, expansion: 200 }, // 第一阶段：步长100，扩展范围200
-        { step: 50, expansion: 100 },   // 第二阶段：步长50，扩展范围100
-        { step: 20, expansion: 50 },    // 第三阶段：步长20，扩展范围50
-        { step: 10, expansion: 30 },    // 第四阶段：步长10，扩展范围30
-        { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
+        { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
+        { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
+        { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
       ];
       
-      // 三种回测方法
-      const backtestMethods = ['most', 'least', 'average'];
+      // 回测方法：只包含排名方法
+      const backtestMethods = [];
+      // 添加排名方法
+      for (let i = 1; i <= 12; i++) {
+        backtestMethods.push(`rank${i}`);
+      }
       const allResults = [];
       
       // 计算总工作量
@@ -1774,15 +1985,27 @@ window.addEventListener('load', async function() {
       const lastPeriod = await getLastPeriod();
       const nextPeriod = (parseInt(lastPeriod) + 2) + '期'; // 使用最近期的期号+2作为下下期期号
       
-      // 遍历三种回测方法
+      // 遍历回测方法
       for (const backtestMethod of backtestMethods) {
-        const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+        // 获取回测方法中文名称
+        let methodName = '出现最多';
+        if (backtestMethod === 'least') {
+          methodName = '出现最少';
+        } else if (backtestMethod === 'average') {
+          methodName = '出现平均';
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          methodName = `排名第${rank}`;
+        }
         
         // 更新进度
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        let currentStart = 20;
+        // 所有回测方法都从2000期开始
+        let currentStart = 2000;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -1848,7 +2071,9 @@ window.addEventListener('load', async function() {
           const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
           
           // 扩展搜索范围，确保不遗漏相邻区域
-          currentStart = Math.max(20, minStatsPeriod - expansion);
+          // 所有回测方法都使用2000期作为最小限制
+          const minLimit = 2000;
+          currentStart = Math.max(minLimit, minStatsPeriod - expansion);
           currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
         }
         
@@ -1897,7 +2122,18 @@ window.addEventListener('load', async function() {
           }
           
           const result = allResults[i];
-          const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
+          // 获取回测方法中文名称
+          let methodName = '出现最多';
+          if (result.backtestMethod === 'least') {
+            methodName = '出现最少';
+          } else if (result.backtestMethod === 'average') {
+            methodName = '出现平均';
+          } else if (result.backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：显示为"排名第X"
+            const rankMatch = result.backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            methodName = `排名第${rank}`;
+          }
           
           // 更新进度
           const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
@@ -1907,7 +2143,7 @@ window.addEventListener('load', async function() {
             `处理结果 ${i + 1}/${allResults.length}`
           );
           
-          result.backBuyNumbers = await huo_qu_hou_qu_tui_jian_mai_hao_second_last(result.statsPeriod, result.backtestMethod);
+          result.backBuyNumbers = await huo_qu_hou_qu_tui_jian_mai_hao(result.statsPeriod, result.backtestMethod);
         }
         
         // 检查是否需要终止回测
@@ -2021,8 +2257,12 @@ window.addEventListener('load', async function() {
         { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
       ];
       
-      // 三种回测方法
-      const backtestMethods = ['most', 'least', 'average'];
+      // 回测方法：只包含排名方法
+      const backtestMethods = [];
+      // 添加排名方法
+      for (let i = 1; i <= 12; i++) {
+        backtestMethods.push(`rank${i}`);
+      }
       const allResults = [];
       
       // 计算总工作量
@@ -2036,15 +2276,27 @@ window.addEventListener('load', async function() {
       const lastPeriod = await getLastPeriod();
       const nextPeriod = (parseInt(lastPeriod) + 3) + '期'; // 使用最近期的期号+3作为下下下期期号
       
-      // 遍历三种回测方法
+      // 遍历回测方法
       for (const backtestMethod of backtestMethods) {
-        const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+        // 获取回测方法中文名称
+        let methodName = '出现最多';
+        if (backtestMethod === 'least') {
+          methodName = '出现最少';
+        } else if (backtestMethod === 'average') {
+          methodName = '出现平均';
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          methodName = `排名第${rank}`;
+        }
         
         // 更新进度
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        let currentStart = 20;
+        // 所有回测方法都从1500期开始
+        let currentStart = 1500;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -2110,7 +2362,9 @@ window.addEventListener('load', async function() {
           const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
           
           // 扩展搜索范围，确保不遗漏相邻区域
-          currentStart = Math.max(20, minStatsPeriod - expansion);
+          // 所有回测方法都使用1500期作为最小限制
+          const minLimit = 1500;
+          currentStart = Math.max(minLimit, minStatsPeriod - expansion);
           currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
         }
         
@@ -2159,7 +2413,18 @@ window.addEventListener('load', async function() {
           }
           
           const result = allResults[i];
-          const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
+          // 获取回测方法中文名称
+          let methodName = '出现最多';
+          if (result.backtestMethod === 'least') {
+            methodName = '出现最少';
+          } else if (result.backtestMethod === 'average') {
+            methodName = '出现平均';
+          } else if (result.backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：显示为"排名第X"
+            const rankMatch = result.backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            methodName = `排名第${rank}`;
+          }
           
           // 更新进度
           const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
@@ -2169,7 +2434,7 @@ window.addEventListener('load', async function() {
             `处理结果 ${i + 1}/${allResults.length}`
           );
           
-          result.backBuyNumbers = await huo_qu_hou_qu_tui_jian_mai_hao_third_last(result.statsPeriod, result.backtestMethod);
+          result.backBuyNumbers = await huo_qu_hou_qu_tui_jian_mai_hao(result.statsPeriod, result.backtestMethod);
         }
         
         // 检查是否需要终止回测
@@ -2276,15 +2541,17 @@ window.addEventListener('load', async function() {
       
       // 多阶段搜索策略，从大到小变化步长
       const searchStages = [
-        { step: 100, expansion: 200 }, // 第一阶段：步长100，扩展范围200
-        { step: 50, expansion: 100 },   // 第二阶段：步长50，扩展范围100
-        { step: 20, expansion: 50 },    // 第三阶段：步长20，扩展范围50
-        { step: 10, expansion: 30 },    // 第四阶段：步长10，扩展范围30
-        { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
+        { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
+        { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
+        { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
       ];
       
-      // 三种回测方法
-      const backtestMethods = ['most', 'least', 'average'];
+      // 回测方法：只包含排名方法
+      const backtestMethods = [];
+      // 添加排名方法
+      for (let i = 1; i <= 12; i++) {
+        backtestMethods.push(`rank${i}`);
+      }
       const allResults = [];
       
       // 计算总工作量
@@ -2298,15 +2565,27 @@ window.addEventListener('load', async function() {
       const lastPeriod = await getLastPeriod();
       const nextPeriod = (parseInt(lastPeriod) + 4) + '期'; // 使用最近期的期号+4作为下下下下期期号
       
-      // 遍历三种回测方法
+      // 遍历回测方法
       for (const backtestMethod of backtestMethods) {
-        const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+        // 获取回测方法中文名称
+        let methodName = '出现最多';
+        if (backtestMethod === 'least') {
+          methodName = '出现最少';
+        } else if (backtestMethod === 'average') {
+          methodName = '出现平均';
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          methodName = `排名第${rank}`;
+        }
         
         // 更新进度
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        let currentStart = 20;
+        // 从1500期开始搜索
+        let currentStart = 1500;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -2371,8 +2650,8 @@ window.addEventListener('load', async function() {
           const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
           const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
           
-          // 扩展搜索范围，确保不遗漏相邻区域
-          currentStart = Math.max(20, minStatsPeriod - expansion);
+          // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从1500期开始
+          currentStart = Math.max(1500, minStatsPeriod - expansion);
           currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
         }
         
@@ -2421,7 +2700,18 @@ window.addEventListener('load', async function() {
           }
           
           const result = allResults[i];
-          const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
+          // 获取回测方法中文名称
+          let methodName = '出现最多';
+          if (result.backtestMethod === 'least') {
+            methodName = '出现最少';
+          } else if (result.backtestMethod === 'average') {
+            methodName = '出现平均';
+          } else if (result.backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：显示为"排名第X"
+            const rankMatch = result.backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            methodName = `排名第${rank}`;
+          }
           
           // 更新进度
           const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
@@ -2538,15 +2828,17 @@ window.addEventListener('load', async function() {
       
       // 多阶段搜索策略，从大到小变化步长
       const searchStages = [
-        { step: 100, expansion: 200 }, // 第一阶段：步长100，扩展范围200
-        { step: 50, expansion: 100 },   // 第二阶段：步长50，扩展范围100
-        { step: 20, expansion: 50 },    // 第三阶段：步长20，扩展范围50
-        { step: 10, expansion: 30 },    // 第四阶段：步长10，扩展范围30
-        { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
+        { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
+        { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
+        { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
       ];
       
-      // 三种回测方法
-      const backtestMethods = ['most', 'least', 'average'];
+      // 回测方法：只包含排名方法
+      const backtestMethods = [];
+      // 添加排名方法
+      for (let i = 1; i <= 12; i++) {
+        backtestMethods.push(`rank${i}`);
+      }
       const allResults = [];
       
       // 计算总工作量
@@ -2560,15 +2852,27 @@ window.addEventListener('load', async function() {
       const lastPeriod = await getLastPeriod();
       const nextPeriod = (parseInt(lastPeriod) + 5) + '期'; // 使用最近期的期号+5作为下下下下下期期号
       
-      // 遍历三种回测方法
+      // 遍历回测方法
       for (const backtestMethod of backtestMethods) {
-        const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+        // 获取回测方法中文名称
+        let methodName = '出现最多';
+        if (backtestMethod === 'least') {
+          methodName = '出现最少';
+        } else if (backtestMethod === 'average') {
+          methodName = '出现平均';
+        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          methodName = `排名第${rank}`;
+        }
         
         // 更新进度
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        let currentStart = 20;
+        // 从1500期开始搜索
+        let currentStart = 1500;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -2633,8 +2937,8 @@ window.addEventListener('load', async function() {
           const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
           const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
           
-          // 扩展搜索范围，确保不遗漏相邻区域
-          currentStart = Math.max(20, minStatsPeriod - expansion);
+          // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从1500期开始
+          currentStart = Math.max(1500, minStatsPeriod - expansion);
           currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
         }
         
@@ -2683,7 +2987,18 @@ window.addEventListener('load', async function() {
           }
           
           const result = allResults[i];
-          const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
+          // 获取回测方法中文名称
+          let methodName = '出现最多';
+          if (result.backtestMethod === 'least') {
+            methodName = '出现最少';
+          } else if (result.backtestMethod === 'average') {
+            methodName = '出现平均';
+          } else if (result.backtestMethod.match(/^rank(\d+)$/)) {
+            // 排名方法：显示为"排名第X"
+            const rankMatch = result.backtestMethod.match(/^rank(\d+)$/);
+            const rank = parseInt(rankMatch[1]);
+            methodName = `排名第${rank}`;
+          }
           
           // 更新进度
           const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
