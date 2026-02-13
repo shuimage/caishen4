@@ -666,12 +666,9 @@ async function loadBacktestResults() {
         backtestResults = loadedResults;
         
         // 调用相应的渲染函数更新页面显示
-        // 这里需要根据加载的结果调用对应的渲染函数
-        // 由于我们不知道具体有哪些结果，暂时只显示成功提示
-        alert('回测结果加载成功');
+        await renderLoadedBacktestResults();
         
-        // 可以在这里添加自动刷新页面的逻辑
-        window.location.reload();
+        alert('回测结果加载成功');
       } else {
         alert('没有找到对应的回测结果');
       }
@@ -686,6 +683,54 @@ async function loadBacktestResults() {
     const loadBacktestResultsBtn = document.getElementById('loadBacktestResultsBtn');
     loadBacktestResultsBtn.textContent = '加载回测结果';
     loadBacktestResultsBtn.disabled = false;
+  }
+}
+
+// 渲染加载的回测结果
+async function renderLoadedBacktestResults() {
+  // 渲染最新一期两球组合
+  if (backtestResults.newest) {
+    await renderDetailData(backtestResults.newest.results, backtestResults.newest.nextPeriod);
+  }
+  
+  // 渲染倒数2期两球组合
+  if (backtestResults.secondLast) {
+    await renderDetailDataSecondLast(backtestResults.secondLast.results, backtestResults.secondLast.nextPeriod);
+  }
+  
+  // 渲染倒数3期两球组合
+  if (backtestResults.thirdLast) {
+    await renderDetailDataThirdLast(backtestResults.thirdLast.results, backtestResults.thirdLast.nextPeriod);
+  }
+  
+  // 渲染倒数4期两球组合
+  if (backtestResults.fourthLast) {
+    await renderDetailDataFourthLast(backtestResults.fourthLast.results, backtestResults.fourthLast.nextPeriod);
+  }
+  
+  // 渲染倒数5期两球组合
+  if (backtestResults.fifthLast) {
+    await renderDetailDataFifthLast(backtestResults.fifthLast.results, backtestResults.fifthLast.nextPeriod);
+  }
+  
+  // 渲染近两期两球组合
+  if (backtestResults.nearTwoPeriods) {
+    await renderDetailDataNearTwoPeriods(backtestResults.nearTwoPeriods.results, backtestResults.nearTwoPeriods.nextPeriod);
+  }
+  
+  // 渲染最新一期三球组合
+  if (backtestResults.threeBall) {
+    await renderDetailDataThreeBall(backtestResults.threeBall.results, backtestResults.threeBall.nextPeriod);
+  }
+  
+  // 渲染倒数2期三球组合
+  if (backtestResults.secondLastThreeBall) {
+    await renderDetailDataSecondLastThreeBall(backtestResults.secondLastThreeBall.results, backtestResults.secondLastThreeBall.nextPeriod);
+  }
+  
+  // 渲染倒数3期三球组合
+  if (backtestResults.thirdLastThreeBall) {
+    await renderDetailDataThirdLastThreeBall(backtestResults.thirdLastThreeBall.results, backtestResults.thirdLastThreeBall.nextPeriod);
   }
 }
 
@@ -919,8 +964,8 @@ async function performSearchNewest() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从2000期开始
-      let currentStart = 2000;
+      // 所有回测方法都从1500期开始
+      let currentStart = 1500;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -986,8 +1031,8 @@ async function performSearchNewest() {
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
         // 扩展搜索范围，确保不遗漏相邻区域
-        // 所有回测方法都使用2000期作为最小限制
-        const minLimit = 2000;
+        // 所有回测方法都使用1500期作为最小限制
+        const minLimit = 1500;
         currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
@@ -1501,8 +1546,8 @@ async function performSearchSecondLast() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从2000期开始
-      let currentStart = 2000;
+      // 所有回测方法都从1500期开始
+      let currentStart = 1500;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -1568,8 +1613,8 @@ async function performSearchSecondLast() {
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
         // 扩展搜索范围，确保不遗漏相邻区域
-        // 所有回测方法都使用2000期作为最小限制
-        const minLimit = 2000;
+        // 所有回测方法都使用1500期作为最小限制
+        const minLimit = 1500;
         currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
@@ -2515,8 +2560,8 @@ async function performSearchThirdLast() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从2000期开始
-      let currentStart = 2000;
+      // 所有回测方法都从1500期开始
+      let currentStart = 1500;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -2590,8 +2635,8 @@ async function performSearchThirdLast() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 所有回测方法都使用2000期作为最小限制
-        const minLimit = 2000;
+        // 所有回测方法都使用1500期作为最小限制
+        const minLimit = 1500;
         currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
@@ -2675,6 +2720,13 @@ async function performSearchThirdLast() {
       
       // 渲染详情数据，传递过滤后的结果和下下下期期号
       await renderDetailDataThirdLast(validResults, nextPeriod);
+      
+      // 存储回测结果到全局变量
+      backtestResults['thirdLast'] = {
+        results: validResults,
+        nextPeriod: nextPeriod,
+        timestamp: new Date().toISOString()
+      };
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -2817,8 +2869,8 @@ async function performSearchFourthLast() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从2000期开始
-      let currentStart = 2000;
+      // 所有回测方法都从1500期开始
+      let currentStart = 1500;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -2892,8 +2944,8 @@ async function performSearchFourthLast() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从2000期开始
-        currentStart = Math.max(2000, minStatsPeriod - expansion);
+        // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从1500期开始
+        currentStart = Math.max(1500, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
       
@@ -3116,8 +3168,8 @@ async function performSearchFifthLast() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从2000期开始
-      let currentStart = 2000;
+      // 所有回测方法都从1500期开始
+      let currentStart = 1500;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -3191,8 +3243,8 @@ async function performSearchFifthLast() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从2000期开始
-        currentStart = Math.max(2000, minStatsPeriod - expansion);
+        // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从1500期开始
+        currentStart = Math.max(1500, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
       
@@ -3698,7 +3750,7 @@ async function performSearchNearTwoPeriods() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      let currentStart = 2000; // 所有回测方法都从2000期开始
+      let currentStart = 1500; // 所有回测方法都从1500期开始
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -3772,8 +3824,8 @@ async function performSearchNearTwoPeriods() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 所有回测方法都使用2000期作为最小限制
-        const minLimit = 2000;
+        // 所有回测方法都使用1500期作为最小限制
+        const minLimit = 1500;
         currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
@@ -3864,6 +3916,13 @@ async function performSearchNearTwoPeriods() {
       
       // 渲染详情数据，传递过滤后的结果和下一期期号
       await renderDetailDataNearTwoPeriods(filteredResults, nextPeriod);
+      
+      // 存储回测结果到全局变量
+      backtestResults['nearTwoPeriods'] = {
+        results: filteredResults,
+        nextPeriod: nextPeriod,
+        timestamp: new Date().toISOString()
+      };
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -4238,8 +4297,8 @@ async function performSearchThreeBall() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从2000期开始
-      let currentStart = 2000;
+      // 所有回测方法都从1500期开始
+      let currentStart = 1500;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -4313,8 +4372,8 @@ async function performSearchThreeBall() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 所有回测方法都使用2000期作为最小限制
-        const minLimit = 2000;
+        // 所有回测方法都使用1500期作为最小限制
+        const minLimit = 1500;
         currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
@@ -4401,6 +4460,13 @@ async function performSearchThreeBall() {
       
       // 渲染详情数据，传递过滤后的结果和下一期期号
       await renderDetailDataThreeBall(filteredResults, nextPeriod);
+      
+      // 存储回测结果到全局变量
+      backtestResults['threeBall'] = {
+        results: filteredResults,
+        nextPeriod: nextPeriod,
+        timestamp: new Date().toISOString()
+      };
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -4571,6 +4637,35 @@ async function huo_qu_qian_qu_tui_jian_mai_hao_second_last_three_ball(statsPerio
             }
           }
         }
+      } else if (backtestMethod.match(/^rank(\d+)$/)) {
+        // 排名方法：根据排名选择号码
+        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+        const rank = parseInt(rankMatch[1]);
+        
+        // 按出现次数降序排序号码（包括出现次数为0的号码）
+        const sortedNumbers = [];
+        for (let i = 1; i <= 35; i++) {
+          sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
+        }
+        sortedNumbers.sort((a, b) => b.count - a.count);
+        
+        // 计算每个号码的实际排名
+        const rankMap = {};
+        let currentRank = 1;
+        
+        for (let i = 0; i < sortedNumbers.length; i++) {
+          if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+            currentRank++;
+          }
+          rankMap[sortedNumbers[i].number] = currentRank;
+        }
+        
+        // 找出所有排名等于指定排名的号码
+        for (let i = 1; i <= 35; i++) {
+          if (rankMap[i] === rank) {
+            frontBuyNumbers.push(i);
+          }
+        }
       }
       
       return frontBuyNumbers;
@@ -4696,6 +4791,35 @@ async function huo_qu_qian_qu_tui_jian_mai_hao_third_last_three_ball(statsPeriod
             }
           }
         }
+      } else if (backtestMethod.match(/^rank(\d+)$/)) {
+        // 排名方法：根据排名选择号码
+        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+        const rank = parseInt(rankMatch[1]);
+        
+        // 按出现次数降序排序号码（包括出现次数为0的号码）
+        const sortedNumbers = [];
+        for (let i = 1; i <= 35; i++) {
+          sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
+        }
+        sortedNumbers.sort((a, b) => b.count - a.count);
+        
+        // 计算每个号码的实际排名
+        const rankMap = {};
+        let currentRank = 1;
+        
+        for (let i = 0; i < sortedNumbers.length; i++) {
+          if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+            currentRank++;
+          }
+          rankMap[sortedNumbers[i].number] = currentRank;
+        }
+        
+        // 找出所有排名等于指定排名的号码
+        for (let i = 1; i <= 35; i++) {
+          if (rankMap[i] === rank) {
+            frontBuyNumbers.push(i);
+          }
+        }
       }
       
       return frontBuyNumbers;
@@ -4724,20 +4848,22 @@ async function renderDetailDataSecondLastThreeBall(allResults, nextNextPeriod) {
       return;
     }
     
-    // 过滤结果：如果回测方法相同，平均正确率相同，下下期前区推荐买号相同，则任意显示一条
-    const filteredResults = [];
-    const seenResults = new Set();
+    // 过滤回测结果：如果回测方法相同且下下期前区推荐买号相同，只保留一条
+    const uniqueResultsMap = new Map();
     
-    for (const result of allResults) {
-      const { backtestMethod, accuracy, frontBuyNumbers } = result;
-      // 生成唯一键：回测方法 + 平均正确率(保留3位小数) + 前区推荐买号排序后用逗号连接
-      const key = `${backtestMethod}_${accuracy.toFixed(3)}_${frontBuyNumbers.sort((a, b) => a - b).join(',')}`;
+    allResults.forEach(result => {
+      // 基于回测方法和下下期前区推荐买号（排序后）创建唯一键
+      const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+      const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
       
-      if (!seenResults.has(key)) {
-        seenResults.add(key);
-        filteredResults.push(result);
+      // 只保留第一条出现的结果
+      if (!uniqueResultsMap.has(uniqueKey)) {
+        uniqueResultsMap.set(uniqueKey, result);
       }
-    }
+    });
+    
+    // 将过滤后的结果转换回数组
+    const filteredResults = Array.from(uniqueResultsMap.values());
     
     // 遍历过滤后的结果
     const allBuyNumbers = [];
@@ -4753,6 +4879,11 @@ async function renderDetailDataSecondLastThreeBall(allResults, nextNextPeriod) {
         backtestMethodText = '出现最少';
       } else if (backtestMethod === 'average') {
         backtestMethodText = '出现平均';
+      } else if (backtestMethod.match(/^rank(\d+)$/)) {
+        // 排名方法：显示为"排名第X"
+        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+        const rank = parseInt(rankMatch[1]);
+        backtestMethodText = `排名第${rank}`;
       }
       
       // 格式化前区推荐买号
@@ -4816,20 +4947,22 @@ async function renderDetailDataThirdLastThreeBall(allResults, nextNextNextPeriod
       return;
     }
     
-    // 过滤结果：如果回测方法相同，平均正确率相同，下下下期前区推荐买号相同，则任意显示一条
-    const filteredResults = [];
-    const seenResults = new Set();
+    // 过滤回测结果：如果回测方法相同且下下下期前区推荐买号相同，只保留一条
+    const uniqueResultsMap = new Map();
     
-    for (const result of allResults) {
-      const { backtestMethod, accuracy, frontBuyNumbers } = result;
-      // 生成唯一键：回测方法 + 平均正确率(保留3位小数) + 前区推荐买号排序后用逗号连接
-      const key = `${backtestMethod}_${accuracy.toFixed(3)}_${frontBuyNumbers.sort((a, b) => a - b).join(',')}`;
+    allResults.forEach(result => {
+      // 基于回测方法和下下下期前区推荐买号（排序后）创建唯一键
+      const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+      const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
       
-      if (!seenResults.has(key)) {
-        seenResults.add(key);
-        filteredResults.push(result);
+      // 只保留第一条出现的结果
+      if (!uniqueResultsMap.has(uniqueKey)) {
+        uniqueResultsMap.set(uniqueKey, result);
       }
-    }
+    });
+    
+    // 将过滤后的结果转换回数组
+    const filteredResults = Array.from(uniqueResultsMap.values());
     
     // 遍历过滤后的结果
     const allBuyNumbers = [];
@@ -4845,6 +4978,11 @@ async function renderDetailDataThirdLastThreeBall(allResults, nextNextNextPeriod
         backtestMethodText = '出现最少';
       } else if (backtestMethod === 'average') {
         backtestMethodText = '出现平均';
+      } else if (backtestMethod.match(/^rank(\d+)$/)) {
+        // 排名方法：显示为"排名第X"
+        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+        const rank = parseInt(rankMatch[1]);
+        backtestMethodText = `排名第${rank}`;
       }
       
       // 格式化前区推荐买号
@@ -4915,11 +5053,17 @@ async function performSearchSecondLastThreeBall() {
   // 更新进度的函数
   function updateProgress(text, percentage, phase) {
     return new Promise(resolve => {
-      // 直接更新DOM，不依赖requestAnimationFrame
-      progressText.textContent = text;
-      progressBar.style.width = `${percentage}%`;
-      progressPercentage.textContent = `${Math.round(percentage)}%`;
-      currentPhase.textContent = phase;
+      // 减少DOM更新频率，只在百分比变化较大时更新
+      const roundedPercentage = Math.round(percentage);
+      const currentRoundedPercentage = Math.round(parseFloat(progressBar.style.width || '0%'));
+      
+      if (Math.abs(roundedPercentage - currentRoundedPercentage) >= 5 || roundedPercentage === 100) {
+        // 直接更新DOM，不依赖requestAnimationFrame
+        progressText.textContent = text;
+        progressBar.style.width = `${percentage}%`;
+        progressPercentage.textContent = `${roundedPercentage}%`;
+        currentPhase.textContent = phase;
+      }
       resolve();
     });
   }
@@ -4958,15 +5102,17 @@ async function performSearchSecondLastThreeBall() {
     
     // 多阶段搜索策略，从大到小变化步长
     const searchStages = [
-      { step: 100, expansion: 200 }, // 第一阶段：步长100，扩展范围200
-      { step: 50, expansion: 100 },   // 第二阶段：步长50，扩展范围100
-      { step: 20, expansion: 50 },    // 第三阶段：步长20，扩展范围50
-      { step: 10, expansion: 30 },    // 第四阶段：步长10，扩展范围30
-      { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
+      { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
+      { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
+      { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
     ];
     
-    // 三种回测方法
-    const backtestMethods = ['most', 'least', 'average'];
+    // 回测方法：只包含排名方法
+    const backtestMethods = [];
+    // 添加排名方法
+    for (let i = 1; i <= 30; i++) {
+      backtestMethods.push(`rank${i}`);
+    }
     const allResults = [];
     
     // 计算总工作量
@@ -4980,15 +5126,22 @@ async function performSearchSecondLastThreeBall() {
     const lastPeriod = await getLastPeriod();
     const nextNextPeriod = (parseInt(lastPeriod) + 2) + '期'; // 使用最近期的期号+2作为下下期期号
     
-    // 遍历三种回测方法
+    // 遍历所有回测方法
     for (const backtestMethod of backtestMethods) {
-      const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+      let methodName;
+      if (backtestMethod.startsWith('rank')) {
+        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+        methodName = rankMatch ? `排名第${rankMatch[1]}` : backtestMethod;
+      } else {
+        methodName = backtestMethod;
+      }
       
       // 更新进度
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      let currentStart = 20;
+      // 所有回测方法都从1500期开始
+      let currentStart = 1500;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -5008,30 +5161,36 @@ async function performSearchSecondLastThreeBall() {
         
         let stageResults = [];
         
-        // 计算当前阶段的期数范围和总次数
-        const stageTotal = Math.ceil((currentEnd - currentStart) / step) + 1;
-        let stageCount = 0;
-        
-        // 在当前范围内使用当前步长进行搜索
+        // 生成所有需要测试的期数
+        const testPeriods = [];
         for (let i = currentStart; i <= currentEnd; i += step) {
-          // 检查是否需要终止回测
-          if (isBacktestStopped) {
-            break;
-          }
-          
-          stageCount++;
-          // 实时更新进度
-          const loopProgress = 15 + ((currentStep - 1 + (stageCount / stageTotal)) / totalSteps) * 60;
-          await updateProgress(
-            `正在测试统计期${i}期..`, 
-            loopProgress, 
-            `测试期数: ${i}，进度 ${stageCount}/${stageTotal}`
-          );
-          
-          const result = await testStatsPeriodSecondLastThreeBall(backtestPeriod, i, backtestMethod);
-          stageResults.push(result);
-          allTestResults.push(result);
+          testPeriods.push(i);
         }
+        
+        // 检查是否需要终止回测
+        if (isBacktestStopped) {
+          continue;
+        }
+        
+        // 实时更新进度
+        await updateProgress(
+          `正在并行测试${testPeriods.length}个统计期..`, 
+          15 + ((currentStep - 1) / totalSteps) * 60, 
+          `并行测试 ${testPeriods.length} 个期数`
+        );
+        
+        // 并行测试所有统计期
+        const promises = testPeriods.map(period => testStatsPeriodSecondLastThreeBall(backtestPeriod, period, backtestMethod));
+        const results = await Promise.all(promises);
+        
+        // 检查是否需要终止回测
+        if (isBacktestStopped) {
+          continue;
+        }
+        
+        // 添加测试结果
+        stageResults.push(...results);
+        allTestResults.push(...results);
         
         // 检查是否需要终止回测
         if (isBacktestStopped) {
@@ -5053,8 +5212,9 @@ async function performSearchSecondLastThreeBall() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 扩展搜索范围，确保不遗漏相邻区域
-        currentStart = Math.max(20, minStatsPeriod - expansion);
+        // 所有回测方法都使用1500期作为最小限制
+        const minLimit = 1500;
+        currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
       
@@ -5086,37 +5246,67 @@ async function performSearchSecondLastThreeBall() {
     await updateProgress('搜索完成，正在获取前区推荐买号..', 85, '获取前区推荐买号');
     currentStep++;
     
-    // 为每个结果获取前区推荐买号
-    for (let i = 0; i < allResults.length; i++) {
-      // 检查是否需要终止回测
-      if (isBacktestStopped) {
-        break;
-      }
-      
-      const result = allResults[i];
-      const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
-      
-      // 更新进度
-      const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
-      await updateProgress(
-        `正在获取统计期${result.statsPeriod}期，${methodName}方法的前区推荐买号..`, 
-        buyProgress, 
-        `处理结果 ${i + 1}/${allResults.length}`
-      );
+    // 为每个结果获取前区推荐买号，并过滤掉空推荐号码的排名方法结果
+    const validResults = [];
+    
+    // 并行获取前区推荐买号
+    const promises = allResults.map(async (result) => {
+      if (isBacktestStopped) return null;
       
       result.frontBuyNumbers = await huo_qu_qian_qu_tui_jian_mai_hao_second_last_three_ball(result.statsPeriod, result.backtestMethod);
+      
+      // 如果是排名方法且没有找到对应排名的号码（返回空数组），则过滤掉该结果
+      if (result.backtestMethod.match(/^rank(\d+)$/) && result.frontBuyNumbers.length === 0) {
+        return null;
+      }
+      
+      return result;
+    });
+    
+    // 等待所有并行请求完成
+    const allResultsWithBuyNumbers = await Promise.all(promises);
+    
+    // 过滤掉null结果
+    for (const result of allResultsWithBuyNumbers) {
+      if (result && !isBacktestStopped) {
+        validResults.push(result);
+      }
     }
     
     // 检查是否需要终止回测
     if (isBacktestStopped) {
       detailResults.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
     } else {
+      // 过滤回测结果：如果回测方法相同且下下期前区推荐买号相同，只保留一条
+      const uniqueResultsMap = new Map();
+      
+      validResults.forEach(result => {
+        // 基于回测方法和下下期前区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+        
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
+        }
+      });
+      
+      // 将过滤后的结果转换回数组
+      const filteredResults = Array.from(uniqueResultsMap.values());
+      
       // 更新进度
-      await updateProgress(`找到 ${allResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
+      await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
       currentStep++;
       
-      // 渲染详情数据，传递所有结果和下下期期号
-      await renderDetailDataSecondLastThreeBall(allResults, nextNextPeriod);
+      // 渲染详情数据，传递过滤后的结果和下下期期号
+      await renderDetailDataSecondLastThreeBall(filteredResults, nextNextPeriod);
+      
+      // 存储回测结果到全局变量
+      backtestResults['secondLastThreeBall'] = {
+        results: filteredResults,
+        nextPeriod: nextNextPeriod,
+        timestamp: new Date().toISOString()
+      };
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -5227,11 +5417,17 @@ async function performSearchThirdLastThreeBall() {
   // 更新进度的函数
   function updateProgress(text, percentage, phase) {
     return new Promise(resolve => {
-      // 直接更新DOM，不依赖requestAnimationFrame
-      progressText.textContent = text;
-      progressBar.style.width = `${percentage}%`;
-      progressPercentage.textContent = `${Math.round(percentage)}%`;
-      currentPhase.textContent = phase;
+      // 减少DOM更新频率，只在百分比变化较大时更新
+      const roundedPercentage = Math.round(percentage);
+      const currentRoundedPercentage = Math.round(parseFloat(progressBar.style.width || '0%'));
+      
+      if (Math.abs(roundedPercentage - currentRoundedPercentage) >= 5 || roundedPercentage === 100) {
+        // 直接更新DOM，不依赖requestAnimationFrame
+        progressText.textContent = text;
+        progressBar.style.width = `${percentage}%`;
+        progressPercentage.textContent = `${roundedPercentage}%`;
+        currentPhase.textContent = phase;
+      }
       resolve();
     });
   }
@@ -5270,15 +5466,17 @@ async function performSearchThirdLastThreeBall() {
     
     // 多阶段搜索策略，从大到小变化步长
     const searchStages = [
-      { step: 100, expansion: 200 }, // 第一阶段：步长100，扩展范围200
-      { step: 50, expansion: 100 },   // 第二阶段：步长50，扩展范围100
-      { step: 20, expansion: 50 },    // 第三阶段：步长20，扩展范围50
-      { step: 10, expansion: 30 },    // 第四阶段：步长10，扩展范围30
-      { step: 5, expansion: 20 }      // 第五阶段：步长5，扩展范围20
+      { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
+      { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
+      { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
     ];
     
-    // 三种回测方法
-    const backtestMethods = ['most', 'least', 'average'];
+    // 回测方法：只包含排名方法
+    const backtestMethods = [];
+    // 添加排名方法
+    for (let i = 1; i <= 30; i++) {
+      backtestMethods.push(`rank${i}`);
+    }
     const allResults = [];
     
     // 计算总工作量
@@ -5292,15 +5490,22 @@ async function performSearchThirdLastThreeBall() {
     const lastPeriod = await getLastPeriod();
     const nextNextNextPeriod = (parseInt(lastPeriod) + 3) + '期'; // 使用最近期的期号+3作为下下下期期号
     
-    // 遍历三种回测方法
+    // 遍历所有回测方法
     for (const backtestMethod of backtestMethods) {
-      const methodName = backtestMethod === 'most' ? '出现最多' : backtestMethod === 'least' ? '出现最少' : '出现平均';
+      let methodName;
+      if (backtestMethod.startsWith('rank')) {
+        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+        methodName = rankMatch ? `排名第${rankMatch[1]}` : backtestMethod;
+      } else {
+        methodName = backtestMethod;
+      }
       
       // 更新进度
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      let currentStart = 20;
+      // 所有回测方法都从1500期开始
+      let currentStart = 1500;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -5320,30 +5525,36 @@ async function performSearchThirdLastThreeBall() {
         
         let stageResults = [];
         
-        // 计算当前阶段的期数范围和总次数
-        const stageTotal = Math.ceil((currentEnd - currentStart) / step) + 1;
-        let stageCount = 0;
-        
-        // 在当前范围内使用当前步长进行搜索
+        // 生成所有需要测试的期数
+        const testPeriods = [];
         for (let i = currentStart; i <= currentEnd; i += step) {
-          // 检查是否需要终止回测
-          if (isBacktestStopped) {
-            break;
-          }
-          
-          stageCount++;
-          // 实时更新进度
-          const loopProgress = 15 + ((currentStep - 1 + (stageCount / stageTotal)) / totalSteps) * 60;
-          await updateProgress(
-            `正在测试统计期${i}期..`, 
-            loopProgress, 
-            `测试期数: ${i}，进度 ${stageCount}/${stageTotal}`
-          );
-          
-          const result = await testStatsPeriodThirdLastThreeBall(backtestPeriod, i, backtestMethod);
-          stageResults.push(result);
-          allTestResults.push(result);
+          testPeriods.push(i);
         }
+        
+        // 检查是否需要终止回测
+        if (isBacktestStopped) {
+          continue;
+        }
+        
+        // 实时更新进度
+        await updateProgress(
+          `正在并行测试${testPeriods.length}个统计期..`, 
+          15 + ((currentStep - 1) / totalSteps) * 60, 
+          `并行测试 ${testPeriods.length} 个期数`
+        );
+        
+        // 并行测试所有统计期
+        const promises = testPeriods.map(period => testStatsPeriodThirdLastThreeBall(backtestPeriod, period, backtestMethod));
+        const results = await Promise.all(promises);
+        
+        // 检查是否需要终止回测
+        if (isBacktestStopped) {
+          continue;
+        }
+        
+        // 添加测试结果
+        stageResults.push(...results);
+        allTestResults.push(...results);
         
         // 检查是否需要终止回测
         if (isBacktestStopped) {
@@ -5365,8 +5576,9 @@ async function performSearchThirdLastThreeBall() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 扩展搜索范围，确保不遗漏相邻区域
-        currentStart = Math.max(20, minStatsPeriod - expansion);
+        // 所有回测方法都使用1500期作为最小限制
+        const minLimit = 1500;
+        currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
       
@@ -5398,37 +5610,67 @@ async function performSearchThirdLastThreeBall() {
     await updateProgress('搜索完成，正在获取前区推荐买号..', 85, '获取前区推荐买号');
     currentStep++;
     
-    // 为每个结果获取前区推荐买号
-    for (let i = 0; i < allResults.length; i++) {
-      // 检查是否需要终止回测
-      if (isBacktestStopped) {
-        break;
-      }
-      
-      const result = allResults[i];
-      const methodName = result.backtestMethod === 'most' ? '出现最多' : result.backtestMethod === 'least' ? '出现最少' : '出现平均';
-      
-      // 更新进度
-      const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
-      await updateProgress(
-        `正在获取统计期${result.statsPeriod}期，${methodName}方法的前区推荐买号..`, 
-        buyProgress, 
-        `处理结果 ${i + 1}/${allResults.length}`
-      );
+    // 为每个结果获取前区推荐买号，并过滤掉空推荐号码的排名方法结果
+    const validResults = [];
+    
+    // 并行获取前区推荐买号
+    const promises = allResults.map(async (result) => {
+      if (isBacktestStopped) return null;
       
       result.frontBuyNumbers = await huo_qu_qian_qu_tui_jian_mai_hao_third_last_three_ball(result.statsPeriod, result.backtestMethod);
+      
+      // 如果是排名方法且没有找到对应排名的号码（返回空数组），则过滤掉该结果
+      if (result.backtestMethod.match(/^rank(\d+)$/) && result.frontBuyNumbers.length === 0) {
+        return null;
+      }
+      
+      return result;
+    });
+    
+    // 等待所有并行请求完成
+    const allResultsWithBuyNumbers = await Promise.all(promises);
+    
+    // 过滤掉null结果
+    for (const result of allResultsWithBuyNumbers) {
+      if (result && !isBacktestStopped) {
+        validResults.push(result);
+      }
     }
     
     // 检查是否需要终止回测
     if (isBacktestStopped) {
       detailResults.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
     } else {
+      // 过滤回测结果：如果回测方法相同且下下下期前区推荐买号相同，只保留一条
+      const uniqueResultsMap = new Map();
+      
+      validResults.forEach(result => {
+        // 基于回测方法和下下下期前区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+        
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
+        }
+      });
+      
+      // 将过滤后的结果转换回数组
+      const filteredResults = Array.from(uniqueResultsMap.values());
+      
       // 更新进度
-      await updateProgress(`找到 ${allResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
+      await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
       currentStep++;
       
-      // 渲染详情数据，传递所有结果和下下下期期号
-      await renderDetailDataThirdLastThreeBall(allResults, nextNextNextPeriod);
+      // 渲染详情数据，传递过滤后的结果和下下下期期号
+      await renderDetailDataThirdLastThreeBall(filteredResults, nextNextNextPeriod);
+      
+      // 存储回测结果到全局变量
+      backtestResults['thirdLastThreeBall'] = {
+        results: filteredResults,
+        nextPeriod: nextNextNextPeriod,
+        timestamp: new Date().toISOString()
+      };
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');

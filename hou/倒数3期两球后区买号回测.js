@@ -41,6 +41,37 @@ function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod 
   const nonZeroCounts = Object.values(totalNumberCounts).filter(count => count > 0);
   const buyNumbers = [];
   
+  // 检查是否为排名方法
+  const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+  if (rankMatch) {
+    const targetRank = parseInt(rankMatch[1]);
+    
+    // 将号码按出现次数降序排序
+    const sortedNumbers = Object.entries(totalNumberCounts)
+      .map(([num, count]) => ({ number: parseInt(num), count }))
+      .sort((a, b) => b.count - a.count);
+    
+    // 计算每个号码的排名
+    const rankMap = {};
+    let currentRank = 1;
+    
+    for (let i = 0; i < sortedNumbers.length; i++) {
+      if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+        currentRank++;
+      }
+      rankMap[sortedNumbers[i].number] = currentRank;
+    }
+    
+    // 找出排名等于目标排名的号码
+    for (const [num, rank] of Object.entries(rankMap)) {
+      if (rank === targetRank) {
+        buyNumbers.push(parseInt(num));
+      }
+    }
+    
+    return buyNumbers;
+  }
+  
   switch (backtestMethod) {
     case 'least':
       // 出现最少：找出出现次数最少的号码
@@ -101,8 +132,10 @@ async function huo_qu_dao_shu_3_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
     
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
-    if (!validMethods.includes(backtest_method)) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')}`);
+    // 允许排名方法，如rank1, rank2等
+    const isRankMethod = /^rank\d+$/.test(backtest_method);
+    if (!validMethods.includes(backtest_method) && !isRankMethod) {
+      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')} 或排名方法（如rank1, rank2等）`);
     }
 
     // 获取历史数据用于回测

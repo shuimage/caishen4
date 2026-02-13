@@ -41,42 +41,74 @@ function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod 
   const nonZeroCounts = Object.values(totalNumberCounts).filter(count => count > 0);
   const buyNumbers = [];
   
-  switch (backtestMethod) {
-    case 'least':
-      // 出现最少：找出出现次数最少的号码
-      if (nonZeroCounts.length > 0) {
-        const minCount = Math.min(...nonZeroCounts);
+  // 处理排名方法
+  if (backtestMethod.startsWith('rank')) {
+    const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+    if (rankMatch) {
+      const targetRank = parseInt(rankMatch[1]);
+      
+      // 计算排名
+      const rankMap = {};
+      const sortedNumbers = [];
+      for (let i = 1; i <= 12; i++) {
+        sortedNumbers.push({ number: i, count: totalNumberCounts[i] || 0 });
+      }
+      // 按出现次数降序排序
+      sortedNumbers.sort((a, b) => b.count - a.count);
+      // 计算排名
+      let currentRank = 1;
+      for (let i = 0; i < sortedNumbers.length; i++) {
+        if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+          currentRank++;
+        }
+        rankMap[sortedNumbers[i].number] = currentRank;
+      }
+      
+      // 找出对应排名的号码
+      for (let i = 1; i <= 12; i++) {
+        if (rankMap[i] === targetRank && totalNumberCounts[i] > 0) {
+          buyNumbers.push(i);
+        }
+      }
+    }
+  } else {
+    switch (backtestMethod) {
+      case 'least':
+        // 出现最少：找出出现次数最少的号码
+        if (nonZeroCounts.length > 0) {
+          const minCount = Math.min(...nonZeroCounts);
+          for (const [num, count] of Object.entries(totalNumberCounts)) {
+            if (count === minCount && count > 0) {
+              buyNumbers.push(parseInt(num));
+            }
+          }
+        }
+        break;
+        
+      case 'average':
+        // 出现平均：找出出现次数等于平均值的号码
+        if (nonZeroCounts.length > 0) {
+          const sumCounts = nonZeroCounts.reduce((sum, count) => sum + count, 0);
+          const averageCount = Math.round(sumCounts / nonZeroCounts.length);
+          for (const [num, count] of Object.entries(totalNumberCounts)) {
+            if (count === averageCount && count > 0) {
+              buyNumbers.push(parseInt(num));
+            }
+          }
+        }
+        break;
+        
+      case 'most':
+      default:
+        // 出现最多：找出出现次数最多的号码
+        const maxCount = Math.max(...Object.values(totalNumberCounts));
         for (const [num, count] of Object.entries(totalNumberCounts)) {
-          if (count === minCount && count > 0) {
+          if (count === maxCount && count > 0) {
             buyNumbers.push(parseInt(num));
           }
         }
-      }
-      break;
-      
-    case 'average':
-      // 出现平均：找出出现次数等于平均值的号码
-      if (nonZeroCounts.length > 0) {
-        const sumCounts = nonZeroCounts.reduce((sum, count) => sum + count, 0);
-        const averageCount = Math.round(sumCounts / nonZeroCounts.length);
-        for (const [num, count] of Object.entries(totalNumberCounts)) {
-          if (count === averageCount && count > 0) {
-            buyNumbers.push(parseInt(num));
-          }
-        }
-      }
-      break;
-      
-    case 'most':
-    default:
-      // 出现最多：找出出现次数最多的号码
-      const maxCount = Math.max(...Object.values(totalNumberCounts));
-      for (const [num, count] of Object.entries(totalNumberCounts)) {
-        if (count === maxCount && count > 0) {
-          buyNumbers.push(parseInt(num));
-        }
-      }
-      break;
+        break;
+    }
   }
   
   return buyNumbers;
@@ -101,8 +133,9 @@ async function huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
     
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
-    if (!validMethods.includes(backtest_method)) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')}`);
+    const isValidRankMethod = /^rank\d+$/.test(backtest_method);
+    if (!validMethods.includes(backtest_method) && !isValidRankMethod) {
+      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')} 或 rank1-rank12`);
     }
 
     // 获取历史数据用于回测
