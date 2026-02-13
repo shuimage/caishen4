@@ -27,6 +27,11 @@ const navigationData = [
   },
   {
     icon: '🔄',
+    text: '倒数X期两球组合分析',
+    link: 'dao_shu_x_qi_liang_qiu_zu_he.html'
+  },
+  {
+    icon: '🔄',
     text: '近两期两球组合分析',
     link: 'jin_liang_qi_liang_qiu_zu_he.html'
   },
