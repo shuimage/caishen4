@@ -766,6 +766,9 @@ async function renderDetailData(allResults, nextPeriod) {
     // 将过滤后的结果转换回数组
     const filteredResults = Array.from(uniqueResultsMap.values());
     
+    // 按照平均正确率降序排序
+    filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+    
     // 遍历过滤后的结果
     const allBuyNumbers = [];
     for (const result of filteredResults) {
@@ -1347,6 +1350,9 @@ async function renderDetailDataSecondLast(allResults, nextPeriod) {
     
     // 将过滤后的结果转换回数组
     const filteredResults = Array.from(uniqueResultsMap.values());
+    
+    // 按照平均正确率降序排序
+    filteredResults.sort((a, b) => b.accuracy - a.accuracy);
     
     // 遍历过滤后的结果
     const allBuyNumbers = [];
@@ -2198,6 +2204,9 @@ async function renderDetailDataThirdLast(allResults, nextPeriod) {
     // 将过滤后的结果转换回数组
     const filteredResults = Array.from(uniqueResultsMap.values());
     
+    // 按照平均正确率降序排序
+    filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+    
     // 遍历过滤后的结果
     const allBuyNumbers = [];
     for (const result of filteredResults) {
@@ -2297,6 +2306,9 @@ async function renderDetailDataFourthLast(allResults, nextPeriod) {
     // 将过滤后的结果转换回数组
     const filteredResults = Array.from(uniqueResultsMap.values());
     
+    // 按照平均正确率降序排序
+    filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+    
     // 遍历过滤后的结果
     const allBuyNumbers = [];
     for (const result of filteredResults) {
@@ -2379,9 +2391,29 @@ async function renderDetailDataFifthLast(allResults, nextPeriod) {
       return;
     }
     
-    // 遍历所有结果
+    // 过滤回测结果：如果回测方法相同且前区推荐买号相同，只保留一条
+    const uniqueResultsMap = new Map();
+    
+    allResults.forEach(result => {
+      // 基于回测方法和前区推荐买号（排序后）创建唯一键
+      const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+      const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+      
+      // 只保留第一条出现的结果
+      if (!uniqueResultsMap.has(uniqueKey)) {
+        uniqueResultsMap.set(uniqueKey, result);
+      }
+    });
+    
+    // 将过滤后的结果转换回数组
+    const filteredResults = Array.from(uniqueResultsMap.values());
+    
+    // 按照平均正确率降序排序
+    filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+    
+    // 遍历过滤后的结果
     const allBuyNumbers = [];
-    for (const result of allResults) {
+    for (const result of filteredResults) {
       const { statsPeriod, accuracy, backtestMethod, frontBuyNumbers } = result;
       
       // 平均正确率已经在搜索阶段计算好
@@ -3565,6 +3597,9 @@ async function renderDetailDataNearTwoPeriods(allResults, nextPeriod) {
     
     // 将过滤后的结果转换回数组
     const filteredResults = Array.from(uniqueResultsMap.values());
+    
+    // 按照平均正确率降序排序
+    filteredResults.sort((a, b) => b.accuracy - a.accuracy);
     
     // 遍历过滤后的结果
     const allBuyNumbers = [];
@@ -4865,6 +4900,9 @@ async function renderDetailDataSecondLastThreeBall(allResults, nextNextPeriod) {
     // 将过滤后的结果转换回数组
     const filteredResults = Array.from(uniqueResultsMap.values());
     
+    // 按照平均正确率降序排序
+    filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+    
     // 遍历过滤后的结果
     const allBuyNumbers = [];
     for (const result of filteredResults) {
@@ -4963,6 +5001,9 @@ async function renderDetailDataThirdLastThreeBall(allResults, nextNextNextPeriod
     
     // 将过滤后的结果转换回数组
     const filteredResults = Array.from(uniqueResultsMap.values());
+    
+    // 按照平均正确率降序排序
+    filteredResults.sort((a, b) => b.accuracy - a.accuracy);
     
     // 遍历过滤后的结果
     const allBuyNumbers = [];

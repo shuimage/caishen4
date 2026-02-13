@@ -44,12 +44,16 @@ window.addEventListener('load', async function() {
   
   // 添加保存回测结果按钮事件监听器
   if (saveBacktestResultsBtn) {
-    saveBacktestResultsBtn.addEventListener('click', bao_cun_hui_ce_jie_guo_quan_bu);
+    saveBacktestResultsBtn.addEventListener('click', async function() {
+      await bao_cun_hui_ce_jie_guo_quan_bu();
+    });
   }
   
   // 添加加载回测结果按钮事件监听器
   if (loadBacktestResultsBtn) {
-    loadBacktestResultsBtn.addEventListener('click', jia_zai_hui_ce_jie_guo);
+    loadBacktestResultsBtn.addEventListener('click', async function() {
+      await jia_zai_hui_ce_jie_guo();
+    });
   }
   
   // 最新一期两球组合后区平均率最高统计期详情 - 开始回测按钮
@@ -286,43 +290,7 @@ window.addEventListener('load', async function() {
         });
         
         // 根据回测方法计算对应的后区推荐买号
-        if (backtestMethod === 'most') {
-          // 1. 出现最多球：找到backTotalCounts中的最大值对应的号码
-          const maxLastCount = Math.max(...backTotalCounts);
-          if (maxLastCount > 0) {
-            // 找出所有最大值对应的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === maxLastCount) {
-                backBuyNumbers.push(i);
-              }
-            }
-          }
-        } else if (backtestMethod === 'least') {
-          // 2. 出现最少球：找到backTotalCounts中除0以外的最小值对应的号码
-          const nonZeroBackCounts = backTotalCounts.filter(count => count > 0);
-          if (nonZeroBackCounts.length > 0) {
-            const minLastCount = Math.min(...nonZeroBackCounts);
-            // 找出所有最小值对应的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === minLastCount) {
-                backBuyNumbers.push(i);
-              }
-            }
-          }
-        } else if (backtestMethod === 'average') {
-          // 3. 出现平均球：找到backTotalCounts中次数等于平均值的号码
-          const nonZeroTotalBackCounts = backTotalCounts.filter(count => count > 0);
-          if (nonZeroTotalBackCounts.length > 0) {
-            const sumBackCounts = nonZeroTotalBackCounts.reduce((sum, count) => sum + count, 0);
-            const averageBackCount = Math.round(sumBackCounts / nonZeroTotalBackCounts.length);
-            // 找出所有等于平均值的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === averageBackCount) {
-                backBuyNumbers.push(i);
-              }
-            }
-          }
-        } else if (backtestMethod.match(/^rank(\d+)$/)) {
+        if (backtestMethod.match(/^rank(\d+)$/)) {
           // 排名方法：根据排名选择号码
           const rankMatch = backtestMethod.match(/^rank(\d+)$/);
           const rank = parseInt(rankMatch[1]);
@@ -350,15 +318,6 @@ window.addEventListener('load', async function() {
             if (rankMap[i] === rank) {
               backBuyNumbers.push(i);
             }
-          }
-        }
-        
-        // 对于排名方法，如果没有找到对应排名的号码，返回空数组
-        // 对于其他方法，如果没有找到对应号码，返回所有后区号码作为默认值
-        if (backBuyNumbers.length === 0 && !backtestMethod.match(/^rank(\d+)$/)) {
-          // 如果所有条件都不满足，返回所有后区号码作为默认值
-          for (let i = 1; i <= 12; i++) {
-            backBuyNumbers.push(i);
           }
         }
         
@@ -551,29 +510,203 @@ window.addEventListener('load', async function() {
     return backtestResultsMap;
   }
 
-  // 保存回测结果到localStorage
-  function bao_cun_hui_ce_jie_guo_quan_bu() {
+  // 保存回测结果到localStorage和数据库
+  async function bao_cun_hui_ce_jie_guo_quan_bu() {
     const backtestResults = collectAllBacktestResults();
-    localStorage.setItem('backtestResults', JSON.stringify(backtestResults));
-    alert('回测结果已保存');
+    
+    // 检查是否有任何回测结果
+    let hasAnyResults = false;
+    for (const [name, results] of Object.entries(backtestResults)) {
+      if (results.length > 0) {
+        hasAnyResults = true;
+        break;
+      }
+    }
+    
+    if (hasAnyResults) {
+      // 保存到localStorage
+      localStorage.setItem('backtestResults', JSON.stringify(backtestResults));
+      
+      try {
+        // 获取当前期号作为缓存键
+        const currentPeriod = document.querySelector('.current-period').textContent;
+        
+        // 保存到数据库
+        const response = await fetch('http://localhost:18889/bao_cun_hui_ce_jie_guo', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            cache_key: currentPeriod,
+            backtest_results: backtestResults,
+            current_period: currentPeriod
+          })
+        });
+        
+        const result = await response.json();
+        if (result.success) {
+          alert('回测结果已保存到数据库');
+        } else {
+          alert('回测结果已保存到本地，但保存到数据库失败: ' + (result.message || '未知错误'));
+        }
+      } catch (error) {
+        console.error('保存回测结果到数据库失败:', error);
+        alert('回测结果已保存到本地，但保存到数据库失败: ' + error.message);
+      }
+    } else {
+      alert('没有回测结果可以保存');
+    }
   }
 
-  // 从localStorage加载回测结果
-  function jia_zai_hui_ce_jie_guo() {
-    const savedResults = localStorage.getItem('backtestResults');
-    if (savedResults) {
-      const backtestResults = JSON.parse(savedResults);
-      // TODO: 根据加载的结果更新UI
-      alert('回测结果已加载');
-    } else {
-      alert('没有保存的回测结果');
+  // 从数据库加载回测结果
+  async function jia_zai_hui_ce_jie_guo() {
+    try {
+      // 获取当前期号作为缓存键
+      const currentPeriod = document.querySelector('.current-period').textContent;
+      
+      // 从数据库获取回测结果
+      const response = await fetch(`http://localhost:18889/huo_qu_hui_ce_jie_guo?cache_key=${encodeURIComponent(currentPeriod)}`);
+      const result = await response.json();
+      
+      if (result.success && result.data) {
+        const backtestResults = result.data;
+        
+        // 保存到localStorage作为备份
+        localStorage.setItem('backtestResults', JSON.stringify(backtestResults));
+        
+        // 更新UI
+        await updateUIWithBacktestResults(backtestResults);
+        
+        alert('回测结果已从数据库加载');
+      } else {
+        // 如果数据库中没有，尝试从localStorage加载
+        const savedResults = localStorage.getItem('backtestResults');
+        if (savedResults) {
+          const backtestResults = JSON.parse(savedResults);
+          await updateUIWithBacktestResults(backtestResults);
+          alert('回测结果已从本地加载');
+        } else {
+          alert('没有找到保存的回测结果');
+        }
+      }
+    } catch (error) {
+      console.error('加载回测结果失败:', error);
+      
+      // 错误时尝试从localStorage加载
+      const savedResults = localStorage.getItem('backtestResults');
+      if (savedResults) {
+        try {
+          const backtestResults = JSON.parse(savedResults);
+          await updateUIWithBacktestResults(backtestResults);
+          alert('从本地加载回测结果成功');
+        } catch (localError) {
+          alert('加载回测结果失败: ' + localError.message);
+        }
+      } else {
+        alert('加载回测结果失败: ' + error.message);
+      }
     }
+  }
+  
+  // 更新UI显示回测结果
+  async function updateUIWithBacktestResults(backtestResults) {
+    // 定义卡片名称和对应的DOM元素ID映射
+    const cardMap = {
+      '最新一期两球组合后区': 'detailResultsNewestBack',
+      '倒数2期两球组合后区': 'detailResultsSecondLastBack',
+      '倒数3期两球组合后区': 'detailResultsThirdLastBack',
+      '倒数4期两球组合后区': 'detailResultsFourthLastBack',
+      '倒数5期两球组合后区': 'detailResultsFifthLastBack',
+      '近两期两球组合后区': 'detailResultsNearTwoPeriodsBack'
+    };
+    
+    // 遍历每个卡片的结果
+    for (const [cardName, results] of Object.entries(backtestResults)) {
+      const tbodyId = cardMap[cardName];
+      if (tbodyId && results.length > 0) {
+        const tbody = document.getElementById(tbodyId);
+        if (tbody) {
+          // 清空当前内容
+          tbody.innerHTML = '';
+          
+          // 遍历结果并创建表格行
+          for (const result of results) {
+            const tr = document.createElement('tr');
+            
+            // 格式化推荐号码
+            const buyNumbers = result.recommendedNumbers;
+            const buyNumbersStr = buyNumbers.split(' ').map(num => {
+              // 移除可能的<span>标签，只保留数字
+              const cleanNum = num.replace(/<[^>]+>/g, '');
+              return `<span class="blue-ball">${cleanNum}</span>`;
+            }).join(' ');
+            
+            tr.innerHTML = `
+              <td>${result.method}</td>
+              <td>${result.backtestPeriod}</td>
+              <td>${result.statsPeriod}</td>
+              <td>${result.accuracy}</td>
+              <td>${result.currentPeriod}</td>
+              <td>${result.nextPeriod}</td>
+              <td>${buyNumbersStr}</td>
+              <td>
+                <button class="btn copy-btn" style="background-color: #4CAF50; color: white; padding: 5px 10px; font-size: 12px;">复制</button>
+              </td>
+            `;
+            
+            // 添加复制按钮事件
+            const copyBtn = tr.querySelector('.copy-btn');
+            copyBtn.addEventListener('click', () => {
+              const numbers = buyNumbers.split(' ').map(num => num.replace(/<[^>]+>/g, ''));
+              copyToClipboard(numbers);
+            });
+            
+            tbody.appendChild(tr);
+          }
+        }
+      }
+    }
+    
+    // 更新保存按钮状态
+    updateSaveButtonStatus();
   }
 
   // 更新保存按钮状态
   function updateSaveButtonStatus() {
     // 检查是否有回测结果可以保存
-    const hasResults = false; // 初始状态为false
+    let hasResults = false;
+    
+    // 检查各个卡片的结果表格是否有数据
+    const tbodyIds = [
+      'detailResultsNewestBack',
+      'detailResultsSecondLastBack',
+      'detailResultsThirdLastBack',
+      'detailResultsFourthLastBack',
+      'detailResultsFifthLastBack',
+      'detailResultsNearTwoPeriodsBack'
+    ];
+    
+    for (const tbodyId of tbodyIds) {
+      const tbody = document.getElementById(tbodyId);
+      if (tbody) {
+        const rows = tbody.querySelectorAll('tr');
+        // 检查是否有非提示行的结果
+        for (const row of rows) {
+          const cells = row.querySelectorAll('td');
+          if (cells.length >= 8) {
+            const firstCellText = cells[0].textContent;
+            // 如果不是提示信息，且包含回测方法名称，则认为有结果
+            if (!firstCellText.includes('未找到') && !firstCellText.includes('搜索失败') && !firstCellText.includes('回测已终止')) {
+              hasResults = true;
+              break;
+            }
+          }
+        }
+        if (hasResults) break;
+      }
+    }
+    
     if (saveBacktestResultsBtn) {
       if (hasResults) {
         saveBacktestResultsBtn.style.opacity = '1';
@@ -932,15 +1065,43 @@ window.addEventListener('load', async function() {
         if (isBacktestStopped) {
           detailResults.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
         } else {
+          // 过滤回测结果：如果回测方法相同，正确率也相同，下一期后区推荐买号的值也相同，则任意显示一个
+          const uniqueResultsMap = new Map();
+          
+          allResults.forEach(result => {
+            // 基于回测方法、正确率和下一期后区推荐买号（排序后）创建唯一键
+            const sortedBuyNumbers = [...(result.backBuyNumbers || [])].sort((a, b) => a - b);
+            const uniqueKey = `${result.backtestMethod}_${result.accuracy.toFixed(3)}_${sortedBuyNumbers.join('_')}`;
+            
+            // 只保留第一条出现的结果
+            if (!uniqueResultsMap.has(uniqueKey)) {
+              uniqueResultsMap.set(uniqueKey, result);
+            }
+          });
+          
+          // 将过滤后的结果转换回数组
+          let filteredResults = Array.from(uniqueResultsMap.values());
+          
+          // 过滤掉下一期后区推荐买号为空的结果
+          filteredResults = filteredResults.filter(result => {
+            return result.backBuyNumbers && result.backBuyNumbers.length > 0;
+          });
+          
+          // 按平均正确率降序排序
+          filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+          
           // 更新进度
-          await updateProgress(`找到 ${allResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
+          await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
           currentStep++;
           
-          // 渲染详情数据，传递所有结果和下一期期号
-          await renderDetailDataNewestBack(allResults, nextPeriod);
+          // 渲染详情数据，传递过滤后的结果和下一期期号
+          await renderDetailDataNewestBack(filteredResults, nextPeriod);
           
           // 更新进度
           await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
+          
+          // 更新保存按钮状态
+          updateSaveButtonStatus();
         }
       }
       
@@ -1014,11 +1175,12 @@ window.addEventListener('load', async function() {
         const averageCorrectRate = accuracy.toFixed(3);
         
         // 获取回测方法中文名称
-        let backtestMethodText = '出现最多';
-        if (backtestMethod === 'least') {
-          backtestMethodText = '出现最少';
-        } else if (backtestMethod === 'average') {
-          backtestMethodText = '出现平均';
+        let backtestMethodText = '排名第1';
+        if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          backtestMethodText = `排名第${rank}`;
         }
         
         // 格式化后区推荐买号
@@ -1098,11 +1260,12 @@ window.addEventListener('load', async function() {
         const averageCorrectRate = accuracy.toFixed(3);
         
         // 获取回测方法中文名称
-        let backtestMethodText = '出现最多';
-        if (backtestMethod === 'least') {
-          backtestMethodText = '出现最少';
-        } else if (backtestMethod === 'average') {
-          backtestMethodText = '出现平均';
+        let backtestMethodText = '排名第1';
+        if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：显示为"排名第X"
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          backtestMethodText = `排名第${rank}`;
         }
         
         // 格式化后区推荐买号
@@ -1525,41 +1688,34 @@ window.addEventListener('load', async function() {
           }
         });
         
-        // 根据回测方法计算对应的后区推荐买号 - 与dao_shu_2_qi_liang_qiu_zu_he.html完全相同
-        if (backtestMethod === 'most') {
-          // 1. 出现最多球：找到backTotalCounts中的最大值对应的号码
-          const maxLastCount = Math.max(...backTotalCounts);
-          if (maxLastCount > 0) {
-            // 找出所有最大值对应的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === maxLastCount) {
-                backBuyNumbers.push(i);
-              }
-            }
+        // 根据回测方法计算对应的后区推荐买号
+        if (backtestMethod.match(/^rank(\d+)$/)) {
+          // 排名方法：根据排名选择号码
+          const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+          const rank = parseInt(rankMatch[1]);
+          
+          // 按出现次数降序排序号码（包括出现次数为0的号码）
+          const sortedNumbers = [];
+          for (let i = 1; i <= 12; i++) {
+            sortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
           }
-        } else if (backtestMethod === 'least') {
-          // 2. 出现最少球：找到backTotalCounts中除0以外的最小值对应的号码
-          const nonZeroBackCounts = backTotalCounts.filter(count => count > 0);
-          if (nonZeroBackCounts.length > 0) {
-            const minLastCount = Math.min(...nonZeroBackCounts);
-            // 找出所有最小值对应的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === minLastCount) {
-                backBuyNumbers.push(i);
-              }
+          sortedNumbers.sort((a, b) => b.count - a.count);
+          
+          // 计算每个号码的实际排名
+          const rankMap = {};
+          let currentRank = 1;
+          
+          for (let i = 0; i < sortedNumbers.length; i++) {
+            if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+              currentRank++;
             }
+            rankMap[sortedNumbers[i].number] = currentRank;
           }
-        } else if (backtestMethod === 'average') {
-          // 3. 出现平均球：找到backTotalCounts中次数等于平均值的号码
-          const nonZeroTotalBackCounts = backTotalCounts.filter(count => count > 0);
-          if (nonZeroTotalBackCounts.length > 0) {
-            const sumBackCounts = nonZeroTotalBackCounts.reduce((sum, count) => sum + count, 0);
-            const averageBackCount = Math.round(sumBackCounts / nonZeroTotalBackCounts.length);
-            // 找出所有等于平均值的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === averageBackCount) {
-                backBuyNumbers.push(i);
-              }
+          
+          // 找出所有排名等于指定排名的号码
+          for (let i = 1; i <= 12; i++) {
+            if (rankMap[i] === rank) {
+              backBuyNumbers.push(i);
             }
           }
         }
@@ -1631,42 +1787,6 @@ window.addEventListener('load', async function() {
           for (let i = 1; i <= 12; i++) {
             if (rankMap[i] === rank) {
               backBuyNumbers.push(i);
-            }
-          }
-        } else if (backtestMethod === 'most') {
-          // 1. 出现最多球：找到backTotalCounts中的最大值对应的号码
-          const maxLastCount = Math.max(...backTotalCounts);
-          if (maxLastCount > 0) {
-            // 找出所有最大值对应的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === maxLastCount) {
-                backBuyNumbers.push(i);
-              }
-            }
-          }
-        } else if (backtestMethod === 'least') {
-          // 2. 出现最少球：找到backTotalCounts中除0以外的最小值对应的号码
-          const nonZeroBackCounts = backTotalCounts.filter(count => count > 0);
-          if (nonZeroBackCounts.length > 0) {
-            const minLastCount = Math.min(...nonZeroBackCounts);
-            // 找出所有最小值对应的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === minLastCount) {
-                backBuyNumbers.push(i);
-              }
-            }
-          }
-        } else if (backtestMethod === 'average') {
-          // 3. 出现平均球：找到backTotalCounts中次数等于平均值的号码
-          const nonZeroTotalBackCounts = backTotalCounts.filter(count => count > 0);
-          if (nonZeroTotalBackCounts.length > 0) {
-            const sumBackCounts = nonZeroTotalBackCounts.reduce((sum, count) => sum + count, 0);
-            const averageBackCount = Math.round(sumBackCounts / nonZeroTotalBackCounts.length);
-            // 找出所有等于平均值的号码
-            for (let i = 1; i <= 12; i++) {
-              if (backTotalCounts[i] === averageBackCount) {
-                backBuyNumbers.push(i);
-              }
             }
           }
         }
@@ -2159,6 +2279,9 @@ window.addEventListener('load', async function() {
           
           // 更新进度
           await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
+          
+          // 更新保存按钮状态
+          updateSaveButtonStatus();
         }
       }
       
@@ -2450,6 +2573,9 @@ window.addEventListener('load', async function() {
           
           // 更新进度
           await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
+          
+          // 更新保存按钮状态
+          updateSaveButtonStatus();
         }
       }
       
@@ -2737,6 +2863,9 @@ window.addEventListener('load', async function() {
           
           // 更新进度
           await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
+          
+          // 更新保存按钮状态
+          updateSaveButtonStatus();
         }
       }
       
@@ -3024,6 +3153,9 @@ window.addEventListener('load', async function() {
           
           // 更新进度
           await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
+          
+          // 更新保存按钮状态
+          updateSaveButtonStatus();
         }
       }
       
@@ -3286,6 +3418,9 @@ window.addEventListener('load', async function() {
           
           // 更新进度
           await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
+          
+          // 更新保存按钮状态
+          updateSaveButtonStatus();
         }
       }
       
