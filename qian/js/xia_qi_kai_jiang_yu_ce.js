@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // 定义全局变量
 let periodValue = '100'; // 默认统计期数
+let backtestPeriod = '20'; // 默认回测期数
 let latestDrawInfo = null;
 let backtestResults = {}; // 存储所有回测结果
 
@@ -150,11 +151,7 @@ async function performAllBacktests() {
     { name: '倒数2期两球组合', func: performSearchSecondLast },
     { name: '倒数3期两球组合', func: performSearchThirdLast },
     { name: '倒数4期两球组合', func: performSearchFourthLast },
-    { name: '倒数5期两球组合', func: performSearchFifthLast },
-    { name: '近两期两球组合', func: performSearchNearTwoPeriods },
-    { name: '最新一期三球组合', func: performSearchThreeBall },
-    { name: '倒数2期三球组合', func: performSearchSecondLastThreeBall },
-    { name: '倒数3期三球组合', func: performSearchThirdLastThreeBall }
+    { name: '倒数5期两球组合', func: performSearchFifthLast }
   ];
   
   // 显示总进度条
@@ -338,11 +335,184 @@ function setupBacktestControls() {
   });
 }
 
+// 生成前区推荐买号总集
+async function generateTotalBuyNumbers() {
+  try {
+    // 收集所有推荐买号合集的数据
+    const numberAccuracyMap = new Map();
+    const numberCountMap = new Map();
+    
+    // 遍历所有推荐买号合集
+    const collectionContents = [
+      'buyNumbersCollectionContentNewest',
+      'buyNumbersCollectionContentSecondLast',
+      'buyNumbersCollectionContentThirdLast',
+      'buyNumbersCollectionContentFourthLast',
+      'buyNumbersCollectionContentFifthLast',
+      'buyNumbersCollectionContentNearTwoPeriods',
+      'buyNumbersCollectionContentThreeBall',
+      'buyNumbersCollectionContentSecondLastThreeBall',
+      'buyNumbersCollectionContentThirdLastThreeBall'
+    ];
+    
+    collectionContents.forEach(contentId => {
+      const content = document.getElementById(contentId);
+      if (content) {
+        const numberElements = content.querySelectorAll('[class="red-ball"]');
+        numberElements.forEach(ball => {
+          const number = parseInt(ball.textContent);
+          const accuracyElement = ball.nextElementSibling;
+          if (accuracyElement) {
+            const accuracyText = accuracyElement.textContent;
+            const accuracy = parseFloat(accuracyText.replace('%', ''));
+            
+            if (numberAccuracyMap.has(number)) {
+              numberAccuracyMap.set(number, numberAccuracyMap.get(number) + accuracy);
+              numberCountMap.set(number, numberCountMap.get(number) + 1);
+            } else {
+              numberAccuracyMap.set(number, accuracy);
+              numberCountMap.set(number, 1);
+            }
+          }
+        });
+      }
+    });
+    
+    // 转换为数组并按累计平均正确率降序排序
+    const sortedNumbers = [];
+    numberAccuracyMap.forEach((accuracy, number) => {
+      const count = numberCountMap.get(number);
+      sortedNumbers.push({
+        number,
+        accuracy,
+        count
+      });
+    });
+    
+    sortedNumbers.sort((a, b) => b.accuracy - a.accuracy);
+    
+    // 更新表格
+    const tableBody = document.getElementById('totalBuyNumbersTable');
+    if (tableBody) {
+      if (sortedNumbers.length > 0) {
+        tableBody.innerHTML = sortedNumbers.map((item, index) => {
+          const rank = index + 1;
+          return `
+            <tr>
+              <td>${rank}</td>
+              <td><span class="red-ball">${item.number}</span></td>
+              <td>${item.accuracy.toFixed(3)}%</td>
+              <td>${item.count}</td>
+            </tr>
+          `;
+        }).join('');
+      } else {
+        tableBody.innerHTML = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #666;">暂无总集数据</td></tr>';
+      }
+    }
+    
+    // 更新总集买号展示
+    const collectionContent = document.getElementById('totalBuyNumbersCollectionContent');
+    if (collectionContent) {
+      if (sortedNumbers.length > 0) {
+        collectionContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
+      } else {
+        collectionContent.innerHTML = '<div style="color: #666;">暂无总集数据</div>';
+      }
+    }
+    
+    // 生成图表
+    generateTotalBuyNumberChart(sortedNumbers);
+    
+  } catch (error) {
+    console.error('生成前区推荐买号总集失败:', error);
+  }
+}
+
+// 生成前区推荐买号总集图表
+function generateTotalBuyNumberChart(sortedNumbers) {
+  const canvas = document.getElementById('totalBuyNumberChart');
+  if (!canvas) return;
+  
+  // 检查当前主题
+  const isDarkTheme = document.body.classList.contains('dark-theme');
+  
+  // 清除之前的图表
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (sortedNumbers.length === 0) return;
+  
+  // 准备数据
+  const labels = sortedNumbers.map(item => item.number);
+  const data = sortedNumbers.map(item => item.accuracy);
+  
+  // 绘制简单的柱状图
+  const barWidth = canvas.width / sortedNumbers.length * 0.8;
+  const maxValue = Math.max(...data);
+  const scale = canvas.height * 0.8 / maxValue;
+  
+  // 根据主题设置颜色
+  const barColor = '#4CAF50';
+  const textColor = isDarkTheme ? '#ffffff' : '#333333';
+  const subTextColor = isDarkTheme ? '#cccccc' : '#666666';
+  
+  ctx.fillStyle = barColor;
+  ctx.font = '12px Arial';
+  ctx.textAlign = 'center';
+  
+  sortedNumbers.forEach((item, index) => {
+    const x = index * (canvas.width / sortedNumbers.length) + barWidth / 2;
+    const barHeight = item.accuracy * scale;
+    const y = canvas.height - barHeight - 20;
+    
+    // 绘制柱子
+    ctx.fillRect(x - barWidth / 2, y, barWidth, barHeight);
+    
+    // 绘制球号
+    ctx.fillStyle = textColor;
+    ctx.fillText(item.number, x, canvas.height - 5);
+    
+    // 绘制正确率
+    ctx.fillStyle = subTextColor;
+    ctx.fillText(`${Math.round(item.accuracy)}`, x, y - 5);
+  });
+  
+  // 绘制标题
+  ctx.fillStyle = textColor;
+  ctx.font = '16px Arial';
+  ctx.fillText('前区推荐买号累计平均正确率', canvas.width / 2, 20);
+}
+
 // 页面加载完成后执行
 window.addEventListener('load', async function() {
   try {
     await main();
     setupBacktestControls();
+    
+    // 获取并监听回测期数输入框
+    const backtestPeriodInput = document.getElementById('backtestPeriod');
+    if (backtestPeriodInput) {
+      // 初始化回测期数
+      backtestPeriod = backtestPeriodInput.value;
+      
+      // 监听输入框变化
+      backtestPeriodInput.addEventListener('change', function() {
+        backtestPeriod = this.value;
+      });
+    }
+    
+    // 添加刷新总集按钮事件
+    const refreshBtn = document.getElementById('refreshTotalBuyNumbersBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', generateTotalBuyNumbers);
+    }
   } catch (error) {
     console.error('页面加载失败:', error);
     // 显示友好的错误信息，避免白屏
@@ -615,7 +785,8 @@ async function saveBacktestResults() {
     const saveData = {
       cache_key: cacheKey,
       backtest_results: backtestResults,
-      current_period: currentPeriod
+      current_period: currentPeriod,
+      backtest_period: backtestPeriod // 保存当前回测期数配置
     };
     
     // 调用后端保存接口
@@ -660,10 +831,20 @@ async function loadBacktestResults() {
     
     if (result.success) {
       const loadedResults = result.data;
+      const loadedBacktestPeriod = result.backtest_period;
       
       if (loadedResults) {
         // 将加载的结果存储到全局变量
         backtestResults = loadedResults;
+        
+        // 如果返回了回测期数配置，更新全局变量和输入框
+        if (loadedBacktestPeriod) {
+          backtestPeriod = loadedBacktestPeriod;
+          const backtestPeriodInput = document.getElementById('backtestPeriod');
+          if (backtestPeriodInput) {
+            backtestPeriodInput.value = backtestPeriod;
+          }
+        }
         
         // 调用相应的渲染函数更新页面显示
         await renderLoadedBacktestResults();
@@ -800,7 +981,7 @@ async function renderDetailData(allResults, nextPeriod) {
         frontBuyNumbersStr = frontBuyNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
         tr.innerHTML = `
           <td>${backtestMethodText}</td>
-          <td>50期</td>
+          <td>${backtestPeriod}期</td>
           <td>${statsPeriod}期</td>
           <td>${averageCorrectRate}%</td>
           <td>${nextPeriod}</td>
@@ -825,7 +1006,7 @@ async function renderDetailData(allResults, nextPeriod) {
         // 无推荐买号时，不显示“下一期前区推荐买号”字段
         tr.innerHTML = `
           <td>${backtestMethodText}</td>
-          <td>50期</td>
+          <td>${backtestPeriod}期</td>
           <td>${statsPeriod}期</td>
           <td>${averageCorrectRate}%</td>
           <td>${nextPeriod}</td>
@@ -849,7 +1030,63 @@ async function renderDetailData(allResults, nextPeriod) {
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -916,7 +1153,8 @@ async function performSearchNewest() {
       updateProgress('回测已终止', 100, '回测终止');
     };
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -1008,7 +1246,7 @@ async function performSearchNewest() {
             `测试期数: ${i}，进度 ${stageCount}/${stageTotal}`
           );
           
-          const result = await testStatsPeriod(backtestPeriod, i, backtestMethod);
+          const result = await testStatsPeriod(currentBacktestPeriod, i, backtestMethod);
           stageResults.push(result);
           allTestResults.push(result);
         }
@@ -1385,7 +1623,7 @@ async function renderDetailDataSecondLast(allResults, nextPeriod) {
         frontBuyNumbersStr = frontBuyNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ');
         tr.innerHTML = `
           <td>${backtestMethodText}</td>
-          <td>50期</td>
+          <td>${backtestPeriod}期</td>
           <td>${statsPeriod}期</td>
           <td>${averageCorrectRate}%</td>
           <td>${nextPeriod}</td>
@@ -1410,7 +1648,7 @@ async function renderDetailDataSecondLast(allResults, nextPeriod) {
         // 无推荐买号时，不显示"下下期前区推荐买号"字段
         tr.innerHTML = `
           <td>${backtestMethodText}</td>
-          <td>50期</td>
+          <td>${backtestPeriod}期</td>
           <td>${statsPeriod}期</td>
           <td>${averageCorrectRate}%</td>
           <td>${nextPeriod}</td>
@@ -1434,7 +1672,63 @@ async function renderDetailDataSecondLast(allResults, nextPeriod) {
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -1501,7 +1795,8 @@ async function performSearchSecondLast() {
       updateProgress('回测已终止', 100, '回测终止');
     };
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -1593,7 +1888,7 @@ async function performSearchSecondLast() {
             `测试期数: ${i}，进度 ${stageCount}/${stageTotal}`
           );
           
-          const result = await testStatsPeriodSecondLast(backtestPeriod, i, backtestMethod);
+          const result = await testStatsPeriodSecondLast(currentBacktestPeriod, i, backtestMethod);
           stageResults.push(result);
           allTestResults.push(result);
         }
@@ -2235,7 +2530,7 @@ async function renderDetailDataThirdLast(allResults, nextPeriod) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${backtestMethodText}</td>
-        <td>50期</td>
+        <td>${backtestPeriod}期</td>
         <td>${statsPeriod}期</td>
         <td>${averageCorrectRate}%</td>
         <td>${nextPeriod}</td>
@@ -2263,7 +2558,63 @@ async function renderDetailDataThirdLast(allResults, nextPeriod) {
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -2337,7 +2688,7 @@ async function renderDetailDataFourthLast(allResults, nextPeriod) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${backtestMethodText}</td>
-        <td>50期</td>
+        <td>${backtestPeriod}期</td>
         <td>${statsPeriod}期</td>
         <td>${averageCorrectRate}%</td>
         <td>${nextPeriod}</td>
@@ -2365,7 +2716,63 @@ async function renderDetailDataFourthLast(allResults, nextPeriod) {
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -2439,7 +2846,7 @@ async function renderDetailDataFifthLast(allResults, nextPeriod) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${backtestMethodText}</td>
-        <td>50期</td>
+        <td>${backtestPeriod}期</td>
         <td>${statsPeriod}期</td>
         <td>${averageCorrectRate}%</td>
         <td>${nextPeriod}</td>
@@ -2467,7 +2874,63 @@ async function renderDetailDataFifthLast(allResults, nextPeriod) {
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -2540,7 +3003,8 @@ async function performSearchThirdLast() {
       updateProgress('回测已终止', 100, '回测终止');
     };
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -2635,7 +3099,7 @@ async function performSearchThirdLast() {
         );
         
         // 并行测试所有统计期
-        const promises = testPeriods.map(period => testStatsPeriodThirdLast(backtestPeriod, period, backtestMethod));
+        const promises = testPeriods.map(period => testStatsPeriodThirdLast(currentBacktestPeriod, period, backtestMethod));
         const results = await Promise.all(promises);
         
         // 检查是否需要终止回测
@@ -2849,7 +3313,8 @@ async function performSearchFourthLast() {
       updateProgress('回测已终止', 100, '回测终止');
     };
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -2944,7 +3409,7 @@ async function performSearchFourthLast() {
         );
         
         // 并行测试所有统计期
-        const promises = testPeriods.map(period => testStatsPeriodFourthLast(backtestPeriod, period, backtestMethod));
+        const promises = testPeriods.map(period => testStatsPeriodFourthLast(currentBacktestPeriod, period, backtestMethod));
         const results = await Promise.all(promises);
         
         // 检查是否需要终止回测
@@ -3157,7 +3622,8 @@ async function performSearchFifthLast() {
       updateProgress('回测已终止', 100, '回测终止');
     };
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -3243,7 +3709,7 @@ async function performSearchFifthLast() {
         );
         
         // 并行测试所有统计期
-        const promises = testPeriods.map(period => testStatsPeriodFifthLast(backtestPeriod, period, backtestMethod));
+        const promises = testPeriods.map(period => testStatsPeriodFifthLast(currentBacktestPeriod, period, backtestMethod));
         const results = await Promise.all(promises);
         
         // 检查是否需要终止回测
@@ -3629,7 +4095,7 @@ async function renderDetailDataNearTwoPeriods(allResults, nextPeriod) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${backtestMethodText}</td>
-        <td>50期</td>
+        <td>${backtestPeriod}期</td>
         <td>${statsPeriod}期</td>
         <td>${averageCorrectRate}%</td>
         <td>${nextPeriod}</td>
@@ -3657,7 +4123,63 @@ async function renderDetailDataNearTwoPeriods(allResults, nextPeriod) {
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -3738,7 +4260,8 @@ async function performSearchNearTwoPeriods() {
     // 确保DOM更新
     await new Promise(resolve => setTimeout(resolve, 100));
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -3827,7 +4350,7 @@ async function performSearchNearTwoPeriods() {
         );
         
         // 并行测试所有统计期
-        const promises = testPeriods.map(period => testStatsPeriodNearTwoPeriods(backtestPeriod, period, method));
+        const promises = testPeriods.map(period => testStatsPeriodNearTwoPeriods(currentBacktestPeriod, period, method));
         const results = await Promise.all(promises);
         
         // 检查是否需要终止回测
@@ -4184,7 +4707,7 @@ async function renderDetailDataThreeBall(allResults, nextPeriod) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${backtestMethodText}</td>
-        <td>50期</td>
+        <td>${backtestPeriod}期</td>
         <td>${statsPeriod}期</td>
         <td>${averageCorrectRate}%</td>
         <td>${nextPeriod}</td>
@@ -4212,7 +4735,63 @@ async function renderDetailDataThreeBall(allResults, nextPeriod) {
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -4285,7 +4864,8 @@ async function performSearchThreeBall() {
       updateProgress('回测已终止', 100, '回测终止');
     };
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -4375,7 +4955,7 @@ async function performSearchThreeBall() {
         );
         
         // 并行测试所有统计期
-        const promises = testPeriods.map(period => testStatsPeriodThreeBall(backtestPeriod, period, backtestMethod));
+        const promises = testPeriods.map(period => testStatsPeriodThreeBall(currentBacktestPeriod, period, backtestMethod));
         const results = await Promise.all(promises);
         
         // 检查是否需要终止回测
@@ -4931,7 +5511,7 @@ async function renderDetailDataSecondLastThreeBall(allResults, nextNextPeriod) {
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${backtestMethodText}</td>
-        <td>50期</td>
+        <td>${backtestPeriod}期</td>
         <td>${statsPeriod}期</td>
         <td>${averageCorrectRate}%</td>
         <td>${nextNextPeriod}</td>
@@ -4959,7 +5539,63 @@ async function renderDetailDataSecondLastThreeBall(allResults, nextNextPeriod) {
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -5033,7 +5669,7 @@ async function renderDetailDataThirdLastThreeBall(allResults, nextNextNextPeriod
       const tr = document.createElement('tr');
       tr.innerHTML = `
         <td>${backtestMethodText}</td>
-        <td>50期</td>
+        <td>${backtestPeriod}期</td>
         <td>${statsPeriod}期</td>
         <td>${averageCorrectRate}%</td>
         <td>${nextNextNextPeriod}</td>
@@ -5061,7 +5697,63 @@ async function renderDetailDataThirdLastThreeBall(allResults, nextNextNextPeriod
     // 更新推荐买号合集
     if (buyNumbersContent) {
       if (allBuyNumbers.length > 0) {
-        buyNumbersContent.innerHTML = allBuyNumbers.sort((a, b) => a - b).map(num => `<div class="red-ball">${num}</div>`).join(' ');
+        // 按平均正确率累加进行排序，同一个推荐买号的球，回测方法相同时，只保留平均正确率大的
+        const numberAccuracyMap = new Map();
+        
+        // 遍历所有结果，计算每个号码的平均正确率累加
+        filteredResults.forEach(result => {
+          const { accuracy, backtestMethod, frontBuyNumbers } = result;
+          
+          if (frontBuyNumbers && frontBuyNumbers.length > 0) {
+            frontBuyNumbers.forEach(num => {
+              const numStr = num.toString();
+              const key = `${backtestMethod}_${numStr}`;
+              
+              if (numberAccuracyMap.has(key)) {
+                // 检查回测方法是否相同
+                const existingData = numberAccuracyMap.get(key);
+                if (existingData.backtestMethod === backtestMethod) {
+                  // 如果回测方法相同，只保留平均正确率大的
+                  if (accuracy > existingData.accuracy) {
+                    numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+                  }
+                }
+              } else {
+                // 第一次出现，直接添加
+                numberAccuracyMap.set(key, { accuracy, backtestMethod, number: num });
+              }
+            });
+          }
+        });
+        
+        // 现在对每个号码，按回测方法分组，相同回测方法只保留最高正确率，不同回测方法累加
+        const finalNumberMap = new Map();
+        numberAccuracyMap.forEach((data, key) => {
+          const { accuracy, backtestMethod, number } = data;
+          const numStr = number.toString();
+          
+          if (finalNumberMap.has(numStr)) {
+            const existingData = finalNumberMap.get(numStr);
+            // 不同回测方法，累加正确率
+            const newAccuracy = existingData.accuracy + accuracy;
+            finalNumberMap.set(numStr, { accuracy: newAccuracy, backtestMethod: 'combined', number: number });
+          } else {
+            finalNumberMap.set(numStr, { accuracy, backtestMethod, number: number });
+          }
+        });
+        
+        // 转换为数组并按平均正确率降序排序
+        const sortedNumbers = Array.from(finalNumberMap.values())
+          .sort((a, b) => b.accuracy - a.accuracy);
+        
+        // 生成推荐买号合集的HTML
+        buyNumbersContent.innerHTML = sortedNumbers.map(item => {
+          const accuracyText = item.accuracy.toFixed(3);
+          return `<div style="display: flex; align-items: center; gap: 5px;">
+            <div class="red-ball">${item.number}</div>
+            <div style="font-size: 12px; color: #666;">${accuracyText}%</div>
+          </div>`;
+        }).join(' ');
       } else {
         buyNumbersContent.innerHTML = '<div style="color: #666;">暂无推荐买号数据</div>';
       }
@@ -5134,7 +5826,8 @@ async function performSearchSecondLastThreeBall() {
       updateProgress('回测已终止', 100, '回测终止');
     };
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -5221,7 +5914,7 @@ async function performSearchSecondLastThreeBall() {
         );
         
         // 并行测试所有统计期
-        const promises = testPeriods.map(period => testStatsPeriodSecondLastThreeBall(backtestPeriod, period, backtestMethod));
+        const promises = testPeriods.map(period => testStatsPeriodSecondLastThreeBall(currentBacktestPeriod, period, backtestMethod));
         const results = await Promise.all(promises);
         
         // 检查是否需要终止回测
@@ -5498,7 +6191,8 @@ async function performSearchThirdLastThreeBall() {
       updateProgress('回测已终止', 100, '回测终止');
     };
     
-    const backtestPeriod = '50'; // 固定回测期数为50期
+    // 使用全局配置的回测期数
+    const currentBacktestPeriod = backtestPeriod;
     
     // 更新进度
     await updateProgress('正在获取总期数..', 5, '获取总期数');
@@ -5585,7 +6279,7 @@ async function performSearchThirdLastThreeBall() {
         );
         
         // 并行测试所有统计期
-        const promises = testPeriods.map(period => testStatsPeriodThirdLastThreeBall(backtestPeriod, period, backtestMethod));
+        const promises = testPeriods.map(period => testStatsPeriodThirdLastThreeBall(currentBacktestPeriod, period, backtestMethod));
         const results = await Promise.all(promises);
         
         // 检查是否需要终止回测

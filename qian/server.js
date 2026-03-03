@@ -3,7 +3,16 @@ const fs = require('fs');
 const path = require('path');
 
 const server = http.createServer((req, res) => {
-  let filePath = '.' + req.url;
+  // 解析请求的URL，忽略查询参数
+  let filePath = '.' + req.url.split('?')[0];
+  
+  // 特殊处理favicon.ico请求
+  if (filePath === './favicon.ico') {
+    res.writeHead(204); // 204 No Content
+    res.end();
+    return;
+  }
+  
   if (filePath === './') {
     filePath = './index.html';
   }
@@ -48,6 +57,7 @@ const server = http.createServer((req, res) => {
   });
 });
 
-server.listen(8080, '0.0.0.0', () => {
-  console.log('Server running at http://0.0.0.0:8080/');
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+  console.log(`Server running at http://localhost:${PORT}/`);
 });

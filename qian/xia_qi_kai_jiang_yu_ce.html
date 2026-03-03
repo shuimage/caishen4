@@ -372,7 +372,11 @@
         <div class="section" style="margin-bottom: 20px;">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">总回测控制</h3>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <label for="backtestPeriod" style="font-size: 14px;">回测期数:</label>
+                <input type="number" id="backtestPeriod" class="period-input" value="20" min="1" max="1000">
+              </div>
               <button class="btn" id="startAllBacktestBtn" style="background-color: #4CAF50; color: white;">开始回测</button>
               <button class="btn" id="stopAllBacktestBtn" style="background-color: #f44336; color: white; display: none;">终止回测</button>
               <button class="btn" id="copyAllBuyNumbersBtn" style="background-color: #2196F3; color: white;">复制推荐买号</button>
@@ -684,8 +688,55 @@
           </div>
         </div>
         
-        <!-- 近两期两球组合平均率最高统计期详情 -->
+        <!-- 前区推荐买号总集 -->
         <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">前区推荐买号总集</h3>
+            <div style="display: flex; gap: 10px;">
+              <button class="btn" id="refreshTotalBuyNumbersBtn" style="background-color: #2196F3; color: white;">刷新总集</button>
+            </div>
+          </div>
+          <!-- 图表容器 -->
+          <div id="totalBuyNumberChartContainer" style="background-color: #f8f9fa; border-radius: 4px; padding: 15px; border: 1px solid #ddd; margin-bottom: 20px;">
+            <canvas id="totalBuyNumberChart" width="1200" height="400"></canvas>
+          </div>
+          <style>
+            /* 图表容器的深色主题样式 */
+            body.dark-theme #totalBuyNumberChartContainer {
+              background-color: #2d2d2d !important;
+              border-color: #444 !important;
+            }
+          </style>
+          <!-- 总集表格 -->
+          <div style="overflow-x: auto;">
+            <table class="detail-list">
+              <thead>
+                <tr>
+                  <th>排名</th>
+                  <th>球号</th>
+                  <th>累计平均正确率</th>
+                  <th>出现次数</th>
+                </tr>
+              </thead>
+              <tbody id="totalBuyNumbersTable">
+                <!-- 数据将通过JavaScript动态生成 -->
+                <tr>
+                  <td colspan="3" style="text-align: center; padding: 20px; color: #666;">点击刷新总集按钮生成数据</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <!-- 总集买号展示 -->
+          <div id="totalBuyNumbersCollection" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd; display: none;">
+            <h4 style="margin: 0 0 10px 0;">总集推荐买号</h4>
+            <div id="totalBuyNumbersCollectionContent" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无总集数据</div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 近两期两球组合平均率最高统计期详情 -->
+        <div class="section" style="display: none;">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">近两期两球组合平均率最高统计期详情</h3>
             <div style="display: flex; gap: 10px;">
@@ -740,7 +791,7 @@
         </div>
         
         <!-- 最新一期三球组合平均率最高统计期详情 -->
-        <div class="section">
+        <div class="section" style="display: none;">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">最新一期三球组合平均率最高统计期详情</h3>
             <div style="display: flex; gap: 10px;">
@@ -795,7 +846,7 @@
         </div>
         
         <!-- 倒数2期三球组合平均率最高统计期详情 -->
-        <div class="section">
+        <div class="section" style="display: none;">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">倒数2期三球组合平均率最高统计期详情</h3>
             <div style="display: flex; gap: 10px;">
@@ -850,7 +901,7 @@
         </div>
         
         <!-- 倒数3期三球组合平均率最高统计期详情 -->
-        <div class="section">
+        <div class="section" style="display: none;">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">倒数3期三球组合平均率最高统计期详情</h3>
             <div style="display: flex; gap: 10px;">

@@ -8,14 +8,31 @@ const router = express.Router();
 
 // 处理球号数据，确保格式一致
 function processBalls(balls) {
-  if (!balls) return [];
-  // 将球号字符串转换为数组并处理成标准格式
-  if (typeof balls === 'string') {
-    return balls.split(' ')
-      .filter(ball => ball.trim() !== '')
-      .map(ball => String(ball).padStart(2, '0'));
-  } else if (Array.isArray(balls)) {
-    return balls.map(ball => String(ball).padStart(2, '0'));
+  try {
+    if (!balls) return [];
+    
+    // 将球号字符串转换为数组并处理成标准格式
+    if (typeof balls === 'string') {
+      // 检查是否是数组格式的字符串，如"[9, 11, 19, 30, 35]"
+      if (balls.startsWith('[') && balls.endsWith(']')) {
+        try {
+          const parsedBalls = JSON.parse(balls);
+          if (Array.isArray(parsedBalls)) {
+            return parsedBalls.map(ball => String(ball).padStart(2, '0'));
+          }
+        } catch (e) {
+          // 解析失败，按照空格分隔处理
+        }
+      }
+      // 否则按照空格分隔处理
+      return balls.split(' ')
+        .filter(ball => ball.trim() !== '')
+        .map(ball => String(ball).padStart(2, '0'));
+    } else if (Array.isArray(balls)) {
+      return balls.map(ball => String(ball).padStart(2, '0'));
+    }
+  } catch (e) {
+    console.error('处理球号数据失败:', e, 'balls:', balls);
   }
   return [];
 }
@@ -35,7 +52,7 @@ router.post('/', async (req, res) => {
     // 获取请求参数
     const { latest_period, type = 'front', combinations = [], stats_range = 100, target_ball = null } = req.body;
     
-    console.log('收到请求参数:', { latest_period, type, combinations, stats_range, target_ball });
+
     
     // 参数验证
     if (!latest_period) {
@@ -83,14 +100,10 @@ router.post('/', async (req, res) => {
     }
     
     const daoShu4QiResult = daoShu4QiData[0];
-    const daoShu4QiPeriod = daoShu4QiResult.issue;
-    console.log('查询倒数4期:', daoShu4QiPeriod);
     
     // 提取倒数4期的开奖号码
     const drawField = type === 'front' ? 'red' : 'blue';
     const drawNumbers = processBalls(daoShu4QiResult[drawField]);
-    
-    console.log('倒数4期开奖号码:', drawNumbers);
     
     // 检查所有请求的组合是否在倒数4期的开奖号码中出现
     // 处理请求的组合，分离组合球和目标球
@@ -102,16 +115,11 @@ router.post('/', async (req, res) => {
       };
     });
     
-    console.log('处理后的组合:', processedCombinations);
-    
     // 直接使用所有请求的组合，不需要检查是否在倒数4期出现
     const matchingCombinations = processedCombinations.map(combo => combo.fullCombo);
     
-    console.log('使用的组合:', matchingCombinations);
-    
     // 查询历史数据，查找这些组合出现的记录
     // 查询足够多的记录，包括bian_hao字段
-    let limit = Number(stats_range * 2);
     let id = Number(daoShu4QiResult.id);
     
     // 使用字符串替换构建SQL查询，避免参数类型问题
@@ -130,19 +138,22 @@ router.post('/', async (req, res) => {
     
     // 只有当stats_range不是'all'时，才添加LIMIT子句
     if (stats_range !== 'all') {
+      let limit = Number(stats_range) * 2;
       sql += ` LIMIT ${limit}`;
     }
     
     // 确保daoShu4QiResult和id存在
     if (!daoShu4QiResult || typeof daoShu4QiResult.id === 'undefined') {
-      console.error('倒数4期数据缺少id字段:', daoShu4QiResult);
       return res.status(500).json({ code: 500, message: '获取倒数4期数据失败，缺少id字段' });
     }
     
     // 执行查询，先获取足够多的数据
     let rawResults = await query(sql);
     
-    console.log('原始查询结果数量:', rawResults.length);
+    // 确保rawResults是一个数组
+    if (!Array.isArray(rawResults)) {
+      return res.json({ code: 200, message: 'success', data: [] });
+    }
     
     // 创建bian_hao到数据的映射，方便快速查找下下下下期数据
     const bianHaoToDataMap = new Map();
@@ -150,10 +161,18 @@ router.post('/', async (req, res) => {
     const numericBianHaoToDataMap = new Map();
     
     rawResults.forEach(row => {
-      bianHaoToDataMap.set(row.bian_hao, row);
-      // 从bian_hao字符串中提取数字部分，比如从"LT00222"中提取"00222"，然后转换为数字222
-      const numericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
-      numericBianHaoToDataMap.set(numericBianHao, row);
+      if (row && row.bian_hao) {
+        bianHaoToDataMap.set(row.bian_hao, row);
+        // 从bian_hao字符串中提取数字部分，比如从"LT00222"中提取"00222"，然后转换为数字222
+        try {
+          const numericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
+          if (!isNaN(numericBianHao)) {
+            numericBianHaoToDataMap.set(numericBianHao, row);
+          }
+        } catch (e) {
+          // 处理失败，跳过
+        }
+      }
     });
     
     // 过滤出真正包含请求组合的记录，并查找下下下下期数据
@@ -169,27 +188,31 @@ router.post('/', async (req, res) => {
         return match;
       });
       
-      if (isMatch) {
+      if (isMatch && row.bian_hao) {
         // 从当前bian_hao中提取数字部分
-        const currentNumericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
-        
-        // 计算下下下下期的数字bian_hao（当前期+4）
-        const nextNextNextNumericBianHao = currentNumericBianHao + 4;
-        
-        // 查找下下下下期数据
-        const nextNextNextData = numericBianHaoToDataMap.get(nextNextNextNumericBianHao);
-        
-        if (nextNextNextData) {
-          const nextNextNextDrawNumbers = processBalls(nextNextNextData.draw_info);
+        try {
+          const currentNumericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
           
-          // 直接添加结果，后续统一处理目标球
-          results.push({
-            id: row.id,
-            period: row.issue,
-            draw_info: currentDrawNumbers,
-            next_next_next_period: nextNextNextData.issue,
-            next_next_next_draw_info: nextNextNextDrawNumbers
-          });
+          // 计算下下下下期的数字bian_hao（当前期+4）
+          const nextNextNextNumericBianHao = currentNumericBianHao + 4;
+          
+          // 查找下下下下期数据
+          const nextNextNextData = numericBianHaoToDataMap.get(nextNextNextNumericBianHao);
+          
+          if (nextNextNextData) {
+            const nextNextNextDrawNumbers = processBalls(nextNextNextData.draw_info);
+            
+            // 直接添加结果，后续统一处理目标球
+            results.push({
+              id: row.id,
+              period: row.issue,
+              draw_info: currentDrawNumbers,
+              next_next_next_period: nextNextNextData.issue,
+              next_next_next_draw_info: nextNextNextDrawNumbers
+            });
+          }
+        } catch (e) {
+          // 处理失败，跳过
         }
       }
     });
@@ -208,8 +231,6 @@ router.post('/', async (req, res) => {
     // 反转结果，按照id从大到小排序
     results = results.reverse();
     
-    console.log('过滤后的结果数量:', results.length);
-    
     // 为结果添加索引
     const indexedResults = results.map((result, index) => ({
       ...result,
@@ -224,8 +245,6 @@ router.post('/', async (req, res) => {
       limitedResults = indexedResults.slice(0, stats_range);
     }
     
-    console.log('最终返回的结果数量:', limitedResults.length);
-    
     // 返回成功结果，即使没有匹配记录也返回空数组
     res.json({
       code: 200,
@@ -233,7 +252,6 @@ router.post('/', async (req, res) => {
       data: limitedResults
     });
   } catch (error) {
-    console.error('处理请求时发生错误:', error);
     res.status(500).json({
       code: 500,
       message: '服务器内部错误',

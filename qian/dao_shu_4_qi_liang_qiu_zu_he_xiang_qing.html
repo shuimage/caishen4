@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -150,11 +150,14 @@
           throw new Error('缺少最新期号');
         }
         
+        // 解析组合，提取前两个球作为主组合
+        const mainCombo = combination.split('-').slice(0, 2).join('-');
+        
         // 使用正确的接口地址和参数格式
         const requestData = {
           latest_period: latestPeriod,
           type: 'front',
-          combinations: [combination],
+          combinations: [mainCombo],
           stats_range: statsRange,
           target_ball: targetBall
         };
@@ -635,35 +638,42 @@
         <span style="float: right; color: #c00;">${targetBall ? `目标球：${targetBall}，` : ''}共出现${combinationData.length}次</span>
       `;
       
-      // 渲染记录表格
-      const combinationRecords = document.getElementById('combinationRecords');
-      combinationRecords.innerHTML = '';
-      
-      combinationData.forEach(record => {
-        const tr = document.createElement('tr');
-        
-        console.log('渲染记录:', record);
-        
-        // 根据类型显示不同的数据，突出显示组合球号
-        const drawNumbers = highlightComboBalls(record.draw_info, comboBalls);
-        // 传递targetBall参数给下下下下期开奖号的渲染函数
-        const nextDrawNumbers = highlightComboBalls(record.next_next_next_draw_info, comboBalls, true, targetBall) || '暂无数据';
-        
-        tr.innerHTML = `
-          <td>${record.index}</td>
-          <td>${record.period}</td>
-          <td>${drawNumbers}</td>
-          <td>${record.next_next_next_period || '暂无数据'}</td>
-          <td>${nextDrawNumbers}</td>
-        `;
-        combinationRecords.appendChild(tr);
-      });
-      
       // 实现分页功能
       const pageSize = 15; // 每页显示15条
       const totalItems = combinationData.length;
       const totalPages = Math.ceil(totalItems / pageSize);
       let currentPage = 1;
+      
+      // 渲染当前页的数据
+      function renderTableData() {
+        const combinationRecords = document.getElementById('combinationRecords');
+        combinationRecords.innerHTML = '';
+        
+        // 计算当前页的数据范围
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = Math.min(startIndex + pageSize, totalItems);
+        const currentPageData = combinationData.slice(startIndex, endIndex);
+        
+        console.log(`渲染第${currentPage}页数据，共${currentPageData.length}条`);
+        
+        currentPageData.forEach((record, index) => {
+          const tr = document.createElement('tr');
+          
+          // 根据类型显示不同的数据，突出显示组合球号
+          const drawNumbers = highlightComboBalls(record.draw_info, comboBalls);
+          // 传递targetBall参数给下下下下期开奖号的渲染函数
+          const nextDrawNumbers = highlightComboBalls(record.next_next_next_draw_info, comboBalls, true, targetBall) || '暂无数据';
+          
+          tr.innerHTML = `
+            <td>${record.index}</td>
+            <td>${record.period}</td>
+            <td>${drawNumbers}</td>
+            <td>${record.next_next_next_period || '暂无数据'}</td>
+            <td>${nextDrawNumbers}</td>
+          `;
+          combinationRecords.appendChild(tr);
+        });
+      }
       
       // 渲染分页内容
       function renderPagination() {
@@ -721,37 +731,6 @@
         const pageInfo = document.createElement('span');
         pageInfo.textContent = `共 ${totalItems} 条记录，每页 ${pageSize} 条`;
         pagination.appendChild(pageInfo);
-      }
-      
-      // 渲染当前页的数据
-      function renderTableData() {
-        const combinationRecords = document.getElementById('combinationRecords');
-        combinationRecords.innerHTML = '';
-        
-        // 计算当前页的数据范围
-        const startIndex = (currentPage - 1) * pageSize;
-        const endIndex = Math.min(startIndex + pageSize, totalItems);
-        const currentPageData = combinationData.slice(startIndex, endIndex);
-        
-        console.log(`渲染第${currentPage}页数据，共${currentPageData.length}条`);
-        
-        currentPageData.forEach((record, index) => {
-          const tr = document.createElement('tr');
-          
-          // 根据类型显示不同的数据，突出显示组合球号
-          const drawNumbers = highlightComboBalls(record.draw_info, comboBalls);
-          // 传递targetBall参数给下下下下期开奖号的渲染函数
-          const nextDrawNumbers = highlightComboBalls(record.next_next_next_draw_info, comboBalls, true, targetBall) || '暂无数据';
-          
-          tr.innerHTML = `
-            <td>${record.index}</td>
-            <td>${record.period}</td>
-            <td>${drawNumbers}</td>
-            <td>${record.next_next_next_period || '暂无数据'}</td>
-            <td>${nextDrawNumbers}</td>
-          `;
-          combinationRecords.appendChild(tr);
-        });
       }
       
       // 渲染第一页数据和分页控件

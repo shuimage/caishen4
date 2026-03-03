@@ -129,6 +129,35 @@
       font-size: 12px;
     }
     
+    /* 回测期数输入框样式 */
+    .period-input {
+      width: 80px;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.3s, box-shadow 0.3s;
+    }
+    .period-input:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.2);
+    }
+    .period-input::-webkit-inner-spin-button,
+    .period-input::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    body.dark-theme .period-input {
+      background-color: #2d2d2d;
+      border-color: #444;
+      color: #fff;
+    }
+    body.dark-theme .period-input:focus {
+      border-color: #4CAF50;
+      box-shadow: 0 0 0 2px rgba(76, 175, 80, 0.3);
+    }
+    
     /* 进度显示样式 */
     #progressNewestBack,
     #progressSecondLastBack,
@@ -270,6 +299,51 @@
       background-color: #333333 !important;
       color: #ffffff !important;
     }
+    
+    /* 后区推荐买号合集的深色主题样式 */
+    body.dark-theme #buyNumbersCollectionNewestBack,
+    body.dark-theme #buyNumbersCollectionSecondLastBack,
+    body.dark-theme #buyNumbersCollectionThirdLastBack,
+    body.dark-theme #buyNumbersCollectionFourthLastBack,
+    body.dark-theme #buyNumbersCollectionFifthLastBack {
+      background-color: #222222 !important;
+      border-color: #444444 !important;
+    }
+    
+    body.dark-theme #buyNumbersCollectionNewestBack h4,
+    body.dark-theme #buyNumbersCollectionSecondLastBack h4,
+    body.dark-theme #buyNumbersCollectionThirdLastBack h4,
+    body.dark-theme #buyNumbersCollectionFourthLastBack h4,
+    body.dark-theme #buyNumbersCollectionFifthLastBack h4 {
+      color: #ffffff !important;
+    }
+    
+    body.dark-theme #buyNumbersCollectionContentNewestBack,
+    body.dark-theme #buyNumbersCollectionContentSecondLastBack,
+    body.dark-theme #buyNumbersCollectionContentThirdLastBack,
+    body.dark-theme #buyNumbersCollectionContentFourthLastBack,
+    body.dark-theme #buyNumbersCollectionContentFifthLastBack {
+      color: #cccccc !important;
+    }
+    
+    /* 后区推荐买号总集的深色主题样式 */
+    body.dark-theme #buyNumbersCollectionTotalFifthLastBack {
+      background-color: #222222 !important;
+      border-color: #444444 !important;
+    }
+    
+    body.dark-theme #buyNumbersCollectionTotalFifthLastBack h4 {
+      color: #ffffff !important;
+    }
+    
+    body.dark-theme #buyNumberTotalChartContainerFifthLastBack {
+      background-color: #222222 !important;
+      border-color: #444444 !important;
+    }
+    
+    body.dark-theme #buyNumbersTotalRankingFifthLastBack {
+      color: #cccccc !important;
+    }
   </style>
 </head>
 <body>
@@ -373,7 +447,11 @@
         <div class="section" style="margin-bottom: 20px;">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">总回测控制</h3>
-            <div style="display: flex; gap: 10px;">
+            <div style="display: flex; gap: 10px; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 5px;">
+                <label for="backtestPeriod" style="font-size: 14px;">回测期数:</label>
+                <input type="number" id="backtestPeriod" class="period-input" value="20" min="1" max="1000">
+              </div>
               <button class="btn" id="startAllBacktestBtn" style="background-color: #4CAF50; color: white;">开始回测</button>
               <button class="btn" id="stopAllBacktestBtn" style="background-color: #f44336; color: white; display: none;">终止回测</button>
               <button class="btn" id="copyAllBuyNumbersBtn" style="background-color: #2196F3; color: white;">复制推荐买号</button>
@@ -444,8 +522,7 @@
                   <th>回测期数</th>
                   <th>统计期数</th>
                   <th>平均正确率</th>
-                  <th>当前回测期号</th>
-                  <th>下一期期号</th>
+                  <th>当前期号</th>
                   <th>下一期后区推荐买号</th>
                   <th>操作</th>
                 </tr>
@@ -453,10 +530,17 @@
               <tbody id="detailResultsNewestBack">
                 <!-- 数据将通过JavaScript动态生成 -->
                 <tr>
-                  <td colspan="8" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
+                  <td colspan="7" style="text-align: center; padding: 20px; color: #666;">点击开始回测按钮开始执行回测</td>
                 </tr>
               </tbody>
             </table>
+          </div>
+          <!-- 后区推荐买号合集 -->
+          <div id="buyNumbersCollectionNewestBack" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">后区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentNewestBack" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
           </div>
         </div>
         
@@ -505,6 +589,13 @@
               </tbody>
             </table>
           </div>
+          <!-- 后区推荐买号合集 -->
+          <div id="buyNumbersCollectionSecondLastBack" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">后区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentSecondLastBack" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
         </div>
         
         <!-- 倒数3期两球组合后区平均率最高统计期详情 -->
@@ -551,6 +642,13 @@
                 </tr>
               </tbody>
             </table>
+          </div>
+          <!-- 后区推荐买号合集 -->
+          <div id="buyNumbersCollectionThirdLastBack" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">后区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentThirdLastBack" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
           </div>
         </div>
         
@@ -599,6 +697,13 @@
               </tbody>
             </table>
           </div>
+          <!-- 后区推荐买号合集 -->
+          <div id="buyNumbersCollectionFourthLastBack" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">后区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentFourthLastBack" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
         </div>
         
         <!-- 倒数5期两球组合后区平均率最高统计期详情 -->
@@ -646,10 +751,29 @@
               </tbody>
             </table>
           </div>
+          <!-- 后区推荐买号合集 -->
+          <div id="buyNumbersCollectionFifthLastBack" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">后区推荐买号合集</h4>
+            <div id="buyNumbersCollectionContentFifthLastBack" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
+          <!-- 后区推荐买号总集 -->
+          <div id="buyNumbersCollectionTotalFifthLastBack" style="margin-top: 20px; padding: 15px; background-color: #f8f9fa; border-radius: 4px; border: 1px solid #ddd;">
+            <h4 style="margin: 0 0 10px 0;">后区推荐买号总集</h4>
+            <!-- 图表容器 -->
+            <div id="buyNumberTotalChartContainerFifthLastBack" style="background-color: #f8f9fa; border-radius: 4px; padding: 15px; border: 1px solid #ddd; margin-bottom: 15px;">
+              <canvas id="buyNumberTotalChartFifthLastBack" width="1200" height="400"></canvas>
+            </div>
+            <!-- 排名列表 -->
+            <div id="buyNumbersTotalRankingFifthLastBack" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+              <div style="color: #666;">暂无推荐买号数据</div>
+            </div>
+          </div>
         </div>
         
         <!-- 近两期两球组合后区平均率最高统计期详情 -->
-        <div class="section" id="sectionNearTwoPeriodsBack">
+        <div class="section" id="sectionNearTwoPeriodsBack" style="display: none;">
           <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
             <h3 style="margin: 0;">近两期两球组合后区平均率最高统计期详情</h3>
             <div style="display: flex; gap: 10px;">
@@ -696,6 +820,7 @@
     </div>
   </div>
   
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="js/data.js"></script>
   <script src="js/xia_qi_hou_qu_kai_jiang_yu_ce.js"></script>
 </body>

@@ -5,7 +5,7 @@ const { query } = require('./数据库配置.js');
 // 保存回测结果到数据库
 router.post('/bao_cun_hui_ce_jie_guo', async (req, res) => {
   try {
-    const { cache_key, backtest_results, current_period } = req.body;
+    const { cache_key, backtest_results, current_period, backtest_period } = req.body;
     
     if (!cache_key || !backtest_results) {
       return res.status(400).json({ success: false, message: '缺少必要参数' });
@@ -22,17 +22,17 @@ router.post('/bao_cun_hui_ce_jie_guo', async (req, res) => {
       // 更新现有记录
       const updateSql = `
         UPDATE backtest_results 
-        SET backtest_results = ?, current_period = ?, updated_at = NOW() 
+        SET backtest_results = ?, current_period = ?, backtest_period = ?, updated_at = NOW() 
         WHERE cache_key = ?
       `;
-      await query(updateSql, [JSON.stringify(backtest_results), current_period, cache_key]);
+      await query(updateSql, [JSON.stringify(backtest_results), current_period, backtest_period, cache_key]);
     } else {
       // 插入新记录
       const insertSql = `
-        INSERT INTO backtest_results (cache_key, backtest_results, current_period, created_at, updated_at) 
-        VALUES (?, ?, ?, NOW(), NOW())
+        INSERT INTO backtest_results (cache_key, backtest_results, current_period, backtest_period, created_at, updated_at) 
+        VALUES (?, ?, ?, ?, NOW(), NOW())
       `;
-      await query(insertSql, [cache_key, JSON.stringify(backtest_results), current_period]);
+      await query(insertSql, [cache_key, JSON.stringify(backtest_results), current_period, backtest_period]);
     }
     
     res.json({ success: true, message: '回测结果保存成功' });
@@ -52,16 +52,17 @@ router.get('/huo_qu_hui_ce_jie_guo', async (req, res) => {
     }
     
     const getSql = `
-      SELECT backtest_results FROM backtest_results 
+      SELECT backtest_results, backtest_period FROM backtest_results 
       WHERE cache_key = ?
     `;
     const result = await query(getSql, [cache_key]);
     
     if (result && result.length > 0) {
       const backtestResults = JSON.parse(result[0].backtest_results);
-      res.json({ success: true, data: backtestResults });
+      const backtestPeriod = result[0].backtest_period;
+      res.json({ success: true, data: backtestResults, backtest_period: backtestPeriod });
     } else {
-      res.json({ success: true, data: null });
+      res.json({ success: true, data: null, backtest_period: null });
     }
   } catch (error) {
     console.error('获取回测结果失败:', error);
