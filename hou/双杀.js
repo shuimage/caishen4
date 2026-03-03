@@ -18,11 +18,25 @@ const router = express.Router();
  */
 async function getDoubleKillAnalysis(period) {
   try {
+    // 处理中文字符串格式的period参数
+    let processedPeriod = period;
+    if (typeof period === 'string' && period !== 'all') {
+      // 尝试从中文描述中提取数字
+      const numberMatch = period.match(/\d+/);
+      if (numberMatch) {
+        processedPeriod = numberMatch[0];
+        console.log('从中文描述中提取的数字:', processedPeriod);
+      }
+    }
+    
     // 验证参数
     // 允许'all'字符串或者任何正整数
-    if (period !== 'all' && (isNaN(period) || parseInt(period) <= 0)) {
+    if (processedPeriod !== 'all' && (isNaN(processedPeriod) || parseInt(processedPeriod) <= 0)) {
       throw new Error('无效的周期参数，必须是正整数或"all"');
     }
+    
+    // 使用处理后的period
+    period = processedPeriod;
 
     // 不使用缓存，直接查询数据库
 

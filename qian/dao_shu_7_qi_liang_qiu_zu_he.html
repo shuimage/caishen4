@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>大乐透统计分析 - 倒数7期两球组合分析</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/navigation.js"></script>
+  <style>
+    /* 确保没有水平导航栏显示 */
+    .main-content > div:nth-child(2) {
+      display: none !important;
+    }
+    
+    /* 为主题适配添加额外样式 */
+    body.dark-theme .section,
+    body.dark-theme .combination-table {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+    
+    body.dark-theme .combination-table th,
+    body.dark-theme .combination-table td {
+      border-color: #333333;
+    }
+    
+    body.dark-theme .highlight {
+      background-color: rgba(96, 39, 39, 0.8) !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="main-layout">
+      <!-- 左侧导航栏 -->
+      <div class="left-sidebar">
+        <!-- 顶部快捷栏 -->
+        <div class="top-bar">
+          <div class="current-period">25120期</div>
+        </div>
+        
+        <!-- 主导航区 -->
+        <nav class="main-nav">
+          <ul>
+          </ul>
+        </nav>
+        
+        <!-- 期数选择区 -->
+        <div class="period-selection" style="position: relative; top: -400px;">
+          <h4 class="section-title">选择统计范</h4>
+          <div style="display: flex; flex-direction: column; gap: 10px;">
+            <select class="period-dropdown">
+              <option selected>最近100期</option>
+              <option>最近50期</option>
+              <option>最近35期</option>
+              <option>最近200期</option>
+              <option>最近300期</option>
+              <option>最近500期</option>
+              <option>最近1000期</option>
+              <option>最近1500期</option>
+              <option>最近2000期</option>
+              <option>全部期</option>
+            </select>
+            <input type="number" id="customPeriod" class="period-input" placeholder="输入期数" min="1" max="5000" style="width: 100%; padding: 8px; border: 1px solid #ddd; border-radius: 4px; font-size: 14px; outline: none; transition: border-color 0.3s, box-shadow 0.3s;">
+          </div>
+        </div>
+      </div>
+      
+      <!-- 右侧主内容区 -->
+      <div class="main-content">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <h1 class="page-title">倒数7期两球组合分析</h1>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn back-btn" onclick="window.location.href='index.html'">返回</button>
+          </div>
+        </div>
+
+        <!-- 推荐杀号区域 -->
+        <div class="recommended-kill-numbers" style="background-color: #2a2a2a; border-radius: 8px; padding: 20px; margin-bottom: 30px;">
+          <h3 style="color: #ff6600; margin-bottom: 15px;">推荐杀号</h3>
+          <div style="display: flex; gap: 30px;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <h4 style="color: #ffffff; margin: 0;">前区推荐杀号</h4>
+                <button class="copy-btn" onclick="copyKillNumbers('front')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
+              <div id="front-kill-numbers" style="font-size: 18px; color: #ff4444; font-weight: bold;">--</div>
+            </div>
+            <div>
+              <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                <h4 style="color: #ffffff; margin: 0;">后区推荐杀号</h4>
+                <button class="copy-btn" onclick="copyKillNumbers('back')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+                </button>
+              </div>
+              <div id="back-kill-numbers" style="font-size: 18px; color: #ff4444; font-weight: bold;">--</div>
+            </div>
+          </div>
+        </div>
+        <!-- 红框区域已删除 -->
+        
+
+        
+        <!-- 横向布局容器 -->
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
+          <!-- 开奖信息区域 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px;">
+              <h3 style="margin: 0;">最新开奖信息</h3>
+            </div>
+            <div class="draw-info-container">
+              <div class="draw-info-box" id="latestDrawInfoBox">
+                <div id="latestDrawInfoBoxContent">
+                    <!-- 数据将通过JavaScript动态生成 -->
+                    <div>加载中...</div>
+                  </div>
+                </div>
+            </div>
+          </div>
+
+          <!-- 倒数第7期开奖信息 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px;">
+              <h3 style="margin: 0;">倒数第7期开奖信息</h3>
+            </div>
+            <div class="draw-info-container">
+              <div class="draw-info-box" id="secondLastDrawInfoBox">
+                <h4 style="margin-top: 0; color: #DF2220;"></h4>
+                <div id="secondLastDrawInfo">
+                  <!-- 数据将通过JavaScript动态生成 -->
+                  <div>加载中...</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 前区推荐买号 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;">前区推荐买号：</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="backtest-btn" onclick="goToFrontBuyBacktestPage()" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg>
+                </button>
+              </div>
+            </div>
+            <!-- 出现最多球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最多球：</span>
+              <div id="firstZoneMostOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现最少球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最少球：</span>
+              <div id="firstZoneLeastOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现平均球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现平均球：</span>
+              <div id="firstZoneAverageOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+          </div>
+          
+          <!-- 后区推荐买号 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;">后区推荐买号：</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="backtest-btn" onclick="goToBackBuyBacktestPage()" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg>
+              </button>
+              </div>
+            </div>
+            <!-- 出现最多球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最多球：</span>
+              <div id="lastZoneMostOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现最少球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现最少球：</span>
+              <div id="lastZoneLeastOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+            <!-- 出现平均球 -->
+            <div style="margin-top: 8px;">
+              <span style="font-weight: bold;">出现平均球：</span>
+              <div id="lastZoneAverageOccurrences" style="display: inline-flex; flex-wrap: wrap; gap: 8px;">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </div>
+            </div>
+          </div>
+
+          <!-- 前区推荐杀号 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;">前区推荐杀号</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="copy-btn" onclick="copyKillNumbers('front')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  复制
+                </button>
+                <button class="backtest-btn" onclick="window.location.href='dao_shu_7_qi_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=' + periodValue" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="kill-numbers-container" id="firstZoneKillNumbersContainer">
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
+                <div id="firstZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
+                  加载中...
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 后区推荐杀号 -->
+          <div class="section" style="flex: 1; min-width: 200px;">
+            <div class="section-header" style="margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+              <h3 style="margin: 0;">后区推荐杀号</h3>
+              <div style="display: flex; gap: 8px;">
+                <button class="copy-btn" onclick="copyKillNumbers('back')" style="padding: 4px 8px; font-size: 12px; background-color: #4CAF50; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  复制
+                </button>
+                <button class="backtest-btn" onclick="goToBacktestHouPage()" style="padding: 4px 8px; font-size: 12px; background-color: #1890ff; color: white; border: none; border-radius: 4px; cursor: pointer;">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 12a10 10 0 0 1 20 0M2 12a10 10 0 0 0 20 0"/></svg>
+                </button>
+              </div>
+            </div>
+            <div class="kill-numbers-container" id="secondZoneKillNumbersContainer">
+              <div style="display: flex; flex-wrap: wrap; gap: 10px; padding: 10px; border-radius: 4px;">
+                <div id="secondZoneKillNumbers" style="font-size: 16px; color: #DF2220;">
+                  加载中...
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 前区两球组合统计 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">前区两球组合统计</h3>
+            <div style="color: #DF2220;">
+              <!-- 统计信息将通过JavaScript动态生成 -->
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="combination-table">
+              <thead id="firstZoneTableHeader">
+                <tr>
+                  <th>组合号</th>
+                  <th>出现次数</th>
+                  <!-- 前区号码1-35将通过JavaScript动态生成 -->
+                </tr>
+              </thead>
+              <tbody id="firstZoneCombinations">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- 前区汇总数据图表 -->
+          <div class="chart-container" style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4>前区号码出现次数分布</h4>
+              <div>
+                <label style="margin-right: 10px;">图表排序：</label>
+                <select id="firstZoneChartSort" style="padding: 5px;">
+                  <option value="number">按号码顺序</option>
+                  <option value="count_asc" selected>出现次数升序</option>
+                  <option value="count_desc">出现次数降序</option>
+                </select>
+              </div>
+            </div>
+            <canvas id="firstZoneChart" width="800" height="300"></canvas>
+          </div>
+        </div>
+        
+        <!-- 后区两球组合统计 -->
+        <div class="section">
+          <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <h3 style="margin: 0;">后区两球组合统计</h3>
+            <div style="color: #DF2220;">
+              <!-- 统计信息将通过JavaScript动态生成 -->
+            </div>
+          </div>
+          <div style="overflow-x: auto;">
+            <table class="combination-table">
+              <thead id="secondZoneTableHeader">
+                <tr>
+                  <th>组合号</th>
+                  <th>出现次数</th>
+                  <!-- 后区号码1-12将通过JavaScript动态生成 -->
+                </tr>
+              </thead>
+              <tbody id="secondZoneCombinations">
+                <!-- 数据将通过JavaScript动态生成 -->
+              </tbody>
+            </table>
+          </div>
+          
+          <!-- 后区汇总数据图表 -->
+          <div class="chart-container" style="margin-top: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+              <h4>后区号码出现次数分布</h4>
+              <div>
+                <label style="margin-right: 10px;">图表排序：</label>
+                <select id="lastZoneChartSort" style="padding: 5px;">
+                  <option value="number">按号码顺序</option>
+                  <option value="count_asc" selected>出现次数升序</option>
+                  <option value="count_desc">出现次数降序</option>
+                </select>
+              </div>
+            </div>
+            <canvas id="lastZoneChart" width="800" height="300"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="js/data.js"></script>
+  <script>
+    // 主题切换功能 - 仅从localStorage读取设置，不在此页面提供切换按钮
+    document.addEventListener('DOMContentLoaded', function() {
+      // 从localStorage读取主题设置
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.body.classList.add('dark-theme');
+      }
+      // 确保调用最新开奖信息函数
+      xuan_ran_zui_xin_kai_jiang();
+      // 调用倒数第7期开奖信息函数
+      xuan_ran_dao_shu_7_qi_kai_jiang();
+    });
+  </script>
+  <script>
+    // 从sql_zui_xin_yi_qi接口获取最新一期开奖信息
+    async function huo_qu_sql_zui_xin_yi_qi() {
+      try {
+        // 调用d:\中啦\caishen4\hou\sql_zui_xin_yi_qi.js对应的接口
+        const response = await fetch('http://localhost:18889/sql_zui_xin_yi_qi');
+        
+        if (!response.ok) {
+          console.error('接口请求失败，状态码:', response.status);
+          return null;
+        }
+        
+        const result = await response.json();
+        console.log('sql_zui_xin_yi_qi接口返回数据:', result);
+        
+        // 确保正确处理后端返回的success和latestDraw结构
+        if (result && result.success && result.latestDraw) {
+          return result.latestDraw;
+        } else {
+          console.error('接口返回数据格式不正确:', result);
+          return null;
+        }
+      } catch (error) {
+        console.error('获取最新一期开奖数据失败:', error);
+        return null;
+      }
+    }
+    
+    // 从sql_dao_shu_7_qi接口获取倒数第7期开奖信息
+    async function huo_qu_sql_dao_shu_7_qi() {
+      try {
+        // 调用d:\中啦\caishen4\hou\sql_dao_shu_7_qi.js对应的接口
+        const response = await fetch('http://localhost:18889/sql_dao_shu_7_qi');
+        
+        if (!response.ok) {
+          console.error('接口请求失败，状态码:', response.status);
+          return null;
+        }
+        
+        const result = await response.json();
+        console.log('sql_dao_shu_7_qi接口返回数据:', result);
+        
+        // 确保正确处理后端返回的success和seventhLastDraw结构
+        if (result && result.success && result.seventhLastDraw) {
+          return result.seventhLastDraw;
+        } else {
+          console.error('接口返回数据格式不正确:', result);
+          return null;
+        }
+      } catch (error) {
+        console.error('获取倒数第7期开奖数据失败:', error);
+        return null;
+      }
+    }
+    
+    // 渲染最新一期开奖信息到新增的区域
+    async function xuan_ran_sql_zui_xin_yi_qi() {
+      const latestDraw = await huo_qu_sql_zui_xin_yi_qi();
+      const latestDrawInfoElement = document.getElementById('latestDrawInfo');
+      
+      if (!latestDraw) {
+        if (latestDrawInfoElement) {
+          latestDrawInfoElement.innerHTML = '<div style="color: #DF2220; font-weight: bold;">接口失败</div>';
+        }
+        return;
+      }
+      
+      // 处理日期格式，只显示年月日
+      let formattedDate = latestDraw.drawDate;
+      if (formattedDate && typeof formattedDate === 'string') {
+        // 处理ISO格式日期
+        if (formattedDate.includes('T')) {
+          formattedDate = formattedDate.split('T')[0];
+        } else if (formattedDate.includes(' ')) {
+          formattedDate = formattedDate.split(' ')[0];
+        }
+      }
+      
+      // 更新顶部快捷栏的期数显示
+      if (latestDraw.period && window.updateCurrentPeriod) {
+        updateCurrentPeriod(latestDraw.period);
+      }
+      
+      if (latestDrawInfoElement) {
+        latestDrawInfoElement.innerHTML = `
+          <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+            期号: ${latestDraw.period}
+          </div>
+          <div>
+            开奖日期: ${formattedDate}
+          </div>
+          <div>
+            前区号码: ${Array.isArray(latestDraw.firstZoneNumbers) ? latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
+          </div>
+          <div>
+            后区号码: ${Array.isArray(latestDraw.lastZoneNumbers) ? latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
+          </div>`;
+      }
+    }
+    
+    // 渲染倒数第7期开奖信息到新增的区域
+    async function xuan_ran_sql_dao_shu_7_qi() {
+      const seventhLastDraw = await huo_qu_sql_dao_shu_7_qi();
+      const seventhLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
+      
+      if (!seventhLastDraw) {
+        if (seventhLastDrawInfoElement) {
+          seventhLastDrawInfoElement.innerHTML = '<div>接口失败</div>';
+        }
+        return;
+      }
+      
+      // 处理日期格式，只显示年月日
+      let formattedDate = seventhLastDraw.drawDate;
+      if (formattedDate && typeof formattedDate === 'string') {
+        // 处理ISO格式日期
+        if (formattedDate.includes('T')) {
+          formattedDate = formattedDate.split('T')[0];
+        } else if (formattedDate.includes(' ')) {
+          formattedDate = formattedDate.split(' ')[0];
+        }
+      }
+      
+      if (seventhLastDrawInfoElement) {
+        seventhLastDrawInfoElement.innerHTML = `
+          <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+            期号: ${seventhLastDraw.period}
+          </div>
+          <div>
+            开奖日期: ${formattedDate}
+          </div>
+          <div>
+            前区号码: ${Array.isArray(seventhLastDraw.firstZoneNumbers) ? seventhLastDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
+          </div>
+          <div>
+            后区号码: ${Array.isArray(seventhLastDraw.lastZoneNumbers) ? seventhLastDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
+          </div>
+        `;
+      }
+    }
+    async function huo_qu_zui_xin_kai_jiang() {
+      console.log('huo_qu_zui_xin_kai_jiang函数开始执行');
+      try {
+        console.log('准备调用/sql_zui_xin_yi_qi接口');
+        const response = await fetch('http://localhost:18889/sql_zui_xin_yi_qi');
+        console.log('fetch调用成功，status:', response.status);
+        
+        if (!response.ok) {
+          console.error('HTTP错误，状态码:', response.status);
+          alert('接口失败');
+        }
+        
+        const result = await response.json();
+        console.log('获取到接口返回数据:', result);
+        
+        // 确保正确处理后端返回的success和latestDraw结构
+        if (result && result.success && result.latestDraw) {
+          console.log('数据格式正确，返回latestDraw:', result.latestDraw);
+          return result.latestDraw;
+        } else {
+          console.error('接口返回数据格式不正确:', result);
+          alert('获取开奖数据失败');
+          return null;
+        }
+      } catch (error) {
+        console.error('获取开奖数据失败:', error);
+        alert('网络请求失败');
+        return null;
+      }
+    }
+    
+    // 从sql_dao_shu_7_qi接口获取倒数第7期开奖信息
+    async function huo_qu_dao_shu_7_qi_kai_jiang() {
+      try {
+        const response = await fetch('http://localhost:18889/sql_dao_shu_7_qi');
+        const result = await response.json();
+        
+        // 确保正确处理后端返回的success和seventhLastDraw结构
+        if (result && result.success && result.seventhLastDraw) {
+          return result.seventhLastDraw;
+        } else {
+          console.error('接口返回数据格式不正确:', result);
+          alert('接口失败');
+          return null;
+        }
+      } catch (error) {
+        console.error('获取倒数第7期开奖数据失败:', error);
+        alert('接口失败');
+        return null;
+      }
+    }
+    
+    // 渲染最新开奖信息（用于顶部显示和红框区域）
+    async function xuan_ran_zui_xin_kai_jiang() {
+      console.log('调用xuan_ran_zui_xin_kai_jiang函数');
+      console.log('开始获取最新一期开奖信息...');
+      const latestDraw = await huo_qu_zui_xin_kai_jiang();
+      console.log('最新一期开奖信息获取完成');
+      
+      if (!latestDraw) {
+        const latestDrawInfoElement = document.getElementById('latestDrawInfoHeader');
+        if (latestDrawInfoElement) {
+          latestDrawInfoElement.innerHTML = '<div style="color: #DF2220; font-weight: bold;">接口失败</div>';
+        }
+        const latestDrawInfoBoxContentElement = document.getElementById('latestDrawInfoBoxContent');
+        if (latestDrawInfoBoxContentElement) {
+          latestDrawInfoBoxContentElement.innerHTML = '<div style="color: #DF2220; font-weight: bold;">接口失败</div>';
+        }
+        return;
+      }
+      
+      // 处理日期格式，只显示年月日
+      let formattedDate = latestDraw.drawDate;
+      if (formattedDate && typeof formattedDate === 'string') {
+        // 处理ISO格式日期
+        if (formattedDate.includes('T')) {
+          formattedDate = formattedDate.split('T')[0];
+        } else if (formattedDate.includes(' ')) {
+          formattedDate = formattedDate.split(' ')[0];
+        }
+      }
+      
+      // 渲染到顶部显示区域
+      const latestDrawInfoHeaderElement = document.getElementById('latestDrawInfoHeader');
+      if (latestDrawInfoHeaderElement) {
+        latestDrawInfoHeaderElement.innerHTML = `
+          <div class="draw-info-box">
+            <h4 style="margin-top: 0; color: #DF2220;"></h4>
+            <div>
+              <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+                期号: ${latestDraw.period}
+              </div>
+              <div>
+                前区号码: ${Array.isArray(latestDraw.firstZoneNumbers) ? latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
+              </div>
+              <div>
+                后区号码: ${Array.isArray(latestDraw.lastZoneNumbers) ? latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }
+      
+      // 渲染到红框区域 - 修改样式使其与蓝框区域保持一致，确保内容顺序为：期号、开奖日期、前区号码、后区号码
+      const latestDrawInfoBoxContentElement = document.getElementById('latestDrawInfoBoxContent');
+      if (latestDrawInfoBoxContentElement) {
+        latestDrawInfoBoxContentElement.innerHTML = `
+        <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+          期号: ${latestDraw.period}
+        </div>
+        <div style="color: #DF2220; margin-top: 5px;">
+          开奖日期: ${formattedDate}
+        </div>
+        <div style="margin-top: 8px;">
+          前区号码: ${Array.isArray(latestDraw.firstZoneNumbers) ? latestDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
+        </div>
+        <div style="margin-top: 5px;">
+          后区号码: ${Array.isArray(latestDraw.lastZoneNumbers) ? latestDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
+        </div>
+        `;
+      }
+      
+      // 更新顶部快捷栏的期数显示
+      try {
+        updateCurrentPeriod(latestDraw.period);
+      } catch (e) {
+        console.warn('更新期数显示失败:', e);
+      }
+    }
+    
+    // 渲染倒数第7期开奖信息
+    async function xuan_ran_dao_shu_7_qi_kai_jiang() {
+      console.log('开始获取并渲染倒数第7期开奖信息');
+      const seventhLastDraw = await huo_qu_sql_dao_shu_7_qi();
+      
+      if (!seventhLastDraw) {
+        console.warn('未获取到倒数第7期开奖信息');
+        const seventhLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
+        if (seventhLastDrawInfoElement) {
+          seventhLastDrawInfoElement.innerHTML = '<div style="color: #DF2220;">接口失败</div>';
+        }
+        alert('接口失败');
+        return;
+      }
+      
+      // 处理日期格式，只显示年月日
+      let formattedDate = seventhLastDraw.drawDate;
+      if (formattedDate && typeof formattedDate === 'string') {
+        if (formattedDate.includes('T')) {
+          formattedDate = formattedDate.split('T')[0];
+        } else if (formattedDate.includes(' ')) {
+          formattedDate = formattedDate.split(' ')[0];
+        }
+      }
+      
+      const seventhLastDrawInfoElement = document.getElementById('secondLastDrawInfo');
+      if (seventhLastDrawInfoElement) {
+        seventhLastDrawInfoElement.innerHTML = `
+        <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+          期号: ${seventhLastDraw.period}
+        </div>
+        <div>
+          开奖日期: ${formattedDate}
+        </div>
+        <div>
+          前区号码: ${Array.isArray(seventhLastDraw.firstZoneNumbers) ? seventhLastDraw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : ''}
+        </div>
+        <div>
+          后区号码: ${Array.isArray(seventhLastDraw.lastZoneNumbers) ? seventhLastDraw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : ''}
+        </div>
+        `;
+      }
+      console.log('倒数第7期开奖信息渲染完成');
+    }
+  </script>
+  <script>
+    // 跳转到前区买号回测页面
+    function goToFrontBuyBacktestPage() {
+      // 获取当前选择的统计周期
+      const periodValue = document.querySelector('.period-dropdown').value;
+      // 跳转到回测页面，传递回测期数和统计期数参数
+      window.location.href = `dao_shu_7_qi_mai_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
+    }
+
+    // 跳转到后区买号回测页面
+    function goToBackBuyBacktestPage() {
+      // 获取当前选择的统计周期
+      const periodValue = document.querySelector('.period-dropdown').value;
+      // 跳转到回测页面，传递回测期数和统计期数参数
+      window.location.href = `dao_shu_7_qi_mai_hao_hui_ce_hou_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
+    }
+
+    // 跳转到后区回测页面
+    function goToBacktestHouPage() {
+      // 获取当前选择的统计周期
+      const periodValue = document.querySelector('.period-dropdown').value;
+      // 跳转到回测页面，传递回测期数和统计期数参数
+      window.location.href = `dao_shu_7_qi_mai_hao_hui_ce_hou_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
+    }
+
+    // 移除了推荐杀号接口相关的函数，现在完全依赖两球组合分析数据接口提供杀号信息
+
+    // 从后端获取倒数7期前区两球组合分析数据
+    async function huo_qu_dao_shu_7_qi_liang_qiu_zu_he(period = '100') {
+      try {
+        console.log(`获取倒数7期前区两球组合分析数据，周期：${period}`);
+        
+        // 使用简单的fetch调用，添加超时处理
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+        
+        const response = await fetch(`http://localhost:18889/dao_shu_7_qi_liang_qiu_zu_he?period=${period}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('fetch响应状态:', response.status, '响应类型:', response.type);
+        if (!response.ok) {
+          throw new Error(`HTTP错误! 状态: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('成功获取前区两球组合分析数据:', JSON.stringify(data));
+        
+        if (data && data.success && data.data) {
+          return data.data;
+        } else {
+          console.warn('返回的数据格式不正确:', data);
+          return {
+            combinations: [],
+            totalCount: 0
+          };
+        }
+      } catch (error) {
+        console.error('获取倒数7期前区两球组合分析数据失败:', error.name, error.message);
+        // 显示错误提示
+        alert('接口失败: ' + (error.message || '未知错误'));
+        return null;
+      }
+    }
+    
+    // 从后端获取倒数7期后区两球组合分析数据
+    async function huo_qu_dao_shu_7_qi_hou_qu_zu_he(period = '100') {
+      try {
+        console.log(`获取倒数7期后区两球组合分析数据，周期：${period}`);
+        
+        // 使用简单的fetch调用，添加超时处理
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+        
+        const response = await fetch(`http://localhost:18889/dao_shu_7_qi_hou_qu_zu_he?period=${period}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        console.log('fetch响应状态:', response.status, '响应类型:', response.type);
+        if (!response.ok) {
+          throw new Error(`HTTP错误! 状态: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        console.log('成功获取后区两球组合分析数据:', JSON.stringify(data));
+        
+        if (data && data.success && data.data) {
+          return data.data;
+        } else {
+          console.warn('返回的数据格式不正确:', data);
+          return {
+            combinations: [],
+            totalCount: 0
+          };
+        }
+      } catch (error) {
+        console.error('获取倒数7期后区两球组合分析数据失败:', error.name, error.message);
+        // 显示错误提示
+        alert('接口失败: ' + (error.message || '未知错误'));
+        return null;
+      }
+    }
+    
+    // 渲染前区两球组合分析数据
+    async function renderFirstZoneAnalysisData(period = '100') {
+      // 获取前区两球组合分析数据
+      const analysisData = await huo_qu_dao_shu_7_qi_liang_qiu_zu_he(period);
+      
+      if (!analysisData) {
+        // 接口调用失败，不使用模拟数据
+        return;
+      }
+      
+      // 注意：最新开奖信息已通过专门的接口获取，这里不再重复设置
+      // 但仍然需要更新顶部期数显示，以保持一致性
+      if (analysisData.latestDraw && analysisData.latestDraw.period) {
+        updateCurrentPeriod(analysisData.latestDraw.period);
+      }
+      
+      // 更新前区推荐杀号（从分析接口获取）
+      console.log('更新前区推荐杀号，数据:', analysisData.recommendedFrontKillNumbers);
+      
+      // 检查数据有效性
+      const originalKillNumbers = analysisData.recommendedFrontKillNumbers || [];
+      console.log('实际可用的杀号数据:', originalKillNumbers);
+      
+      // 计算从未出现球杀号（在至少一个组合中从未出现过的球）
+      const neverAppearedNumbers = new Set();
+      
+      // 遍历所有组合，找出每个组合中从未出现过的号码
+      analysisData.combinations.forEach(combo => {
+        // 对于当前组合，检查每个号码是否出现过
+        for (let i = 1; i <= 35; i++) {
+          // 转换为两位格式的字符串比较，因为nextDrawNumbers中的元素是两位格式的字符串
+          const numStr = i.toString().padStart(2, '0');
+          // 如果该号码在当前组合的nextDrawNumbers中不存在
+          if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers) && !combo.nextDrawNumbers.includes(numStr)) {
+            neverAppearedNumbers.add(i);
+          }
+        }
+      });
+      
+      // 将Set转换为数组，排序后使用
+      const neverAppearedArray = Array.from(neverAppearedNumbers).sort((a, b) => a - b);
+      console.log('从未出现球数据:', neverAppearedArray);
+      
+      // 按方法分组显示杀号
+      // 创建杀号方法列表
+      const killMethods = [];
+      
+      // 添加原有的推荐杀号
+      if (originalKillNumbers.length > 0) {
+        killMethods.push({
+          name: '推荐杀号',
+          numbers: originalKillNumbers
+        });
+      }
+      
+      // 添加从未出现球杀号（始终显示，无论是否有数据）
+      killMethods.push({
+        name: '从未出现球',
+        numbers: neverAppearedArray
+      });
+      
+      // 更新顶部推荐杀号区域（只显示推荐杀号，不显示从未出现球）
+      const frontKillNumbersElement = document.getElementById('front-kill-numbers');
+      if (frontKillNumbersElement) {
+        if (originalKillNumbers.length > 0) {
+          frontKillNumbersElement.innerHTML = originalKillNumbers.map(num => 
+            `<span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; margin: 3px; background-color: #DF2220; border-radius: 50%; font-size: 14px; color: #ffffff; font-weight: bold;">${num}</span>`
+          ).join(' ');
+        } else {
+          frontKillNumbersElement.textContent = '暂无推荐杀号';
+        }
+      }
+      
+      // 更新前区推荐杀号区块（卡片区域），显示两种杀号方法
+      const firstZoneKillNumbersElement = document.getElementById('firstZoneKillNumbers');
+      if (firstZoneKillNumbersElement) {
+        if (killMethods.length > 0) {
+          // 清空现有内容
+          firstZoneKillNumbersElement.innerHTML = '';
+          
+          // 渲染每种杀号方法
+          killMethods.forEach(method => {
+            // 创建杀号方法标题
+            const methodDiv = document.createElement('div');
+            methodDiv.style.marginTop = '10px';
+            methodDiv.innerHTML = `<strong>${method.name}：</strong>`;
+            firstZoneKillNumbersElement.appendChild(methodDiv);
+            
+            // 创建杀号号码容器
+            const numbersDiv = document.createElement('div');
+            numbersDiv.style.display = 'inline-flex';
+            numbersDiv.style.flexWrap = 'wrap';
+            numbersDiv.style.gap = '8px';
+            numbersDiv.style.marginLeft = '10px';
+            
+            // 渲染杀号号码
+            if (method.numbers.length > 0) {
+              method.numbers.forEach(num => {
+                const ball = document.createElement('span');
+                ball.style.display = 'inline-flex';
+                ball.style.alignItems = 'center';
+                ball.style.justifyContent = 'center';
+                ball.style.width = '30px';
+                ball.style.height = '30px';
+                ball.style.margin = '3px';
+                ball.style.backgroundColor = '#DF2220';
+                ball.style.borderRadius = '50%';
+                ball.style.fontSize = '14px';
+                ball.style.color = '#ffffff';
+                ball.style.fontWeight = 'bold';
+                ball.textContent = num;
+                numbersDiv.appendChild(ball);
+              });
+            } else {
+              numbersDiv.innerHTML = '<span style="color: #999;">暂无数据</span>';
+            }
+            
+            firstZoneKillNumbersElement.appendChild(numbersDiv);
+          });
+        } else {
+          firstZoneKillNumbersElement.textContent = '暂无推荐杀号';
+        }
+      }
+      
+      // 渲染前区两球组合统计
+      const firstZoneCombinations = document.getElementById('firstZoneCombinations');
+      firstZoneCombinations.innerHTML = ''; // 清空现有数据
+      
+      // 初始化汇总计数数组
+      const totalCounts = new Array(36).fill(0); // 索引0不使用，1-35对应前区号码
+      let totalOccurrences = 0; // 总出现次数
+      
+      console.log('渲染前区两球组合数据，共', analysisData.combinations.length, '个组合');
+      
+      // 为了更好的用户体验，先按照出现次数降序排序
+      const sortedCombinations = [...analysisData.combinations].sort((a, b) => {
+        // 直接使用后端提供的count字段
+        return (b.count || 0) - (a.count || 0);
+      });
+      
+      sortedCombinations.forEach(combo => {
+        // 直接使用后端提供的count字段
+        const totalCount = combo.count || 0;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="combination-cell" data-combination="${combo.combo}">${combo.combo}</td>
+          <td class="count">${totalCount}</td>
+        `;
+        
+        // 添加35个单元格，对应前区号码1-35
+        for (let i = 1; i <= 35; i++) {
+          const td = document.createElement('td');
+          const numStr = String(i).padStart(2, '0'); // 后端使用两位格式的号码，需要补0
+          // 安全访问nextDrawNumbers属性
+          let count = 0;
+          if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
+            count = combo.nextDrawNumbers.filter(n => n === numStr).length;
+          }
+          
+          // 累加汇总计数
+          totalCounts[i] += count;
+          
+          // 当值为0时不显示，只显示大于0的统计值
+          td.textContent = count > 0 ? count : '';
+          
+          // 只有当count大于0时才高亮显示
+          if (count > 0) {
+            td.className = 'highlight';
+            
+            // 添加一些视觉效果，根据count值设置不同的背景色深度
+            const opacity = 0.2 + (count * 0.1); // 基础透明度0.2，每增加1次出现增加0.1的不透明度
+            const clampedOpacity = Math.min(opacity, 0.9); // 最大不透明度为0.9
+            td.style.backgroundColor = `rgba(96, 39, 39, ${clampedOpacity})`;
+            td.style.color = '#fff';
+            td.style.cursor = 'pointer'; // 添加鼠标指针样式
+            td.style.transition = 'background-color 0.2s'; // 添加过渡效果
+            
+            // 为有统计值的单元格添加点击事件
+            td.addEventListener('click', function() {
+              const combination = combo.combo;
+              const selectedNumber = i;
+              console.log('点击组合统计值:', combination, selectedNumber);
+              // 跳转到组合详情页面，传递组合和号码参数
+              const type = 'first'; // 前区类型
+              const formattedCombination = combination + '-' + selectedNumber; // 组合球-目标球格式
+              window.location.href = `dao_shu_7_qi_liang_qiu_zu_he_xiang_qing.html?combination=${formattedCombination}&type=${type}&stats_range=${period}`;
+            });
+            
+            // 添加鼠标悬停效果
+            td.addEventListener('mouseenter', function() {
+              this.style.backgroundColor = 'rgba(96, 39, 39, 1)';
+            });
+            
+            td.addEventListener('mouseleave', function() {
+              this.style.backgroundColor = `rgba(96, 39, 39, ${clampedOpacity})`;
+            });
+          }
+          
+          tr.appendChild(td);
+        }
+        
+        // 累加总出现次数
+        totalOccurrences += totalCount;
+        
+        // 为组合号单元格添加点击事件
+            const combinationCell = tr.querySelector('.combination-cell');
+            combinationCell.addEventListener('click', function() {
+              const combination = this.getAttribute('data-combination');
+              console.log('点击组合:', combination);
+              // 跳转到组合详情页面，传递组合参数
+              const type = 'first'; // 前区类型
+              window.location.href = `dao_shu_7_qi_liang_qiu_zu_he_xiang_qing.html?combination=${combination}&type=${type}&stats_range=${period}`;
+            });
+        
+        firstZoneCombinations.appendChild(tr);
+      });
+      
+      // 添加汇总行
+      const summaryTr = document.createElement('tr');
+      summaryTr.className = 'summary-row';
+      summaryTr.innerHTML = `
+        <td class="summary-cell">汇总</td>
+        <td class="count summary-cell">${totalOccurrences}</td>
+      `;
+      
+      // 添加35个汇总单元格
+      for (let i = 1; i <= 35; i++) {
+        const td = document.createElement('td');
+        const count = totalCounts[i];
+        
+        if (count > 0) {
+            td.textContent = count;
+            td.className = 'highlight summary-highlight';
+          }
+        
+        summaryTr.appendChild(td);
+      }
+      
+      firstZoneCombinations.appendChild(summaryTr);
+      
+      // 添加排名行
+      const rankTr = document.createElement('tr');
+      rankTr.className = 'summary-row';
+      rankTr.innerHTML = `
+        <td class="summary-cell">排名</td>
+        <td class="count summary-cell"></td>
+      `;
+      
+      // 计算排名
+      const rankMap = {};
+      const sortedNumbers = [];
+      for (let i = 1; i <= 35; i++) {
+        sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
+      }
+      // 按出现次数降序排序
+      sortedNumbers.sort((a, b) => b.count - a.count);
+      // 计算排名
+      let currentRank = 1;
+      for (let i = 0; i < sortedNumbers.length; i++) {
+        if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
+          currentRank++;
+        }
+        rankMap[sortedNumbers[i].number] = currentRank;
+      }
+      
+      // 添加35个排名单元格
+      for (let i = 1; i <= 35; i++) {
+        const td = document.createElement('td');
+        const rank = rankMap[i];
+        if (rank) {
+          td.textContent = rank;
+          td.className = 'highlight summary-highlight';
+        }
+        rankTr.appendChild(td);
+      }
+      
+      firstZoneCombinations.appendChild(rankTr);
+      
+      // 绘制前区图表
+      await drawFrontZoneChart(totalCounts, period);
+      // 更新全局汇总数据
+      globalTotalCounts = totalCounts;
+      
+      // 如果没有数据，显示提示信息
+      if (sortedCombinations.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 37; // 组合号 + 出现次数 + 35个号码
+        td.textContent = '暂无前区两球组合统计数据';
+        td.style.textAlign = 'center';
+        td.style.padding = '20px';
+        tr.appendChild(td);
+        firstZoneCombinations.appendChild(tr);
+      }
+      
+      // 渲染前区推荐买号
+      // 1. 出现最多球：找到totalCounts中的最大值对应的号码
+      const firstZoneMostOccurrences = document.getElementById('firstZoneMostOccurrences');
+      firstZoneMostOccurrences.innerHTML = '';
+      // 找到前区汇总计数中的最大值
+      const maxFirstCount = Math.max(...totalCounts);
+      if (maxFirstCount > 0) {
+        // 找出所有最大值对应的号码
+        const mostOccurrenceNumbers = [];
+        for (let i = 1; i <= 35; i++) {
+          if (totalCounts[i] === maxFirstCount) {
+            mostOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现最多球
+        mostOccurrenceNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'red-ball';
+          ball.textContent = num;
+          firstZoneMostOccurrences.appendChild(ball);
+        });
+      } else {
+        firstZoneMostOccurrences.textContent = '暂无数据';
+      }
+      
+      // 2. 出现最少球：找到totalCounts中除0以外的最小值对应的号码
+      const firstZoneLeastOccurrences = document.getElementById('firstZoneLeastOccurrences');
+      firstZoneLeastOccurrences.innerHTML = '';
+      // 过滤掉0值，找到最小值
+      const nonZeroCounts = totalCounts.filter(count => count > 0);
+      if (nonZeroCounts.length > 0) {
+        const minFirstCount = Math.min(...nonZeroCounts);
+        // 找出所有最小值对应的号码
+        const leastOccurrenceNumbers = [];
+        for (let i = 1; i <= 35; i++) {
+          if (totalCounts[i] === minFirstCount) {
+            leastOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现最少球
+        leastOccurrenceNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'red-ball';
+          ball.textContent = num;
+          firstZoneLeastOccurrences.appendChild(ball);
+        });
+      } else {
+        firstZoneLeastOccurrences.textContent = '暂无数据';
+      }
+      
+      // 3. 出现平均球：找到totalCounts中次数等于平均值的号码
+      const firstZoneAverageOccurrences = document.getElementById('firstZoneAverageOccurrences');
+      firstZoneAverageOccurrences.innerHTML = '';
+      // 计算前区号码的平均出现次数
+      const nonZeroTotalCounts = totalCounts.filter(count => count > 0);
+      if (nonZeroTotalCounts.length > 0) {
+        const sumCounts = nonZeroTotalCounts.reduce((sum, count) => sum + count, 0);
+        const averageCount = Math.round(sumCounts / nonZeroTotalCounts.length);
+        // 找出所有等于平均值的号码
+        const averageOccurrenceNumbers = [];
+        for (let i = 1; i <= 35; i++) {
+          if (totalCounts[i] === averageCount) {
+            averageOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现平均球
+        if (averageOccurrenceNumbers.length > 0) {
+          averageOccurrenceNumbers.forEach(num => {
+            const ball = document.createElement('span');
+            ball.className = 'red-ball';
+            ball.textContent = num;
+            firstZoneAverageOccurrences.appendChild(ball);
+          });
+        } else {
+          firstZoneAverageOccurrences.textContent = '暂无数据';
+        }
+      } else {
+        firstZoneAverageOccurrences.textContent = '暂无数据';
+      }
+      
+      // 渲染前区待排导号（如果元素存在）
+      const predictionBalls = document.getElementById('predictionBalls');
+      if (predictionBalls) {
+        predictionBalls.innerHTML = '';
+        if (analysisData.prediction && analysisData.prediction.length > 0) {
+          analysisData.prediction.forEach(num => {
+            const ball = document.createElement('span');
+            ball.className = 'red-ball';
+            ball.textContent = num;
+            predictionBalls.appendChild(ball);
+          });
+        } else {
+          predictionBalls.textContent = '暂无预测数据';
+        }
+      }
+      
+      // 更新前区统计信息
+      const firstZoneSection = document.querySelector('.section:nth-child(1)');
+      if (firstZoneSection && firstZoneSection.querySelector('.section-header')) {
+        // 计算总出现次数
+        const totalOccurrences = analysisData.combinations.reduce((sum, combo) => sum + combo.count, 0);
+        
+        firstZoneSection.querySelector('.section-header').innerHTML = `
+          <h3 style="margin: 0;">最新开奖信息</h3>
+        `;
+      }
+    }
+    
+    // 渲染后区两球组合分析数据
+    async function renderSecondZoneAnalysisData(period = '100') {
+      // 获取后区两球组合分析数据
+      const analysisData = await huo_qu_dao_shu_7_qi_hou_qu_zu_he(period);
+      
+      if (!analysisData || !analysisData.combinations) {
+        // 接口调用失败，不使用模拟数据
+        return;
+      }
+      
+      // 自己计算出现次数为0的号码作为推荐杀号
+      // 收集所有可能的后区号码（1-12）
+      const allPossibleNumbers = Array.from({length: 12}, (_, i) => (i + 1).toString());
+      
+      // 统计每个号码出现的总次数
+      const numberCounts = {};
+      allPossibleNumbers.forEach(num => {
+        numberCounts[num] = 0;
+      });
+      
+      // 计算每个号码的出现次数
+      analysisData.combinations.forEach(combination => {
+        if (combination.numberCounts) {
+          Object.keys(combination.numberCounts).forEach(num => {
+            if (numberCounts.hasOwnProperty(num)) {
+              numberCounts[num] += combination.numberCounts[num];
+            }
+          });
+        }
+      });
+      
+      // 只选择出现次数为0的号码作为推荐杀号
+      const killNumbers = Object.keys(numberCounts).filter(num => numberCounts[num] === 0);
+      console.log('后区推荐杀号（出现次数为0）:', killNumbers);
+      
+      // 更新顶部推荐杀号区域 - 使用正确的元素ID
+      const backKillNumbersElement = document.getElementById('back-kill-numbers');
+      if (backKillNumbersElement) {
+        if (killNumbers.length > 0) {
+              backKillNumbersElement.innerHTML = killNumbers.map(num => 
+                `<span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; margin: 3px; background-color: #A462F8; border-radius: 50%; font-size: 14px; color: #ffffff; font-weight: bold;">${num}</span>`
+              ).join(' ');
+            } else {
+              backKillNumbersElement.textContent = '暂无推荐杀号';
+            }
+      }
+      
+      // 更新后区推荐杀号区块（卡片区域）
+      const secondZoneKillNumbersElement = document.getElementById('secondZoneKillNumbers');
+      if (secondZoneKillNumbersElement) {
+        if (killNumbers.length > 0) {
+            secondZoneKillNumbersElement.innerHTML = killNumbers.map(num => 
+              `<span style="display: inline-flex; align-items: center; justify-content: center; width: 30px; height: 30px; margin: 3px; background-color: #A462F8; border-radius: 50%; font-size: 14px; color: #ffffff; font-weight: bold;">${num}</span>`
+            ).join(' ');
+          } else {
+            secondZoneKillNumbersElement.textContent = '暂无推荐杀号';
+          }
+      }
+      
+      // 渲染后区两球组合统计
+      const secondZoneCombinations = document.getElementById('secondZoneCombinations');
+      secondZoneCombinations.innerHTML = ''; // 清空现有数据
+      
+      // 初始化后区汇总计数数组
+      const backTotalCounts = new Array(13).fill(0); // 索引0不使用，1-12对应后区号码
+      let backTotalOccurrences = 0; // 后区总出现次数
+      
+      console.log('渲染后区两球组合数据，共', analysisData.combinations.length, '个组合');
+      
+      // 为了更好的用户体验，先按照出现次数降序排序
+      const sortedCombinations = [...analysisData.combinations].sort((a, b) => {
+        // 直接使用后端提供的count字段
+        return (b.count || 0) - (a.count || 0);
+      });
+      
+      sortedCombinations.forEach(combo => {
+        // 直接使用后端提供的count字段
+        const totalCount = combo.count || 0;
+        
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="combination-cell" data-combination="${combo.combo}">${combo.combo}</td>
+          <td class="count">${totalCount}</td>
+        `;
+        
+        // 添加12个单元格，对应后区号码1-12
+        for (let i = 1; i <= 12; i++) {
+          const td = document.createElement('td');
+          const numStr = String(i); // 后端使用数字作为键，不需要补0
+          // 安全访问nextDrawNumbers属性
+          let count = 0;
+          if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
+            count = combo.nextDrawNumbers.filter(n => n === numStr).length;
+          }
+          
+          // 累加后区汇总计数
+          backTotalCounts[i] += count;
+          
+          // 当值为0时不显示，只显示大于0的统计值
+          td.textContent = count > 0 ? count : '';
+          
+          // 只有当count大于0时才高亮显示
+          if (count > 0) {
+            td.className = 'highlight';
+            
+            // 添加一些视觉效果，根据count值设置不同的背景色深度
+            const opacity = 0.2 + (count * 0.1); // 基础透明度0.2，每增加1次出现增加0.1的不透明度
+            const clampedOpacity = Math.min(opacity, 0.9); // 最大不透明度为0.9
+            td.style.backgroundColor = `rgba(96, 39, 39, ${clampedOpacity})`;
+            td.style.color = '#fff';
+            td.style.cursor = 'pointer'; // 添加鼠标指针样式
+            td.style.transition = 'background-color 0.2s'; // 添加过渡效果
+            
+            // 为有统计值的单元格添加点击事件
+            td.addEventListener('click', function() {
+              const combination = combo.combo;
+              const selectedNumber = i;
+              console.log('点击组合统计值:', combination, selectedNumber);
+              // 跳转到组合详情页面，传递组合和号码参数
+              const type = 'last'; // 后区类型
+              const formattedCombination = combination + '-' + selectedNumber; // 组合球-目标球格式
+              window.location.href = `dao_shu_7_qi_liang_qiu_zu_he_xiang_qing.html?combination=${formattedCombination}&type=${type}&stats_range=${period}`;
+            });
+            
+            // 添加鼠标悬停效果
+            td.addEventListener('mouseenter', function() {
+              this.style.backgroundColor = 'rgba(96, 39, 39, 1)';
+            });
+            
+            td.addEventListener('mouseleave', function() {
+              this.style.backgroundColor = `rgba(96, 39, 39, ${clampedOpacity})`;
+            });
+          }
+          
+          tr.appendChild(td);
+        }
+        
+        // 累加后区总出现次数
+        backTotalOccurrences += totalCount;
+        
+        // 为组合号单元格添加点击事件
+            const combinationCell = tr.querySelector('.combination-cell');
+            combinationCell.addEventListener('click', function() {
+              const combination = this.getAttribute('data-combination');
+              console.log('点击组合:', combination);
+              // 跳转到组合详情页面，传递组合参数
+              const type = 'last'; // 后区类型
+              window.location.href = `dao_shu_7_qi_liang_qiu_zu_he_xiang_qing.html?combination=${combination}&type=${type}&stats_range=${period}`;
+            });
+        
+        secondZoneCombinations.appendChild(tr);
+      });
+      
+      // 添加后区汇总行
+      const backSummaryTr = document.createElement('tr');
+      backSummaryTr.className = 'summary-row';
+      backSummaryTr.innerHTML = `
+        <td class="summary-cell">汇总</td>
+        <td class="count summary-cell">${backTotalOccurrences}</td>
+      `;
+      
+      // 添加12个后区汇总单元格
+      for (let i = 1; i <= 12; i++) {
+        const td = document.createElement('td');
+        const count = backTotalCounts[i];
+        
+        if (count > 0) {
+            td.textContent = count;
+            td.className = 'highlight summary-highlight';
+          }
+        
+        backSummaryTr.appendChild(td);
+      }
+      
+      secondZoneCombinations.appendChild(backSummaryTr);
+      
+      // 添加排名行
+      const backRankTr = document.createElement('tr');
+      backRankTr.className = 'summary-row';
+      backRankTr.innerHTML = `
+        <td class="summary-cell">排名</td>
+        <td class="count summary-cell"></td>
+      `;
+      
+      // 计算排名
+      const backRankMap = {};
+      const backSortedNumbers = [];
+      for (let i = 1; i <= 12; i++) {
+        backSortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
+      }
+      // 按出现次数降序排序
+      backSortedNumbers.sort((a, b) => b.count - a.count);
+      // 计算排名
+      let backCurrentRank = 1;
+      
+      for (let i = 0; i < backSortedNumbers.length; i++) {
+        if (i > 0 && backSortedNumbers[i].count !== backSortedNumbers[i - 1].count) {
+          backCurrentRank++;
+        }
+        backRankMap[backSortedNumbers[i].number] = backCurrentRank;
+      }
+      // 为原始数据添加排名
+      backSortedNumbers.forEach(item => {
+        item.rank = backRankMap[item.number];
+      });
+      
+      // 添加12个排名单元格
+      for (let i = 1; i <= 12; i++) {
+        const td = document.createElement('td');
+        const rank = backRankMap[i];
+        if (rank) {
+          td.textContent = rank;
+          td.className = 'highlight summary-highlight';
+        }
+        backRankTr.appendChild(td);
+      }
+      
+      secondZoneCombinations.appendChild(backRankTr);
+      
+      // 绘制后区图表
+      await drawBackZoneChart(backTotalCounts, period);
+      // 更新全局汇总数据
+      globalBackTotalCounts = backTotalCounts;
+      
+      // 如果没有数据，显示提示信息
+      if (sortedCombinations.length === 0) {
+        const tr = document.createElement('tr');
+        const td = document.createElement('td');
+        td.colSpan = 14; // 组合号 + 出现次数 + 12个号码
+        td.textContent = '暂无后区两球组合统计数据';
+        td.style.textAlign = 'center';
+        td.style.padding = '20px';
+        tr.appendChild(td);
+        secondZoneCombinations.appendChild(tr);
+      }
+      
+      // 后区推荐买号的三种类型：出现最多球、出现最少球、出现平均球
+      
+      // 1. 出现最多球：找到backTotalCounts中的最大值对应的号码
+      const lastZoneMostOccurrences = document.getElementById('lastZoneMostOccurrences');
+      lastZoneMostOccurrences.innerHTML = '';
+      // 找到后区汇总计数中的最大值
+      const maxLastCount = Math.max(...backTotalCounts);
+      if (maxLastCount > 0) {
+        // 找出所有最大值对应的号码
+        const mostOccurrenceNumbers = [];
+        for (let i = 1; i <= 12; i++) {
+          if (backTotalCounts[i] === maxLastCount) {
+            mostOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现最多球
+        mostOccurrenceNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'blue-ball';
+          ball.textContent = num;
+          lastZoneMostOccurrences.appendChild(ball);
+        });
+      } else {
+        lastZoneMostOccurrences.textContent = '暂无数据';
+      }
+      
+      // 2. 出现最少球：找到backTotalCounts中除0以外的最小值对应的号码
+      const lastZoneLeastOccurrences = document.getElementById('lastZoneLeastOccurrences');
+      lastZoneLeastOccurrences.innerHTML = '';
+      // 过滤掉0值，找到最小值
+      const nonZeroBackCounts = backTotalCounts.filter(count => count > 0);
+      if (nonZeroBackCounts.length > 0) {
+        const minLastCount = Math.min(...nonZeroBackCounts);
+        // 找出所有最小值对应的号码
+        const leastOccurrenceNumbers = [];
+        for (let i = 1; i <= 12; i++) {
+          if (backTotalCounts[i] === minLastCount) {
+            leastOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现最少球
+        leastOccurrenceNumbers.forEach(num => {
+          const ball = document.createElement('span');
+          ball.className = 'blue-ball';
+          ball.textContent = num;
+          lastZoneLeastOccurrences.appendChild(ball);
+        });
+      } else {
+        lastZoneLeastOccurrences.textContent = '暂无数据';
+      }
+      
+      // 3. 出现平均球：找到backTotalCounts中次数等于平均值的号码
+      const lastZoneAverageOccurrences = document.getElementById('lastZoneAverageOccurrences');
+      lastZoneAverageOccurrences.innerHTML = '';
+      // 计算后区号码的平均出现次数
+      const nonZeroTotalBackCounts = backTotalCounts.filter(count => count > 0);
+      if (nonZeroTotalBackCounts.length > 0) {
+        const sumBackCounts = nonZeroTotalBackCounts.reduce((sum, count) => sum + count, 0);
+        const averageBackCount = Math.round(sumBackCounts / nonZeroTotalBackCounts.length);
+        // 找出所有等于平均值的号码
+        const averageOccurrenceNumbers = [];
+        for (let i = 1; i <= 12; i++) {
+          if (backTotalCounts[i] === averageBackCount) {
+            averageOccurrenceNumbers.push(i);
+          }
+        }
+        // 渲染出现平均球
+        if (averageOccurrenceNumbers.length > 0) {
+          averageOccurrenceNumbers.forEach(num => {
+            const ball = document.createElement('span');
+            ball.className = 'blue-ball';
+            ball.textContent = num;
+            lastZoneAverageOccurrences.appendChild(ball);
+          });
+        } else {
+          lastZoneAverageOccurrences.textContent = '暂无数据';
+        }
+      } else {
+        lastZoneAverageOccurrences.textContent = '暂无数据';
+      }
+      
+      // 更新后区统计信息
+      const secondZoneSection = document.querySelector('.section:nth-child(2)');
+      if (secondZoneSection && secondZoneSection.querySelector('.section-header')) {
+        // 计算总出现次数
+        const totalOccurrences = analysisData.combinations.reduce((sum, combo) => sum + combo.count, 0);
+        
+        secondZoneSection.querySelector('.section-header').innerHTML = `
+          <h3 style="margin: 0;">倒数第7期开奖信息</h3>
+        `;
+      }
+    }
+    
+    // 统一渲染所有数据的函数
+    async function renderTwoBallAnalysisData(period = '100') {
+      // 并行获取并渲染前区和后区数据
+      // 前区推荐杀号现在已从renderFirstZoneAnalysisData中获取，不再单独调用杀号接口
+      await Promise.all([
+        renderFirstZoneAnalysisData(period),
+        renderSecondZoneAnalysisData(period)
+      ]);
+    }
+    
+    // 渲染表格头部
+    function renderTableHeaders() {
+      // 渲染前区表格头部
+      const firstZoneHeader = document.getElementById('firstZoneTableHeader');
+      if (firstZoneHeader) {
+        const firstZoneRow = firstZoneHeader.querySelector('tr');
+        if (firstZoneRow) {
+          for (let i = 1; i <= 35; i++) {
+            const th = document.createElement('th');
+            th.textContent = String(i).padStart(2, '0');
+            firstZoneRow.appendChild(th);
+          }
+        }
+      }
+      
+      // 渲染后区表格头部
+      const secondZoneHeader = document.getElementById('secondZoneTableHeader');
+      if (secondZoneHeader) {
+        const secondZoneRow = secondZoneHeader.querySelector('tr');
+        if (secondZoneRow) {
+          for (let i = 1; i <= 12; i++) {
+            const th = document.createElement('th');
+            th.textContent = String(i).padStart(2, '0');
+            secondZoneRow.appendChild(th);
+          }
+        }
+      }
+    }
+    
+    // 更新顶部快捷栏的期数显示
+    function updateCurrentPeriod(period) {
+      const periodElement = document.querySelector('.current-period');
+      if (periodElement) {
+        periodElement.textContent = period;
+      }
+    }
+    
+    // 保存统计范到localStorage
+    function savePeriodSelection(periodValue) {
+      try {
+        localStorage.setItem('selectedPeriodRange', periodValue);
+      } catch (e) {
+        console.error('保存统计范失败:', e);
+      }
+    }
+    
+    // 从localStorage读取保存的统计范
+    function getSavedPeriodSelection() {
+      try {
+        return localStorage.getItem('selectedPeriodRange') || '100';
+      } catch (e) {
+        console.error('读取统计范失败:', e);
+        return '100';
+      }
+    }
+    
+    // 根据period值设置下拉框选中状态
+    function setPeriodDropdownSelection(periodValue) {
+      const periodDropdown = document.querySelector('.period-dropdown');
+      const customPeriodInput = document.getElementById('customPeriod');
+      if (periodDropdown) {
+        if (periodValue === '100') periodDropdown.value = '最近100期';
+        else if (periodValue === '50') periodDropdown.value = '最近50期';
+        else if (periodValue === '35') periodDropdown.value = '最近35期';
+        else if (periodValue === '200') periodDropdown.value = '最近200期';
+        else if (periodValue === '300') periodDropdown.value = '最近300期';
+        else if (periodValue === '500') periodDropdown.value = '最近500期';
+        else if (periodValue === '1000') periodDropdown.value = '最近1000期';
+        else if (periodValue === '1500') periodDropdown.value = '最近1500期';
+        else if (periodValue === '2000') periodDropdown.value = '最近2000期';
+        else if (periodValue === 'all') periodDropdown.value = '全部期';
+        else {
+          // 自定义期数，清空下拉框选中状态，设置输入框值
+          periodDropdown.selectedIndex = -1;
+          if (customPeriodInput) {
+            customPeriodInput.value = periodValue;
+          }
+        }
+      }
+    }
+    
+    // 跳转到前区买号回测页面
+    function goToFrontBuyBacktestPage() {
+      const statsPeriod = getSelectedStatsRange();
+      window.location.href = `dao_shu_7_qi_mai_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
+    }
+    
+    // 跳转到后区买号回测页面
+    function goToBackBuyBacktestPage() {
+      const statsPeriod = getSelectedStatsRange();
+      window.location.href = `dao_shu_7_qi_mai_hao_hui_ce_hou_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
+    }
+    
+    // 获取当前选择的统计范
+    function getSelectedStatsRange() {
+      const customPeriodInput = document.getElementById('customPeriod');
+      // 首先检查手动输入框
+      if (customPeriodInput && customPeriodInput.value.trim() && parseInt(customPeriodInput.value) > 0) {
+        return customPeriodInput.value.trim();
+      }
+      
+      // 然后检查下拉框
+      const periodDropdown = document.querySelector('.period-dropdown');
+      if (periodDropdown) {
+        const selectedText = periodDropdown.value;
+        if (selectedText === '最近100期') return '100';
+        else if (selectedText === '最近50期') return '50';
+        else if (selectedText === '最近35期') return '35';
+        else if (selectedText === '最近200期') return '200';
+        else if (selectedText === '最近300期') return '300';
+        else if (selectedText === '最近500期') return '500';
+        else if (selectedText === '最近1000期') return '1000';
+        else if (selectedText === '全部期') return 'all';
+      }
+      return '100'; // 默认值
+    }
+    
+    // 定义全局变量用于存储当前选择的统计范
+    let periodValue = '100'; // 默认值
+    
+    // 全局存储汇总数据，用于主题切换时重新绘制图表
+    let globalTotalCounts = [];
+    let globalBackTotalCounts = [];
+    
+    // 移除了showRecommendedKillNumbers函数，现在推荐杀号信息直接从两球组合分析数据接口获取并显示
+    
+    // 初始化函数
+    async function init_data() {
+      // 立即调用获取最新开奖信息函数
+      console.log('在init_data中立即调用xuan_ran_zui_xin_kai_jiang');
+      await xuan_ran_zui_xin_kai_jiang();
+    }
+    
+    // 页面加载完成后渲染数据
+    window.addEventListener('load', async function() {
+      // 调用初始化函数
+      await init_data();
+      
+      // 立即调用获取最新一期开奖信息函数（保留原始调用以确保兼容性）
+      console.log('在页面加载时立即调用xuan_ran_zui_xin_kai_jiang');
+      await xuan_ran_zui_xin_kai_jiang();
+      
+      renderTableHeaders();
+      
+      // 获取保存的统计范，如果没有则使用默认值100
+      periodValue = getSavedPeriodSelection();
+      
+      // 设置下拉框选中状态
+      setPeriodDropdownSelection(periodValue);
+      
+      // 调用函数获取并显示倒数第7期开奖信息
+      await xuan_ran_dao_shu_7_qi_kai_jiang();
+      
+      // 使用保存的统计范渲染数据
+      await renderTwoBallAnalysisData(periodValue);
+      
+      console.log('页面初始化完成，所有数据已加载');
+      console.log('使用的接口：');
+      console.log('1. 最新一期数据: http://localhost:18889/sql_zui_xin_yi_qi');
+console.log('2. 倒数第7期数据: http://localhost:18889/sql_dao_shu_7_qi');
+console.log('3. 两球组合分析数据: http://localhost:18889/dao_shu_7_qi_liang_qiu_zu_he');
+console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_7_qi_hou_qu_zu_he');
+      console.log('推荐杀号信息现在直接从两球组合分析数据接口获取并更新');
+      
+      // 为统计范下拉选择框添加事件监听器
+      const periodDropdown = document.querySelector('.period-dropdown');
+      const customPeriodInput = document.getElementById('customPeriod');
+      if (periodDropdown) {
+        periodDropdown.addEventListener('change', function() {
+          const selectedText = this.value;
+          
+          // 根据选择的文本确定对应的period值
+          if (selectedText === '最近100期') periodValue = '100';
+          else if (selectedText === '最近50期') periodValue = '50';
+          else if (selectedText === '最近35期') periodValue = '35';
+          else if (selectedText === '最近200期') periodValue = '200';
+          else if (selectedText === '最近300期') periodValue = '300';
+          else if (selectedText === '最近500期') periodValue = '500';
+          else if (selectedText === '最近1000期') periodValue = '1000';
+          else if (selectedText === '最近1500期') periodValue = '1500';
+          else if (selectedText === '最近2000期') periodValue = '2000';
+          else if (selectedText === '全部期') periodValue = 'all';
+          
+          // 清空手动输入框
+          if (customPeriodInput) {
+            customPeriodInput.value = '';
+          }
+          
+          // 保存选择的统计范
+          savePeriodSelection(periodValue);
+          
+          // 根据选择的统计范重新渲染数据
+          renderTwoBallAnalysisData(periodValue);
+          // 推荐杀号信息现在直接从两球组合分析数据接口获取并更新
+        });
+      }
+      
+      // 为手动输入期数添加事件监听器
+      if (customPeriodInput) {
+        // 监听回车键
+        customPeriodInput.addEventListener('keypress', function(event) {
+          if (event.key === 'Enter') {
+            const inputValue = this.value.trim();
+            if (inputValue && parseInt(inputValue) > 0) {
+              // 更新全局变量
+              periodValue = inputValue;
+              
+              // 保存选择的统计范
+              savePeriodSelection(periodValue);
+              
+              // 清空下拉框选中状态
+              if (periodDropdown) {
+                periodDropdown.selectedIndex = -1;
+              }
+              
+              // 根据选择的统计范重新渲染数据
+              renderTwoBallAnalysisData(periodValue);
+            }
+          }
+        });
+        
+        // 监听失去焦点事件
+        customPeriodInput.addEventListener('blur', function() {
+          const inputValue = this.value.trim();
+          if (inputValue && parseInt(inputValue) > 0) {
+            // 更新全局变量
+            periodValue = inputValue;
+            
+            // 保存选择的统计范
+            savePeriodSelection(periodValue);
+            
+            // 清空下拉框选中状态
+            if (periodDropdown) {
+              periodDropdown.selectedIndex = -1;
+            }
+            
+            // 根据选择的统计范重新渲染数据
+            renderTwoBallAnalysisData(periodValue);
+          }
+        });
+      }
+      
+      // 添加主题切换监听，重新绘制图表
+      const observer = new MutationObserver(async function(mutations) {
+        mutations.forEach(async function(mutation) {
+          if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+            // 主题切换时重新绘制图表
+            if (globalTotalCounts.length > 0) {
+              const currentPeriodValue = getSavedPeriodSelection();
+              await drawFrontZoneChart(globalTotalCounts, currentPeriodValue);
+            }
+            if (globalBackTotalCounts.length > 0) {
+              const currentPeriodValue = getSavedPeriodSelection();
+              await drawBackZoneChart(globalBackTotalCounts, currentPeriodValue);
+            }
+          }
+        });
+      });
+      
+      // 监听body元素的class变化
+      observer.observe(document.body, {
+        attributes: true,
+        attributeFilter: ['class']
+      });
+      
+      // 为前区图表排序选择框添加事件监听器
+      const firstZoneSortSelect = document.getElementById('firstZoneChartSort');
+      if (firstZoneSortSelect) {
+        firstZoneSortSelect.addEventListener('change', async function() {
+          // 重新绘制前区图表
+          if (globalTotalCounts.length > 0) {
+            const currentPeriodValue = getSavedPeriodSelection();
+            await drawFrontZoneChart(globalTotalCounts, currentPeriodValue);
+          }
+        });
+      }
+      
+      // 为后区图表排序选择框添加事件监听器
+      const lastZoneSortSelect = document.getElementById('lastZoneChartSort');
+      if (lastZoneSortSelect) {
+        lastZoneSortSelect.addEventListener('change', async function() {
+          // 重新绘制后区图表
+          if (globalBackTotalCounts.length > 0) {
+            const currentPeriodValue = getSavedPeriodSelection();
+            await drawBackZoneChart(globalBackTotalCounts, currentPeriodValue);
+          }
+        });
+      }
+    });
+    
+    // 复制杀号到剪贴板
+    function copyKillNumbers(zoneType) {
+      let killNumbersText;
+      let copyBtn;
+      
+      if (zoneType === 'front') {
+        const frontKillNumbersElement = document.getElementById('front-kill-numbers');
+        killNumbersText = frontKillNumbersElement.textContent.trim();
+        copyBtn = frontKillNumbersElement.closest('div').querySelector('.copy-btn');
+      } else {
+        const backKillNumbersElement = document.getElementById('back-kill-numbers');
+        killNumbersText = backKillNumbersElement.textContent.trim();
+        copyBtn = backKillNumbersElement.closest('div').querySelector('.copy-btn');
+      }
+      
+      if (!killNumbersText || killNumbersText === '--' || killNumbersText.includes('暂无推荐杀号')) {
+        alert('暂无推荐杀号可复制');
+        return;
+      }
+      
+      // 提取数字
+      const killNumbers = killNumbersText.match(/\d+/g);
+      if (!killNumbers || killNumbers.length === 0) {
+        alert('无法提取杀号数字');
+        return;
+      }
+      
+      // 复制到剪贴板
+      const textToCopy = killNumbers.join(' ');
+      
+      navigator.clipboard.writeText(textToCopy).then(() => {
+        // 显示复制成功反馈
+        if (copyBtn) {
+          const originalText = copyBtn.textContent;
+          copyBtn.textContent = '已复制';
+          copyBtn.style.backgroundColor = '#2196F3';
+          
+          // 恢复原始状态
+          setTimeout(() => {
+            copyBtn.textContent = originalText;
+            copyBtn.style.backgroundColor = '#4CAF50';
+          }, 1500);
+        }
+      }).catch(err => {
+        console.error('复制失败:', err);
+        alert('复制失败，请手动复制');
+      });
+    }
+    
+    // 绘制前区汇总数据图表
+    async function drawFrontZoneChart(totalCounts, periodValue) {
+      const canvas = document.getElementById('firstZoneChart');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      const isDarkTheme = document.body.classList.contains('dark-theme');
+      
+      // 清空画布
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 设置图表样式
+      const chartWidth = canvas.width;
+      const chartHeight = canvas.height;
+      const padding = { top: 20, right: 20, bottom: 40, left: 40 };
+      const chartInnerWidth = chartWidth - padding.left - padding.right;
+      const chartInnerHeight = chartHeight - padding.top - padding.bottom;
+      
+      // 准备数据
+      const data = [];
+      for (let i = 1; i <= 35; i++) {
+        data.push({
+          number: i,
+          count: totalCounts[i] || 0
+        });
+      }
+      
+      // 获取排序方式
+      const sortSelect = document.getElementById('firstZoneChartSort');
+      const sortType = sortSelect ? sortSelect.value : 'number';
+      
+      // 根据选择的排序方式对数据进行排序
+      switch (sortType) {
+        case 'count_asc':
+          // 按出现次数升序
+          data.sort((a, b) => a.count - b.count);
+          break;
+        case 'count_desc':
+          // 按出现次数降序
+          data.sort((a, b) => b.count - a.count);
+          break;
+        case 'number':
+        default:
+          // 按号码顺序
+          data.sort((a, b) => a.number - b.number);
+          break;
+      }
+      
+      // 计算排名：基于出现次数，最多的为1，顺序排名不跳过数字
+      // 先创建一个副本并按出现次数降序排序
+      const sortedByCount = [...data].sort((a, b) => b.count - a.count);
+      // 计算排名
+      const rankMap = {};
+      let currentRank = 1;
+      
+      for (let i = 0; i < sortedByCount.length; i++) {
+        if (i > 0 && sortedByCount[i].count !== sortedByCount[i - 1].count) {
+          currentRank++;
+        }
+        rankMap[sortedByCount[i].number] = currentRank;
+      }
+      // 为原始数据添加排名
+      data.forEach(item => {
+        item.rank = rankMap[item.number];
+      });
+      
+      // 计算最大值
+      const maxCount = Math.max(...data.map(item => item.count), 1);
+      
+      // 绘制背景
+      ctx.fillStyle = isDarkTheme ? '#222' : '#fff';
+      ctx.fillRect(0, 0, chartWidth, chartHeight);
+      
+      // 绘制坐标轴
+      ctx.strokeStyle = isDarkTheme ? '#666' : '#333';
+      ctx.lineWidth = 1;
+      
+      // Y轴
+      ctx.beginPath();
+      ctx.moveTo(padding.left, padding.top);
+      ctx.lineTo(padding.left, chartHeight - padding.bottom);
+      ctx.stroke();
+      
+      // X轴
+      ctx.beginPath();
+      ctx.moveTo(padding.left, chartHeight - padding.bottom);
+      ctx.lineTo(chartWidth - padding.right, chartHeight - padding.bottom);
+      ctx.stroke();
+      
+      // 绘制Y轴刻度和标签
+      const yAxisSteps = 5;
+      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      
+      for (let i = 0; i <= yAxisSteps; i++) {
+        const y = padding.top + (chartInnerHeight / yAxisSteps) * i;
+        const count = Math.round(maxCount * (1 - i / yAxisSteps));
+        
+        // 绘制刻度线
+        ctx.beginPath();
+        ctx.moveTo(padding.left - 5, y);
+        ctx.lineTo(padding.left, y);
+        ctx.stroke();
+        
+        // 绘制标签
+        ctx.fillText(count.toString(), padding.left - 10, y);
+      }
+      
+      // 绘制X轴标签
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      for (let i = 0; i < data.length; i++) {
+        const x = padding.left + (chartInnerWidth / data.length) * (i + 0.5);
+        const y = chartHeight - padding.bottom + 5;
+        ctx.fillText(data[i].number.toString(), x, y);
+      }
+      
+      // 绘制柱状图
+      const barWidth = chartInnerWidth / data.length * 0.8;
+      
+      data.forEach((item, index) => {
+        const barHeight = (item.count / maxCount) * chartInnerHeight;
+        const x = padding.left + (chartInnerWidth / data.length) * index + (chartInnerWidth / data.length - barWidth) / 2;
+        const y = chartHeight - padding.bottom - barHeight;
+        
+        // 颜色设置
+        // 根据数值大小调整颜色深度
+        const intensity = item.count / maxCount;
+        ctx.fillStyle = `rgba(223, 34, 32, ${0.5 + intensity * 0.5})`;
+        
+        // 绘制柱子
+        ctx.fillRect(x, y, barWidth, barHeight);
+        
+        // 绘制数值
+        ctx.fillStyle = isDarkTheme ? '#fff' : '#333';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        if (item.count > 0) {
+          ctx.fillText(item.count.toString(), x + barWidth / 2, y - 2);
+        }
+        
+        // 绘制排名
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        ctx.fillText(`${item.rank}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
+      });
+      
+      // 绘制统计期数信息
+      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      
+      // 获取并显示具体期数
+      let periodText;
+      if (periodValue === 'all') {
+        // 获取总期数
+        const totalPeriods = await huo_qu_lottery_results_total();
+        periodText = totalPeriods ? `${totalPeriods}期` : '全部期';
+      } else {
+        periodText = `最近${periodValue}期`;
+      }
+      
+      // 计算总出现次数和平均次数
+      const totalOccurrences = data.reduce((sum, item) => sum + item.count, 0);
+      const averageCount = Math.round(totalOccurrences / 35); // 前区有35个号码
+      
+      ctx.fillText(`统计期数: ${periodText} | 平均次数: ${averageCount}`, padding.left + 5, padding.top + 15);
+    }
+    
+    // 绘制后区汇总数据图表
+    async function drawBackZoneChart(backTotalCounts, periodValue) {
+      const canvas = document.getElementById('lastZoneChart');
+      if (!canvas) return;
+      
+      const ctx = canvas.getContext('2d');
+      const isDarkTheme = document.body.classList.contains('dark-theme');
+      
+      // 清空画布
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // 设置图表样式
+      const chartWidth = canvas.width;
+      const chartHeight = canvas.height;
+      const padding = { top: 20, right: 20, bottom: 40, left: 40 };
+      const chartInnerWidth = chartWidth - padding.left - padding.right;
+      const chartInnerHeight = chartHeight - padding.top - padding.bottom;
+      
+      // 准备数据
+      const data = [];
+      for (let i = 1; i <= 12; i++) {
+        data.push({
+          number: i,
+          count: backTotalCounts[i] || 0
+        });
+      }
+      
+      // 获取排序方式
+      const sortSelect = document.getElementById('lastZoneChartSort');
+      const sortType = sortSelect ? sortSelect.value : 'number';
+      
+      // 根据选择的排序方式对数据进行排序
+      switch (sortType) {
+        case 'count_asc':
+          // 按出现次数升序
+          data.sort((a, b) => a.count - b.count);
+          break;
+        case 'count_desc':
+          // 按出现次数降序
+          data.sort((a, b) => b.count - a.count);
+          break;
+        case 'number':
+        default:
+          // 按号码顺序
+          data.sort((a, b) => a.number - b.number);
+          break;
+      }
+      
+      // 计算排名：基于出现次数，最多的为1，顺序排名不跳过数字
+      // 先创建一个副本并按出现次数降序排序
+      const sortedByCount = [...data].sort((a, b) => b.count - a.count);
+      // 计算排名
+      const rankMap = {};
+      let currentRank = 1;
+      
+      for (let i = 0; i < sortedByCount.length; i++) {
+        if (i > 0 && sortedByCount[i].count !== sortedByCount[i - 1].count) {
+          currentRank++;
+        }
+        rankMap[sortedByCount[i].number] = currentRank;
+      }
+      // 为原始数据添加排名
+      data.forEach(item => {
+        item.rank = rankMap[item.number];
+      });
+      
+      // 计算最大值
+      const maxCount = Math.max(...data.map(item => item.count), 1);
+      
+      // 绘制背景
+      ctx.fillStyle = isDarkTheme ? '#222' : '#fff';
+      ctx.fillRect(0, 0, chartWidth, chartHeight);
+      
+      // 绘制坐标轴
+      ctx.strokeStyle = isDarkTheme ? '#666' : '#333';
+      ctx.lineWidth = 1;
+      
+      // Y轴
+      ctx.beginPath();
+      ctx.moveTo(padding.left, padding.top);
+      ctx.lineTo(padding.left, chartHeight - padding.bottom);
+      ctx.stroke();
+      
+      // X轴
+      ctx.beginPath();
+      ctx.moveTo(padding.left, chartHeight - padding.bottom);
+      ctx.lineTo(chartWidth - padding.right, chartHeight - padding.bottom);
+      ctx.stroke();
+      
+      // 绘制Y轴刻度和标签
+      const yAxisSteps = 5;
+      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'right';
+      ctx.textBaseline = 'middle';
+      
+      for (let i = 0; i <= yAxisSteps; i++) {
+        const y = padding.top + (chartInnerHeight / yAxisSteps) * i;
+        const count = Math.round(maxCount * (1 - i / yAxisSteps));
+        
+        // 绘制刻度线
+        ctx.beginPath();
+        ctx.moveTo(padding.left - 5, y);
+        ctx.lineTo(padding.left, y);
+        ctx.stroke();
+        
+        // 绘制标签
+        ctx.fillText(count.toString(), padding.left - 10, y);
+      }
+      
+      // 绘制X轴标签
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'top';
+      data.forEach((item, index) => {
+        const x = padding.left + (chartInnerWidth / data.length) * (index + 0.5);
+        const y = chartHeight - padding.bottom + 5;
+        ctx.fillText(item.number.toString(), x, y);
+      });
+      
+      // 绘制柱状图
+      const barWidth = chartInnerWidth / data.length * 0.8;
+      
+      data.forEach((item, index) => {
+        const barHeight = (item.count / maxCount) * chartInnerHeight;
+        const x = padding.left + (chartInnerWidth / data.length) * index + (chartInnerWidth / data.length - barWidth) / 2;
+        const y = chartHeight - padding.bottom - barHeight;
+        
+        // 颜色设置
+        // 根据数值大小调整颜色深度
+        const intensity = item.count / maxCount;
+        ctx.fillStyle = `rgba(164, 98, 248, ${0.5 + intensity * 0.5})`;
+        
+        // 绘制柱子
+        ctx.fillRect(x, y, barWidth, barHeight);
+        
+        // 绘制数值
+        ctx.fillStyle = isDarkTheme ? '#fff' : '#333';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'bottom';
+        if (item.count > 0) {
+          ctx.fillText(item.count.toString(), x + barWidth / 2, y - 2);
+        }
+      });
+      
+      // 绘制统计期数信息
+      ctx.fillStyle = isDarkTheme ? '#ccc' : '#333';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      ctx.textBaseline = 'bottom';
+      
+      // 获取并显示具体期数
+      let periodText;
+      if (periodValue === 'all') {
+        // 获取总期数
+        const totalPeriods = await huo_qu_lottery_results_total();
+        periodText = totalPeriods ? `${totalPeriods}期` : '全部期';
+      } else {
+        periodText = `最近${periodValue}期`;
+      }
+      
+      // 计算总出现次数和平均次数
+      const totalOccurrences = data.reduce((sum, item) => sum + item.count, 0);
+      const averageCount = Math.round(totalOccurrences / 12); // 后区有12个号码
+      
+      ctx.fillText(`统计期数: ${periodText} | 平均次数: ${averageCount}`, padding.left + 5, padding.top + 15);
+    }
+    
+    // 跳转到后区回测页面
+    function goToBacktestHouPage() {
+      window.location.href = `dao_shu_7_qi_hou_qu_sha_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
+    }
+    
+    // 移动端侧边栏切换
+    function toggleSidebar() {
+      const sidebar = document.querySelector('.left-sidebar');
+      sidebar.classList.toggle('open');
+    }
+    
+    // 导航项点击事件 - 只处理没有<a>标签的导航项，避免与默认<a>标签事件冲突
+    document.querySelectorAll('.nav-item').forEach(item => {
+      // 检查当前导航项是否包含<a>标签，如果包含则跳过，使用<a>标签的默认行为
+      const hasLink = item.querySelector('a') !== null;
+      if (hasLink) {
+        return; // 跳过包含<a>标签的导航项
+      }
+      
+      item.addEventListener('click', function() {
+        // 移除所有导航项的活动状态
+        document.querySelectorAll('.nav-item').forEach(navItem => {
+          navItem.classList.remove('active');
+        });
+        // 添加当前导航项的活动状态
+        this.classList.add('active');
+        
+        // 获取当前点击项的文本内容
+        const navText = this.textContent.trim();
+        console.log('点击的导航项文本:', navText);
+        
+        // 使用更宽松的匹配方式，只要文本中包含关键词即可
+        if (navText.includes('两球') || navText.includes('双球')) {
+          // 检查是否包含"倒数2期"或"倒数3期"以区分不同的两球组合分析页面
+          if (navText.includes('倒数2期')) {
+            console.log('跳转到倒数2期两球组合分析页面');
+            window.location.href = 'dao_shu_2_qi_liang_qiu_zu_he.html';
+          } else if (navText.includes('倒数3期')) {
+            console.log('跳转到倒数3期两球组合分析页面');
+            window.location.href = 'dao_shu_3_qi_liang_qiu_zu_he.html';
+          } else if (navText.includes('倒数4期')) {
+            console.log('跳转到倒数4期两球组合分析页面');
+            window.location.href = 'dao_shu_4_qi_liang_qiu_zu_he.html';
+          } else if (navText.includes('倒数5期')) {
+            console.log('跳转到倒数5期两球组合分析页面');
+            window.location.href = 'dao_shu_5_qi_liang_qiu_zu_he.html';
+          } else if (navText.includes('倒数6期')) {
+            console.log('跳转到倒数6期两球组合分析页面');
+            window.location.href = 'dao_shu_6_qi_liang_qiu_zu_he.html';
+          } else if (navText.includes('倒数7期')) {
+            console.log('跳转到倒数7期两球组合分析页面');
+            window.location.href = 'dao_shu_7_qi_liang_qiu_zu_he.html';
+          } else {
+            console.log('跳转到最新1期两球组合分析页面');
+            window.location.href = 'sha_hao_fen_xi.html';
+          }
+        } else if (navText.includes('三球') || navText.includes('三区')) {
+          // 检查是否包含"倒数2期"或"倒数3期"以区分不同的三球组合分析页面
+          if (navText.includes('倒数2期')) {
+            console.log('跳转到倒数2期三球组合分析页面');
+            window.location.href = 'dao_shu_2_qi_san_qiu_zu_he.html';
+          } else if (navText.includes('倒数3期')) {
+            console.log('跳转到倒数3期三球组合分析页面');
+            window.location.href = 'dao_shu_3_qi_san_qiu_zu_he.html';
+          } else {
+            console.log('跳转到最新1期三球组合分析页面');
+            window.location.href = 'san_qiu_fen_xi.html';
+          }
+        }
+        
+        // 在移动端点击导航后关闭侧边栏
+        if (window.innerWidth <= 768) {
+          toggleSidebar();
+        }
+      });
+    });
+  </script>
+  
+    <!-- 核心功能：最新开奖信息展示 -->
+    <script>
+      // 确保DOM完全加载后再执行
+      document.addEventListener('DOMContentLoaded', function() {
+        console.log('DOM已完全加载，开始初始化最新开奖信息功能');
+        
+        // 删除刷新按钮功能
+        
+        // 加载最新开奖信息
+        function loadLatestDrawInfo() {
+          console.log('开始加载最新开奖信息...');
+          
+          // 先更新UI显示加载中状态
+          const infoBox = document.getElementById('latestDrawInfoBoxContent');
+          if (infoBox) {
+            infoBox.innerHTML = '<div style="color: #DF2220; font-weight: bold;">加载中...</div>';
+          } else {
+            console.error('未找到latestDrawInfoBoxContent元素');
+          }
+          
+          // 使用简单的fetch调用，添加超时处理
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 10000); // 10秒超时
+          
+          fetch('http://localhost:18889/sql_zui_xin_yi_qi', {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            signal: controller.signal
+          })
+          .then(response => {
+            clearTimeout(timeoutId);
+            console.log('fetch响应状态:', response.status, '响应类型:', response.type);
+            if (!response.ok) {
+              throw new Error(`HTTP错误! 状态: ${response.status}`);
+            }
+            return response.json();
+          })
+          .then(data => {
+            console.log('成功获取开奖数据:', JSON.stringify(data));
+            
+            // 更新UI显示数据
+            const infoBox = document.getElementById('latestDrawInfoBoxContent');
+            if (infoBox) {
+              if (data && data.success && data.latestDraw) {
+                const draw = data.latestDraw;
+                // 处理日期格式
+                let formattedDate = draw.drawDate || '-';
+                if (formattedDate && typeof formattedDate === 'string') {
+                  if (formattedDate.includes('T')) {
+                    formattedDate = formattedDate.split('T')[0];
+                  } else if (formattedDate.includes(' ')) {
+                    formattedDate = formattedDate.split(' ')[0];
+                  }
+                }
+                
+                infoBox.innerHTML = `
+                <div style="font-weight: bold; color: #DF2220; font-size: 16px;">
+                  期号: ${draw.period}
+                </div>
+                <div>
+                  开奖日期: ${formattedDate}
+                </div>
+                <div>
+                  前区号码: ${Array.isArray(draw.firstZoneNumbers) ? draw.firstZoneNumbers.map(num => `<span class="red-ball">${num}</span>`).join(' ') : '-'}
+                </div>
+                <div>
+                  后区号码: ${Array.isArray(draw.lastZoneNumbers) ? draw.lastZoneNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ') : '-'}
+                </div>
+                `;
+              } else {
+                infoBox.innerHTML = '<div style="color: #DF2220;">暂无开奖数据</div>';
+                console.warn('返回的数据格式不正确或无数据:', data);
+              }
+            }
+          })
+          .catch(error => {
+            clearTimeout(timeoutId);
+            console.error('获取开奖信息失败:', error.name, error.message);
+            
+            // 更新UI显示错误信息
+            const infoBox = document.getElementById('latestDrawInfoBoxContent');
+            if (infoBox) {
+              infoBox.innerHTML = '<div style="color: #DF2220;">接口失败</div>';
+            }
+            
+            // 显示错误提示
+            alert('接口失败: ' + (error.message || '未知错误'));
+          });
+        }
+        
+        // 延迟一秒后加载数据，确保页面元素都已渲染
+        setTimeout(() => {
+          console.log('延迟加载最新开奖信息...');
+          loadLatestDrawInfo();
+        }, 1000);
+      });
+    </script>
+</body>
+</html>

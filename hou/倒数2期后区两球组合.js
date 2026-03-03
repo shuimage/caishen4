@@ -16,10 +16,24 @@ const router = express.Router();
  */
 async function getSecondLastBackZoneAnalysis(period) {
   try {
+    // 处理中文字符串格式的period参数
+    let processedPeriod = period;
+    if (typeof period === 'string' && period !== 'all') {
+      // 尝试从中文描述中提取数字
+      const numberMatch = period.match(/\d+/);
+      if (numberMatch) {
+        processedPeriod = numberMatch[0];
+        console.log('从中文描述中提取的数字:', processedPeriod);
+      }
+    }
+    
     // 验证参数
-    if (period !== 'all' && (isNaN(period) || parseInt(period) <= 0)) {
+    if (processedPeriod !== 'all' && (isNaN(processedPeriod) || parseInt(processedPeriod) <= 0)) {
       throw new Error('无效的周期参数，必须是正整数或"all"');
     }
+    
+    // 使用处理后的period
+    period = processedPeriod;
 
     // 获取倒数第2期的开奖数据
     console.log('开始查询倒数第2期开奖数据...');

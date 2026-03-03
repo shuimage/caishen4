@@ -9,14 +9,44 @@ router.use(express.json());
 
 // 处理球号数据，确保格式一致
 function processBalls(balls) {
-  if (!balls) return [];
-  // 将球号字符串转换为数组并处理成标准格式
-  if (typeof balls === 'string') {
-    return balls.split(' ')
-      .filter(ball => ball.trim() !== '')
-      .map(ball => String(ball).padStart(2, '0'));
-  } else if (Array.isArray(balls)) {
-    return balls.map(ball => String(ball).padStart(2, '0'));
+  try {
+    if (!balls) return [];
+    
+    // 将球号字符串转换为数组并处理成标准格式
+    if (typeof balls === 'string') {
+      // 检查是否是数组格式的字符串，如"[9, 11, 19, 30, 35]"
+      if (balls.startsWith('[') && balls.endsWith(']')) {
+        try {
+          const parsedBalls = JSON.parse(balls);
+          if (Array.isArray(parsedBalls)) {
+            return parsedBalls.map(ball => String(ball).padStart(2, '0'));
+          }
+        } catch (e) {
+          // 解析失败，按照空格分隔处理
+        }
+      }
+      // 否则按照空格分隔处理
+      return balls.split(' ')
+        .filter(ball => ball.trim() !== '')
+        .map(ball => String(ball).padStart(2, '0'));
+    } else if (Array.isArray(balls)) {
+      // 如果是数组，检查第一个元素是否是字符串形式的数组元素
+      if (balls.length > 0 && typeof balls[0] === 'string' && balls[0].startsWith('[')) {
+        // 尝试将整个数组合并为一个字符串并解析
+        try {
+          const combinedString = balls.join(' ');
+          const parsedBalls = JSON.parse(combinedString);
+          if (Array.isArray(parsedBalls)) {
+            return parsedBalls.map(ball => String(ball).padStart(2, '0'));
+          }
+        } catch (e) {
+          // 解析失败，尝试处理每个元素
+        }
+      }
+      return balls.map(ball => String(ball).padStart(2, '0'));
+    }
+  } catch (e) {
+    console.error('处理球号数据失败:', e, 'balls:', balls);
   }
   return [];
 }
@@ -158,40 +188,57 @@ router.post('/', async (req, res) => {
     // 过滤出真正包含请求组合的记录，并查找下下下下下期数据
     let results = [];
     
+    console.log('开始过滤结果，原始数据数量:', rawResults.length);
+    console.log('匹配组合:', matchingCombinations);
+    
     rawResults.forEach(row => {
-      const currentDrawNumbers = processBalls(row.draw_info);
-      
-      // 分离主组合和目标球，只检查主组合（前两个球）
-      const isMatch = matchingCombinations.some(fullCombination => {
-        const mainCombo = fullCombination.split('-').slice(0, 2).join('-');
-        const match = checkCombinationInDraw(currentDrawNumbers, mainCombo);
-        return match;
-      });
-      
-      if (isMatch) {
-        // 从当前bian_hao中提取数字部分
-        const currentNumericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
+      try {
+        const currentDrawNumbers = processBalls(row.draw_info);
+        console.log('当前记录期号:', row.issue, '开奖号码:', currentDrawNumbers);
         
-        // 计算下下下下下期的数字bian_hao（当前期+5）
-        const nextNextNextNextNumericBianHao = currentNumericBianHao + 5;
+        // 分离主组合和目标球，只检查主组合（前两个球）
+        const isMatch = matchingCombinations.some(fullCombination => {
+          const mainCombo = fullCombination.split('-').slice(0, 2).join('-');
+          const match = checkCombinationInDraw(currentDrawNumbers, mainCombo);
+          console.log('检查组合:', mainCombo, '结果:', match);
+          return match;
+        });
         
-        // 查找下下下下下期数据
-        const nextNextNextNextData = numericBianHaoToDataMap.get(nextNextNextNextNumericBianHao);
-        
-        if (nextNextNextNextData) {
-          const nextNextNextNextDrawNumbers = processBalls(nextNextNextNextData.draw_info);
+        if (isMatch) {
+          console.log('找到匹配组合的记录:', row.issue);
+          // 从当前bian_hao中提取数字部分
+          const currentNumericBianHao = parseInt(row.bian_hao.replace(/[^0-9]/g, ''));
+          console.log('当前bian_hao数字部分:', currentNumericBianHao);
           
-          // 直接添加结果，后续统一处理目标球
-          results.push({
-            id: row.id,
-            period: row.issue,
-            draw_info: currentDrawNumbers,
-            next_next_next_next_period: nextNextNextNextData.issue,
-            next_next_next_next_draw_info: nextNextNextNextDrawNumbers
-          });
+          // 计算下下下下下期的数字bian_hao（当前期+5）
+          const nextNextNextNextNumericBianHao = currentNumericBianHao + 5;
+          console.log('下下下下下期bian_hao数字部分:', nextNextNextNextNumericBianHao);
+          
+          // 查找下下下下下期数据
+          const nextNextNextNextData = numericBianHaoToDataMap.get(nextNextNextNextNumericBianHao);
+          
+          if (nextNextNextNextData) {
+            console.log('找到下下下下下期数据:', nextNextNextNextData.issue);
+            const nextNextNextNextDrawNumbers = processBalls(nextNextNextNextData.draw_info);
+            
+            // 直接添加结果，后续统一处理目标球
+            results.push({
+              id: row.id,
+              period: row.issue,
+              draw_info: currentDrawNumbers,
+              next_next_next_next_period: nextNextNextNextData.issue,
+              next_next_next_next_draw_info: nextNextNextNextDrawNumbers
+            });
+          } else {
+            console.log('未找到下下下下下期数据:', nextNextNextNextNumericBianHao);
+          }
         }
+      } catch (error) {
+        console.error('处理记录时发生错误:', error, '记录:', row);
       }
     });
+    
+    console.log('过滤后的结果数量:', results.length);
     
     // 如果有目标球，检查目标球是否在下下下下下期出现
     if (target_ball !== null && target_ball !== undefined && target_ball !== '') {

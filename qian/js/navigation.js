@@ -26,6 +26,26 @@ const navigationData = [
     link: 'dao_shu_5_qi_liang_qiu_zu_he.html'
   },
   {
+    icon: '✚',
+    text: '倒数6期两球组合分析',
+    link: 'dao_shu_6_qi_liang_qiu_zu_he.html'
+  },
+  {
+    icon: '✛',
+    text: '倒数7期两球组合分析',
+    link: 'dao_shu_7_qi_liang_qiu_zu_he.html'
+  },
+  {
+    icon: '✛',
+    text: '倒数8期两球组合分析',
+    link: 'dao_shu_8_qi_liang_qiu_zu_he.html'
+  },
+  {
+    icon: '✛',
+    text: '倒数9期两球组合分析',
+    link: 'dao_shu_9_qi_liang_qiu_zu_he.html'
+  },
+  {
     icon: '🔄',
     text: '倒数X期两球组合分析',
     link: 'dao_shu_x_qi_liang_qiu_zu_he.html'

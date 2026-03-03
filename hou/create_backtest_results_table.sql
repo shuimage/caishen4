@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS backtest_results (
   cache_key VARCHAR(255) NOT NULL UNIQUE,
   backtest_results TEXT NOT NULL,
   current_period VARCHAR(20) DEFAULT NULL,
+  backtest_period VARCHAR(10) DEFAULT NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   INDEX idx_cache_key (cache_key)

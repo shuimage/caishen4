@@ -11,6 +11,14 @@ const sqlDaoShu3QiRouter = require('./SQL倒数3期.js');
 const sqlDaoShu4QiRouter = require('./sql_dao_shu_4_qi.js'); // 导入倒数第4期数据路由
 // 导入倒数第5期数据路由
 const sqlDaoShu5QiRouter = require('./sql_dao_shu_5_qi.js');
+// 导入倒数第6期数据路由
+const sqlDaoShu6QiRouter = require('./sql_dao_shu_6_qi.js');
+// 导入倒数第7期数据路由
+const sqlDaoShu7QiRouter = require('./sql_dao_shu_7_qi.js');
+// 导入倒数第8期数据路由
+const sqlDaoShu8QiRouter = require('./sql_dao_shu_8_qi.js');
+// 导入倒数第9期数据路由
+const sqlDaoShu9QiRouter = require('./sql_dao_shu_9_qi.js');
 // 导入倒数X期数据路由
 const sqlDaoShuXQiRouter = require('./sql_dao_shu_x_qi.js');
 // 导入倒数4期两球组合详情路由
@@ -34,10 +42,28 @@ const daoShu4QiLiangQiuZuHeRouter = require('./倒数4期两球组合前区.js')
 const daoShu4QiHouQuZuHeRouter = require('./倒数4期两球组合后区.js'); // 导入倒数5期两球组合前区.js
 const daoShu5QiLiangQiuZuHeRouter = require('./倒数5期两球组合前区.js'); // 导入倒数5期后区两球组合路由
 const daoShu5QiHouQuZuHeRouter = require('./倒数5期两球组合后区.js'); // 导入倒数5期后区两球组合路由
+// 导入倒数6期两球组合路由
+const daoShu6QiLiangQiuZuHeRouter = require('./倒数6期两球组合前区.js'); // 导入倒数6期前区两球组合路由
+const daoShu6QiHouQuZuHeRouter = require('./倒数6期两球组合后区.js'); // 导入倒数6期后区两球组合路由
+// 导入倒数7期两球组合路由
+const daoShu7QiLiangQiuZuHeRouter = require('./倒数7期两球组合前区.js'); // 导入倒数7期前区两球组合路由
+const daoShu7QiHouQuZuHeRouter = require('./倒数7期两球组合后区.js'); // 导入倒数7期后区两球组合路由
+// 导入倒数8期两球组合路由
+const daoShu8QiLiangQiuZuHeRouter = require('./倒数8期两球组合前区.js'); // 导入倒数8期前区两球组合路由
+const daoShu8QiHouQuZuHeRouter = require('./倒数8期两球组合后区.js'); // 导入倒数8期后区两球组合路由
+// 导入倒数9期两球组合路由
+const daoShu9QiLiangQiuZuHeRouter = require('./倒数9期两球组合前区.js'); // 导入倒数9期前区两球组合路由
+const daoShu9QiHouQuZuHeRouter = require('./倒数9期两球组合后区.js'); // 导入倒数9期后区两球组合路由
 // 导入倒数X期两球组合路由
 const daoShuXQiLiangQiuZuHeRouter = require('./dao_shu_x_qi_liang_qiu_zu_he.js'); // 导入倒数X期前区两球组合路由
 const daoShuXQiHouQuZuHeRouter = require('./dao_shu_x_qi_hou_qu_zu_he.js'); // 导入倒数X期后区两球组合路由
 const daoShuXQiLiangQiuZuHeXiangQingRouter = require('./dao_shu_x_qi_liang_qiu_zu_he_xiang_qing.js'); // 导入倒数X期两球组合详情路由
+// 导入倒数6期两球组合详情路由
+const daoShu6QiLiangQiuZuHeXiangQingRouter = require('./倒数6期两球组合详情服务器.js'); // 导入倒数6期两球组合详情路由
+// 导入倒数7期两球组合详情路由
+const daoShu7QiLiangQiuZuHeXiangQingRouter = require('./倒数7期两球组合详情服务器.js'); // 导入倒数7期两球组合详情路由
+// 导入倒数8期两球组合详情路由
+const daoShu8QiLiangQiuZuHeXiangQingRouter = require('./倒数8期两球组合详情服务器.js'); // 导入倒数8期两球组合详情路由
 // 导入近两期两球组合路由
 const jinLiangQiLiangQiuZuHeFrontRouter = require('./近两期两球组合前区.js'); // 导入近两期前区两球组合路由
 const jinLiangQiLiangQiuZuHeBackRouter = require('./近两期两球组合后区.js'); // 导入近两期后区两球组合路由
@@ -72,6 +98,8 @@ const daoShu3QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数3期两球前�
 const daoShu4QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数4期两球前区买号回测.js'); // 导入倒数4期两球前区买号回测路由
 // 导入倒数5期两球前区买号回测路由
 const daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数5期两球前区买号回测.js'); // 导入倒数5期两球前区买号回测路由
+// 导入倒数6期两球前区买号回测路由
+const daoShu6QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数6期两球前区买号回测.js'); // 导入倒数6期两球前区买号回测路由
 // 导入近两期两球前区买号回测路由
 const jinLiangQiLiangQiuQianQuMaiHaoHuiCeRouter = require('./近两期两球前区买号回测.js'); // 导入近两期两球前区买号回测路由
 // 导入近两期两球后区买号回测路由
@@ -132,6 +160,10 @@ app.use('/sql_dao_shu_2_qi', sqlDaoShu2QiRouter);
 app.use('/sql_dao_shu_3_qi', sqlDaoShu3QiRouter);
 app.use('/sql_dao_shu_4_qi', sqlDaoShu4QiRouter); // 注册倒数第4期数据路由
 app.use('/sql_dao_shu_5_qi', sqlDaoShu5QiRouter); // 注册倒数第5期数据路由
+app.use('/sql_dao_shu_6_qi', sqlDaoShu6QiRouter); // 注册倒数第6期数据路由
+app.use('/sql_dao_shu_7_qi', sqlDaoShu7QiRouter); // 注册倒数第7期数据路由
+app.use('/sql_dao_shu_8_qi', sqlDaoShu8QiRouter); // 注册倒数第8期数据路由
+app.use('/sql_dao_shu_9_qi', sqlDaoShu9QiRouter); // 注册倒数第9期数据路由
 app.use('/sql_dao_shu_x_qi', sqlDaoShuXQiRouter); // 注册倒数X期数据路由
 app.use('/dao_shu_2_qi_tui_jian_sha_hao', daoShu2QiTuiJianShaHaoRouter);
 app.use('/huo_qu_ti_cai_shu_ju', huoQuTiCaiShuJuRouter);
@@ -148,6 +180,15 @@ app.use('/dao_shu_4_qi_liang_qiu_zu_he', daoShu4QiLiangQiuZuHeRouter); // 注册
 app.use('/dao_shu_4_qi_hou_qu_zu_he', daoShu4QiHouQuZuHeRouter); // 注册倒数4期后区两球组合路由
 app.use('/dao_shu_5_qi_liang_qiu_zu_he', daoShu5QiLiangQiuZuHeRouter); // 注册倒数5期前区两球组合路由
 app.use('/dao_shu_5_qi_hou_qu_zu_he', daoShu5QiHouQuZuHeRouter); // 注册倒数5期后区两球组合路由
+app.use('/dao_shu_6_qi_liang_qiu_zu_he', daoShu6QiLiangQiuZuHeRouter); // 注册倒数6期前区两球组合路由
+app.use('/dao_shu_6_qi_hou_qu_zu_he', daoShu6QiHouQuZuHeRouter); // 注册倒数6期后区两球组合路由
+app.use('/dao_shu_7_qi_liang_qiu_zu_he', daoShu7QiLiangQiuZuHeRouter); // 注册倒数7期前区两球组合路由
+app.use('/dao_shu_7_qi_hou_qu_zu_he', daoShu7QiHouQuZuHeRouter); // 注册倒数7期后区两球组合路由
+app.use('/dao_shu_8_qi_liang_qiu_zu_he', daoShu8QiLiangQiuZuHeRouter); // 注册倒数8期前区两球组合路由
+app.use('/dao_shu_8_qi_hou_qu_zu_he', daoShu8QiHouQuZuHeRouter); // 注册倒数8期后区两球组合路由
+app.use('/dao_shu_9_qi_liang_qiu_zu_he', daoShu9QiLiangQiuZuHeRouter); // 注册倒数9期前区两球组合路由
+app.use('/dao_shu_9_qi_hou_qu_zu_he', daoShu9QiHouQuZuHeRouter); // 注册倒数9期后区两球组合路由
+app.use('/dao_shu_9_qi_hou_qu_liang_qiu_zu_he', daoShu9QiHouQuZuHeRouter); // 注册倒数9期后区两球组合分析路由
 // 注册倒数X期两球组合路由
 app.use('/dao_shu_x_qi_liang_qiu_zu_he', daoShuXQiLiangQiuZuHeRouter); // 注册倒数X期前区两球组合路由
 app.use('/dao_shu_x_qi_hou_qu_zu_he', daoShuXQiHouQuZuHeRouter); // 注册倒数X期后区两球组合路由
@@ -494,6 +535,12 @@ app.use((err, req, res, next) => {
 app.use('/zuhe/dao_shu_3_qi_liang_qiu_zu_he_xiang_qing', daoShu3QiLiangQiuZuHeXiangQingRouter); // 注册倒数3期两球组合详情路由
 app.use('/zuhe/dao_shu_4_qi_liang_qiu_zu_he_xiang_qing', daoShu4QiLiangQiuZuHeXiangQingRouter); // 注册倒数4期两球组合详情路由
 app.use('/zuhe/dao_shu_5_qi_liang_qiu_zu_he_xiang_qing', daoShu5QiLiangQiuZuHeXiangQingRouter); // 注册倒数5期两球组合详情路由
+app.use('/zuhe/dao_shu_6_qi_liang_qiu_zu_he_xiang_qing', daoShu6QiLiangQiuZuHeXiangQingRouter); // 注册倒数6期两球组合详情路由
+app.use('/zuhe/dao_shu_7_qi_liang_qiu_zu_he_xiang_qing', daoShu7QiLiangQiuZuHeXiangQingRouter); // 注册倒数7期两球组合详情路由
+app.use('/zuhe/dao_shu_8_qi_liang_qiu_zu_he_xiang_qing', daoShu8QiLiangQiuZuHeXiangQingRouter); // 注册倒数8期两球组合详情路由
+// 导入倒数9期两球组合详情路由
+const daoShu9QiLiangQiuZuHeXiangQingRouter = require('./倒数9期两球组合详情服务器.js'); // 导入倒数9期两球组合详情路由
+app.use('/zuhe/dao_shu_9_qi_liang_qiu_zu_he_xiang_qing', daoShu9QiLiangQiuZuHeXiangQingRouter); // 注册倒数9期两球组合详情路由
 app.use('/san_qiu_zu_he_xiang_qing', sanQiuZuHeXiangQingRouter); // 注册最新1期三球组合详情路由
 app.use('/san_qiu_xiang_qing', sanQiuXiangQingRouter);
 app.use('/huo_qu_sha_hao_hui_ce', shaHaoHuiCeRouter); // 注册杀号回测路由
@@ -523,6 +570,8 @@ app.use('/dao_shu_3_qi_mai_hao_hui_ce', daoShu3QiLiangQiuQianQuMaiHaoHuiCeRouter
 app.use('/dao_shu_4_qi_mai_hao_hui_ce', daoShu4QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数4期两球前区买号回测路由
 // 注册倒数5期两球前区买号回测路由
 app.use('/dao_shu_5_qi_mai_hao_hui_ce', daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数5期两球前区买号回测路由
+// 注册倒数6期两球前区买号回测路由
+app.use('/dao_shu_6_qi_mai_hao_hui_ce', daoShu6QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数6期两球前区买号回测路由
 app.use('/dao_shu_5_qi_qian_qu_mai_hao_hui_ce', daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数5期前区买号回测路由（兼容前端请求路径）
 // 注册近两期两球前区买号回测路由
 app.use('/jin_liang_qi_mai_hao_hui_ce', jinLiangQiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册近两期两球前区买号回测路由
@@ -748,6 +797,14 @@ console.log(`倒数4期前区两球组合接口: http://localhost:${PORT}/dao_sh
 console.log(`倒数4期后区两球组合接口: http://localhost:${PORT}/dao_shu_4_qi_hou_qu_zu_he`);
 console.log(`倒数5期前区两球组合接口: http://localhost:${PORT}/dao_shu_5_qi_liang_qiu_zu_he`);
 console.log(`倒数5期后区两球组合接口: http://localhost:${PORT}/dao_shu_5_qi_hou_qu_zu_he`);
+console.log(`倒数6期前区两球组合接口: http://localhost:${PORT}/dao_shu_6_qi_liang_qiu_zu_he`);
+console.log(`倒数6期后区两球组合接口: http://localhost:${PORT}/dao_shu_6_qi_hou_qu_zu_he`);
+console.log(`倒数7期前区两球组合接口: http://localhost:${PORT}/dao_shu_7_qi_liang_qiu_zu_he`);
+console.log(`倒数7期后区两球组合接口: http://localhost:${PORT}/dao_shu_7_qi_hou_qu_zu_he`);
+console.log(`倒数8期前区两球组合接口: http://localhost:${PORT}/dao_shu_8_qi_liang_qiu_zu_he`);
+console.log(`倒数8期后区两球组合接口: http://localhost:${PORT}/dao_shu_8_qi_hou_qu_zu_he`);
+console.log(`倒数9期前区两球组合接口: http://localhost:${PORT}/dao_shu_9_qi_liang_qiu_zu_he`);
+console.log(`倒数9期后区两球组合接口: http://localhost:${PORT}/dao_shu_9_qi_hou_qu_zu_he`);
 console.log(`====================================`);
     });
   } catch (error) {
