@@ -128,6 +128,9 @@ const huanYuanHuiCeReLengRouter = require('./huan_yuan_hui_ce_re_leng.js'); // �
 const huiCeJieGuoRouter = require('./回测结果保存获取.js');
 // 导入还原九转连环图路由
 const huanYuanJiuZhuanLianHuanTuRouter = require('./huan_yuan_jiu_zhuan_lian_huan_tu.js');
+// 导入前区深度预测路由
+const qianQuShenDuYuCeRouter = require('./qian_qu_shen_du_yu_ce.js');
+const qiHaoKaiJiangXinXiRouter = require('./qi_hao_kai_jiang_xin_xi.js');
 
 // 设置中间件
 app.use(express.json());
@@ -600,6 +603,10 @@ app.use('/huan_yuan_hui_ce_re_leng', huanYuanHuiCeReLengRouter); // 注册幻圆
 // 注册回测结果保存和获取路由
 app.use('/', huiCeJieGuoRouter);
 
+// 注册前区深度预测路由
+app.use('/qian_qu_shen_du_yu_ce', qianQuShenDuYuCeRouter);
+app.use('/qi_hao_kai_jiang_xin_xi', qiHaoKaiJiangXinXiRouter);
+
 // 测试路由
 app.get('/test', async (req, res) => {
   try {
@@ -668,6 +675,72 @@ app.get('/sql_jin_liang_qi', async (req, res) => {
     }
   } catch (error) {
     console.error('获取近两期开奖数据失败:', error);
+    res.status(500).json({ success: false, message: '数据库查询失败' });
+  }
+});
+
+// 根据期号获取开奖信息
+app.get('/sql_kai_jiang_info', async (req, res) => {
+  try {
+    const { period } = req.query;
+    if (!period) {
+      return res.status(400).json({ success: false, message: '期号参数不能为空' });
+    }
+    
+    // 查询指定期号的开奖信息
+    const result = await query('SELECT * FROM lottery_results WHERE issue = ?', [period]);
+    
+    if (result && result.length > 0) {
+      const drawInfo = result[0];
+      
+      // 处理球号数据
+      let firstZoneNumbers = [];
+      let lastZoneNumbers = [];
+      
+      // 解析前区号码
+      if (drawInfo.red) {
+        if (typeof drawInfo.red === 'string') {
+          if (drawInfo.red.includes(',')) {
+            firstZoneNumbers = drawInfo.red.split(',').map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+          } else if (drawInfo.red.includes(' ')) {
+            firstZoneNumbers = drawInfo.red.split(' ').filter(num => num.trim() !== '').map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+          } else {
+            firstZoneNumbers = (drawInfo.red.match(/\d+/g) || []).map(num => parseInt(num)).filter(num => !isNaN(num));
+          }
+        } else if (Array.isArray(drawInfo.red)) {
+          firstZoneNumbers = drawInfo.red.map(num => parseInt(num)).filter(num => !isNaN(num));
+        }
+      }
+      
+      // 解析后区号码
+      if (drawInfo.blue) {
+        if (typeof drawInfo.blue === 'string') {
+          if (drawInfo.blue.includes(',')) {
+            lastZoneNumbers = drawInfo.blue.split(',').map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+          } else if (drawInfo.blue.includes(' ')) {
+            lastZoneNumbers = drawInfo.blue.split(' ').filter(num => num.trim() !== '').map(num => parseInt(num.trim())).filter(num => !isNaN(num));
+          } else {
+            lastZoneNumbers = (drawInfo.blue.match(/\d+/g) || []).map(num => parseInt(num)).filter(num => !isNaN(num));
+          }
+        } else if (Array.isArray(drawInfo.blue)) {
+          lastZoneNumbers = drawInfo.blue.map(num => parseInt(num)).filter(num => !isNaN(num));
+        }
+      }
+      
+      res.json({
+        success: true,
+        drawInfo: {
+          period: drawInfo.issue,
+          drawDate: drawInfo.draw_date,
+          firstZoneNumbers: firstZoneNumbers,
+          lastZoneNumbers: lastZoneNumbers
+        }
+      });
+    } else {
+      res.json({ success: false, message: '未找到指定期号的开奖信息' });
+    }
+  } catch (error) {
+    console.error('根据期号获取开奖信息失败:', error);
     res.status(500).json({ success: false, message: '数据库查询失败' });
   }
 });

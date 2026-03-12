@@ -1365,6 +1365,9 @@ async function performSearchNewest() {
         timestamp: new Date().toISOString()
       };
       
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
+      
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
     }
@@ -2006,6 +2009,9 @@ async function performSearchSecondLast() {
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
+      
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -3224,6 +3230,9 @@ async function performSearchThirdLast() {
         timestamp: new Date().toISOString()
       };
       
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
+      
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
     }
@@ -3532,6 +3541,9 @@ async function performSearchFourthLast() {
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
+      
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -3846,6 +3858,9 @@ async function performSearchFifthLast() {
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
+      
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -4482,6 +4497,9 @@ async function performSearchNearTwoPeriods() {
         timestamp: new Date().toISOString()
       };
       
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
+      
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
     }
@@ -5082,6 +5100,9 @@ async function performSearchThreeBall() {
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
+      
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
@@ -6042,6 +6063,9 @@ async function performSearchSecondLastThreeBall() {
         timestamp: new Date().toISOString()
       };
       
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
+      
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
     }
@@ -6406,6 +6430,9 @@ async function performSearchThirdLastThreeBall() {
         nextPeriod: nextNextNextPeriod,
         timestamp: new Date().toISOString()
       };
+      
+      // 自动刷新推荐买号统计图表
+      await generateTotalBuyNumbers();
       
       // 更新进度
       await updateProgress('搜索完成，正在隐藏进度条...', 100, '完成');
