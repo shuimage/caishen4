@@ -129,7 +129,7 @@ function calculateFrontBuyNumbers(combinations, combinationStats, backtestMethod
  * @param {string} backtest_method - 回测方法：most(出现最多), least(出现最少), average(出现平均)
  * @returns {Promise<Object>} 包含回测数据的结果
  */
-async function huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, backtest_method = 'most') {
+async function huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, backtest_method = 'most', target_period = null) {
   try {
     // 验证参数
     if (backtest_period !== 'all' && (isNaN(backtest_period) || parseInt(backtest_period) <= 0)) {
@@ -151,10 +151,20 @@ async function huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, back
     }
 
     // 获取历史数据用于回测
-    console.log('开始查询历史数据，backtest_period:', backtest_period, ', stats_period:', stats_period, ', backtest_method:', backtest_method);
+    console.log('开始查询历史数据，backtest_period:', backtest_period, ', stats_period:', stats_period, ', backtest_method:', backtest_method, ', target_period:', target_period);
     let historyData;
     
-    if (backtest_period === 'all') {
+    if (target_period) {
+      // 如果指定了目标期号，查询该期号及其之前的历史数据
+      const historySql = `
+        SELECT * 
+        FROM lottery_results 
+        WHERE issue <= '${target_period}' 
+        ORDER BY issue DESC 
+        LIMIT ${backtest_period === 'all' ? 1000 : parseInt(backtest_period) + 1}  -- 多获取1期，用于回测比较
+      `;
+      historyData = await query(historySql);
+    } else if (backtest_period === 'all') {
       // 查询所有历史数据
       const historySql = `
         SELECT * 
@@ -374,7 +384,7 @@ async function huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, back
  */
 router.get('/', async (req, res) => {
   try {
-    const { backtest_period, stats_period, backtest_method = 'most' } = req.query;
+    const { backtest_period, stats_period, backtest_method = 'most', target_period = null } = req.query;
     
     if (!backtest_period || !stats_period) {
       return res.status(400).json({
@@ -383,7 +393,7 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const result = await huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, backtest_method);
+    const result = await huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, backtest_method, target_period);
     
     res.status(200).json(result);
   } catch (error) {

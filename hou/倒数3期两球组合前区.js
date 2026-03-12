@@ -14,23 +14,38 @@ const router = express.Router();
  * @param {string} period - 统计周期（35, 50, 100, 200, 300, 500, 1000）
  * @returns {Promise<Object>} 包含前区两球组合统计的结果
  */
-async function getThirdLastFrontZoneAnalysis(period) {
+async function getThirdLastFrontZoneAnalysis(period, targetPeriod) {
   try {
     // 验证参数
     if (period !== 'all' && (isNaN(period) || parseInt(period) <= 0)) {
       throw new Error('无效的周期参数，必须是正整数或"all"');
     }
 
-    // 获取倒数第3期的开奖数据
+    // 获取倒数第3期的开奖数据（如果提供了targetPeriod，则使用指定期号的前两期作为倒数第3期）
     console.log('开始查询倒数第3期开奖数据...');
-    const thirdLastResultSql = `
-      SELECT * 
-      FROM lottery_results 
-      ORDER BY issue DESC 
-      LIMIT 2, 1
-    `;
+    let thirdLastResult;
+    if (targetPeriod) {
+      console.log('使用指定的目标期号:', targetPeriod);
+      // 查找指定期号的前两期作为倒数第3期
+      const targetResultSql = `
+        SELECT * 
+        FROM lottery_results 
+        WHERE issue < '${targetPeriod}' 
+        ORDER BY issue DESC 
+        LIMIT 2, 1
+      `;
+      thirdLastResult = await query(targetResultSql);
+    } else {
+      console.log('使用最新一期的倒数第3期数据');
+      const thirdLastResultSql = `
+        SELECT * 
+        FROM lottery_results 
+        ORDER BY issue DESC 
+        LIMIT 2, 1
+      `;
+      thirdLastResult = await query(thirdLastResultSql);
+    }
     
-    const thirdLastResult = await query(thirdLastResultSql);
     console.log('倒数第3期开奖数据查询完成');
     
     if (!thirdLastResult || thirdLastResult.length === 0) {
@@ -251,7 +266,7 @@ async function getThirdLastFrontZoneAnalysis(period) {
  */
 router.get('/', async (req, res) => {
   try {
-    const { period } = req.query;
+    const { period, target_period } = req.query;
     
     if (!period) {
       return res.status(400).json({
@@ -260,7 +275,7 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const result = await getThirdLastFrontZoneAnalysis(period);
+    const result = await getThirdLastFrontZoneAnalysis(period, target_period);
     
     res.status(200).json({
       success: true,

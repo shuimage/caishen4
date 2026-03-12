@@ -16,7 +16,7 @@ const router = express.Router();
  * @param {string} period - 统计周期（35, 50, 100, 200, 300, 500, 1000）
  * @returns {Promise<Object>} 包含最新开奖数据和组合统计的结果
  */
-async function getDoubleKillAnalysis(period) {
+async function getDoubleKillAnalysis(period, targetPeriod) {
   try {
     // 处理中文字符串格式的period参数
     let processedPeriod = period;
@@ -40,17 +40,29 @@ async function getDoubleKillAnalysis(period) {
 
     // 不使用缓存，直接查询数据库
 
-    // 获取最新一期的开奖数据
-    console.log('开始查询最新开奖数据...');
-    const latestResultSql = `
-      SELECT * 
-      FROM lottery_results 
-      ORDER BY issue DESC 
-      LIMIT 1
-    `;
+    // 获取开奖数据（如果提供了targetPeriod，则使用指定期号，否则使用最新一期）
+    console.log('开始查询开奖数据...');
+    let latestResult;
+    if (targetPeriod) {
+      console.log('使用指定的目标期号:', targetPeriod);
+      const targetResultSql = `
+        SELECT * 
+        FROM lottery_results 
+        WHERE issue = '${targetPeriod}'
+      `;
+      latestResult = await query(targetResultSql);
+    } else {
+      console.log('使用最新一期的开奖数据');
+      const latestResultSql = `
+        SELECT * 
+        FROM lottery_results 
+        ORDER BY issue DESC 
+        LIMIT 1
+      `;
+      latestResult = await query(latestResultSql);
+    }
     
-    const latestResult = await query(latestResultSql);
-    console.log('最新开奖数据查询完成');
+    console.log('开奖数据查询完成');
     
     if (!latestResult || latestResult.length === 0) {
       throw new Error('未找到开奖数据');
@@ -365,7 +377,7 @@ async function getDoubleKillAnalysis(period) {
  */
 router.get('/', async (req, res) => {
   try {
-    const { period } = req.query;
+    const { period, target_period } = req.query;
     
     if (!period) {
       return res.status(400).json({
@@ -374,7 +386,7 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const result = await getDoubleKillAnalysis(period);
+    const result = await getDoubleKillAnalysis(period, target_period);
     
     res.status(200).json({
       success: true,
