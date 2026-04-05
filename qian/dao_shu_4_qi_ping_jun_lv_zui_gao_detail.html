@@ -631,8 +631,8 @@
           { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
         ];
         
-        // 回测方法列表，只包括排名方法
-        const backtestMethods = Array.from({length: 30}, (_, i) => `rank${i + 1}`);
+        // 回测方法列表，只包括排名方法（后区只有12个号码，排名最多到12）
+        const backtestMethods = Array.from({length: 12}, (_, i) => `rank${i + 1}`);
         const allResults = [];
         
         // 计算总工作量

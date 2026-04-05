@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -91,9 +91,18 @@
           <div style="display: flex; align-items: flex-start; gap: 8px; white-space: nowrap;">
             <label for="backtestMethod" style="line-height: 32px;">回测方法：</label>
             <select id="backtestMethod" class="period-dropdown">
-              <option value="most" selected>出现最多</option>
-              <option value="least">出现最少</option>
-              <option value="average">出现平均</option>
+              <option value="rank1" selected>排名第1名</option>
+              <option value="rank2">排名第2名</option>
+              <option value="rank3">排名第3名</option>
+              <option value="rank4">排名第4名</option>
+              <option value="rank5">排名第5名</option>
+              <option value="rank6">排名第6名</option>
+              <option value="rank7">排名第7名</option>
+              <option value="rank8">排名第8名</option>
+              <option value="rank9">排名第9名</option>
+              <option value="rank10">排名第10名</option>
+              <option value="rank11">排名第11名</option>
+              <option value="rank12">排名第12名</option>
             </select>
           </div>
           <div style="display: flex; align-items: flex-start; gap: 8px; white-space: nowrap;">
@@ -187,17 +196,22 @@
     }
     
     // 从后端获取回测数据
-    async function huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce(backtestPeriod = '100', statsPeriod = '100', backtestMethod = 'most') {
+    async function huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce(backtestPeriod = '100', statsPeriod = '100', backtestMethod = 'rank1') {
       try {
+        console.log('开始获取回测数据，参数:', backtestPeriod, statsPeriod, backtestMethod);
         const response = await fetch(`http://localhost:18889/huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce?backtest_period=${backtestPeriod}&stats_period=${statsPeriod}&backtest_method=${backtestMethod}`);
+        console.log('响应状态:', response.status);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const result = await response.json();
+        console.log('响应数据:', result);
         
         if (result.success) {
+          console.log('接口成功，返回数据:', result.data);
           return result.data;
         } else {
+          console.error('接口失败，原因:', result.message);
           alert('接口失败');
           return null;
         }
@@ -326,7 +340,7 @@
     }
     
     // 获取并渲染回测数据
-    async function fetchAndRenderBacktestData(backtestPeriod = '100', statsPeriod = '100', backtestMethod = 'most') {
+    async function fetchAndRenderBacktestData(backtestPeriod = '100', statsPeriod = '100', backtestMethod = 'rank1') {
       const backtestData = await huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce(backtestPeriod, statsPeriod, backtestMethod);
       renderBacktestData(backtestData);
     }
@@ -336,7 +350,8 @@
       try {
         localStorage.setItem('backtestPeriod', backtestPeriod);
         localStorage.setItem('statsPeriod', statsPeriod);
-        localStorage.setItem('backtestMethod', backtestMethod);
+        // 强制保存rank1作为回测方法参数
+        localStorage.setItem('backtestMethod', 'rank1');
       } catch (e) {
         console.error('保存统计范围失败:', e);
       }
@@ -347,11 +362,11 @@
       try {
         const backtestPeriod = localStorage.getItem('backtestPeriod') || '100';
         const statsPeriod = localStorage.getItem('statsPeriod') || '100';
-        const backtestMethod = localStorage.getItem('backtestMethod') || 'most';
-        return { backtestPeriod, statsPeriod, backtestMethod };
+        // 强制返回rank1作为回测方法参数
+        return { backtestPeriod, statsPeriod, backtestMethod: 'rank1' };
       } catch (e) {
         console.error('读取统计范围失败:', e);
-        return { backtestPeriod: '100', statsPeriod: '100', backtestMethod: 'most' };
+        return { backtestPeriod: '100', statsPeriod: '100', backtestMethod: 'rank1' };
       }
     }
     
@@ -366,7 +381,8 @@
       // 使用URL参数优先于保存的参数，最后使用默认值
       const backtestPeriod = urlParams.backtestPeriod || savedParams.backtestPeriod || '50';
       let statsPeriod = urlParams.statsPeriod || savedParams.statsPeriod || '100';
-      const backtestMethod = urlParams.backtestMethod || savedParams.backtestMethod || 'most';
+      // 强制使用rank1作为回测方法，确保与后端兼容
+      const backtestMethod = 'rank1';
       
       // 获取下拉选项元素和输入框元素
       const backtestMethodSelect = document.getElementById('backtestMethod');

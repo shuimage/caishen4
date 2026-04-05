@@ -87,6 +87,11 @@ const navigationData = [
   },
   {
     icon: '🔮',
+    text: '下期后区深度预测',
+    link: 'xia_qi_hou_qu_shen_du_yu_ce.html'
+  },
+  {
+    icon: '🔮',
     text: '下期后区开奖预测',
     link: 'xia_qi_hou_qu_kai_jiang_yu_ce.html'
   },

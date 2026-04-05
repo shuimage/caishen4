@@ -259,29 +259,33 @@
       }
     }
 
-    // 测试单个统计期值的平均正确率 - 使用sha_hao_mai_hao_hui_ce_xiang_qing.html的算法
+    // 测试单个统计期值的平均正确率 - 使用 sha_hao_mai_hao_hui_ce_xiang_qing.html 的算法
     async function testStatsPeriod(backtestPeriod, statsPeriod, backtestMethod) {
       try {
         const backtestData = await huo_qu_sha_hao_mai_hao_hui_ce(backtestPeriod, statsPeriod, backtestMethod);
         if (!backtestData || !backtestData.backtestResults || backtestData.backtestResults.length === 0) {
-          return { statsPeriod, accuracy: 100 };
+          return { statsPeriod, accuracy: 100, frontBuyNumbers: [] };
         }
-        
+            
         let successBuyCount = 0;
         backtestData.backtestResults.forEach(result => {
           if (result.frontCorrectBuy > 0) {
             successBuyCount++;
           }
         });
-        
+            
         const totalPeriods = backtestData.backtestResults.length;
         const averageCorrectRate = totalPeriods > 0 ? 
           ((successBuyCount / totalPeriods) * 100) : 100;
-        
-        return { statsPeriod, accuracy: averageCorrectRate };
+            
+        // 保存后端返回的 frontBuyNumbers(从第一条结果中获取，因为回测按时间倒序排列)
+        const firstResult = backtestData.backtestResults[0];
+        const frontBuyNumbers = firstResult.frontBuyNumbers || [];
+            
+        return { statsPeriod, accuracy: averageCorrectRate, frontBuyNumbers };
       } catch (error) {
         console.error(`测试统计期${statsPeriod} 失败:`, error);
-        return { statsPeriod, accuracy: 100 };
+        return { statsPeriod, accuracy: 100, frontBuyNumbers: [] };
       }
     }
 
@@ -572,29 +576,25 @@
             // 排名方法：根据排名选择号码
             const rankMatch = backtestMethod.match(/^rank(\d+)$/);
             const rank = parseInt(rankMatch[1]);
-            
-            // 按出现次数降序排序号码（包括出现次数为0的号码）
+                       
+            // 按出现次数降序排序号码 (包括出现次数为 0 的号码),次数相同时按球号升序
             const sortedNumbers = [];
             for (let i = 1; i <= 35; i++) {
               sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
             }
-            sortedNumbers.sort((a, b) => b.count - a.count);
-            
-            // 计算每个号码的实际排名
-            const rankMap = {};
-            let currentRank = 1;
-            
-            for (let i = 0; i < sortedNumbers.length; i++) {
-              if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-                currentRank++;
+            sortedNumbers.sort((a, b) => {
+              if (b.count !== a.count) {
+                return b.count - a.count;  // 出现次数降序
               }
-              rankMap[sortedNumbers[i].number] = currentRank;
-            }
-            
-            // 找出所有排名等于指定排名的号码
-            for (let i = 1; i <= 35; i++) {
-              if (rankMap[i] === rank) {
-                frontBuyNumbers.push(i);
+              return a.number - b.number;  // 次数相同时，球号升序
+            });
+                       
+            // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+            if (sortedNumbers.length >= rank) {
+              // 获取指定排名的号码
+              const selectedNumber = sortedNumbers[rank - 1];
+              if (selectedNumber) {
+                frontBuyNumbers.push(selectedNumber.number);
               }
             }
           }
@@ -692,10 +692,10 @@
           { step: 10, expansion: 30 }     // 第三阶段：步长10，扩展范围30
         ];
         
-        // 回测方法：只包含排名方法
+        // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
         const backtestMethods = [];
         // 添加排名方法
-        for (let i = 1; i <= 30; i++) {
+        for (let i = 1; i <= 35; i++) {
           backtestMethods.push(`rank${i}`);
         }
         const allResults = [];
@@ -846,13 +846,13 @@
         await updateProgress('搜索完成，正在获取前区推荐买号..', 85, '获取前区推荐买号');
         currentStep++;
         
-        // 为每个结果获取前区推荐买号
+        // 为每个结果获取前区推荐买号 (使用前端计算的推荐买号)
         for (let i = 0; i < allResults.length; i++) {
           // 检查是否需要终止回测
           if (isBacktestStopped) {
             break;
           }
-          
+                  
           const result = allResults[i];
           // 获取回测方法中文名称
           let methodName = '出现最多';
@@ -861,12 +861,12 @@
           } else if (result.backtestMethod === 'average') {
             methodName = '出现平均';
           } else if (result.backtestMethod.match(/^rank(\d+)$/)) {
-            // 排名方法：显示为"排名第X"
+            // 排名方法：显示为"排名第 X"
             const rankMatch = result.backtestMethod.match(/^rank(\d+)$/);
             const rank = parseInt(rankMatch[1]);
             methodName = `排名第${rank}`;
           }
-          
+                  
           // 更新进度
           const buyProgress = 85 + ((i + 1) / allResults.length) * 10;
           await updateProgress(
@@ -874,7 +874,8 @@
             buyProgress, 
             `处理结果 ${i + 1}/${allResults.length}`
           );
-          
+                  
+          // 使用前端计算的推荐买号
           result.frontBuyNumbers = await huo_qu_qian_qu_tui_jian_mai_hao(result.statsPeriod, result.backtestMethod);
         }
         
@@ -898,6 +899,9 @@
           
           // 将过滤后的结果转换回数组
           const filteredResults = Array.from(uniqueResultsMap.values());
+          
+          // 按照平均正确率降序排序
+          filteredResults.sort((a, b) => b.accuracy - a.accuracy);
           
           // 更新进度
           await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');

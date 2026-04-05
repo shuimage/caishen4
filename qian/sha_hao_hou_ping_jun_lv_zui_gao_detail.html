@@ -550,28 +550,24 @@
             const rankMatch = backtestMethod.match(/^rank(\d+)$/);
             const rank = parseInt(rankMatch[1]);
             
-            // 按出现次数降序排序号码（包括出现次数为0的号码）
+            // 按出现次数降序排序号码（包括出现次数为0的号码），次数相同时按球号升序
             const sortedNumbers = [];
             for (let i = 1; i <= 12; i++) {
               sortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
             }
-            sortedNumbers.sort((a, b) => b.count - a.count);
-            
-            // 计算每个号码的实际排名
-            const rankMap = {};
-            let currentRank = 1;
-            
-            for (let i = 0; i < sortedNumbers.length; i++) {
-              if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-                currentRank++;
+            sortedNumbers.sort((a, b) => {
+              if (b.count !== a.count) {
+                return b.count - a.count;  // 出现次数降序
               }
-              rankMap[sortedNumbers[i].number] = currentRank;
-            }
+              return a.number - b.number;  // 次数相同时，球号升序
+            });
             
-            // 找出所有排名等于指定排名的号码
-            for (let i = 1; i <= 12; i++) {
-              if (rankMap[i] === rank) {
-                backBuyNumbers.push(i);
+            // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+            if (sortedNumbers.length >= rank) {
+              // 获取指定排名的号码
+              const selectedNumber = sortedNumbers[rank - 1];
+              if (selectedNumber) {
+                backBuyNumbers.push(selectedNumber.number);
               }
             }
           }

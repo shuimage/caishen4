@@ -388,18 +388,17 @@ window.addEventListener('load', async function() {
         return { statsPeriod, accuracy: 0 };
       }
       
-      let successBuyCount = 0;
+      let totalCorrectBuy = 0;
+      let totalPossibleBuy = 0;
       backtestData.backtestResults.forEach(result => {
-        if (result.backCorrectBuy > 0) {
-          successBuyCount++;
-        }
+        totalCorrectBuy += result.backCorrectBuy || 0;
+        totalPossibleBuy += 2; // 后区每期有2个号码
       });
       
-      const totalPeriods = backtestData.backtestResults.length;
-      const averageCorrectRate = totalPeriods > 0 ? 
-        ((successBuyCount / totalPeriods) * 100) : 0;
+      const averageCorrectRate = totalPossibleBuy > 0 ? 
+        ((totalCorrectBuy / totalPossibleBuy) * 100) : 0;
       
-      return { statsPeriod, accuracy: averageCorrectRate }; // 这里变量名错误，应该是averageCorrectRate
+      return { statsPeriod, accuracy: averageCorrectRate };
     } catch (error) {
       console.error(`测试统计期${statsPeriod} 失败:`, error);
       return { statsPeriod, accuracy: 0 };
@@ -1230,6 +1229,11 @@ window.addEventListener('load', async function() {
             return result.backBuyNumbers && result.backBuyNumbers.length > 0;
           });
           
+          // 过滤掉平均正确率为0%的结果
+          filteredResults = filteredResults.filter(result => {
+            return result.accuracy > 0;
+          });
+          
           // 按平均正确率降序排序
           filteredResults.sort((a, b) => b.accuracy - a.accuracy);
           
@@ -1305,6 +1309,11 @@ window.addEventListener('load', async function() {
       // 过滤掉下下期后区推荐买号为空的结果
       filteredResults = filteredResults.filter(result => {
         return result.backBuyNumbers && result.backBuyNumbers.length > 0;
+      });
+      
+      // 过滤掉平均正确率为0%的结果
+      filteredResults = filteredResults.filter(result => {
+        return result.accuracy > 0;
       });
       
       // 按平均正确率降序排序
@@ -1452,6 +1461,11 @@ window.addEventListener('load', async function() {
         return result.backBuyNumbers && result.backBuyNumbers.length > 0;
       });
       
+      // 过滤掉平均正确率为0%的结果
+      filteredResults = filteredResults.filter(result => {
+        return result.accuracy > 0;
+      });
+      
       // 按平均正确率降序排序
       filteredResults.sort((a, b) => b.accuracy - a.accuracy);
       
@@ -1575,11 +1589,16 @@ window.addEventListener('load', async function() {
         return;
       }
       
-      // 过滤结果：过滤空推荐号码并实现去重
+      // 过滤结果：过滤空推荐号码、平均正确率为0%的结果并实现去重
       const filteredResults = [];
       const seenResults = new Set();
       
       for (const result of allResults) {
+        // 过滤平均正确率为0%的结果
+        if (result.accuracy <= 0) {
+          continue;
+        }
+        
         // 如果是排名方法且没有找到对应排名的号码（返回空数组），则跳过该结果
         if (result.backtestMethod.match(/^rank(\d+)$/) && result.backBuyNumbers.length === 0) {
           continue;
@@ -1721,11 +1740,16 @@ window.addEventListener('load', async function() {
         return;
       }
       
-      // 过滤结果：过滤空推荐号码并实现去重
+      // 过滤结果：过滤空推荐号码、平均正确率为0%的结果并实现去重
       const filteredResults = [];
       const seenResults = new Set();
       
       for (const result of allResults) {
+        // 过滤平均正确率为0%的结果
+        if (result.accuracy <= 0) {
+          continue;
+        }
+        
         // 如果是排名方法且没有找到对应排名的号码（返回空数组），则跳过该结果
         if (result.backtestMethod.match(/^rank(\d+)$/) && result.backBuyNumbers.length === 0) {
           continue;
@@ -2084,16 +2108,15 @@ window.addEventListener('load', async function() {
         return { statsPeriod, accuracy: 0 };
       }
       
-      let successBuyCount = 0;
+      let totalCorrectBuy = 0;
+      let totalPossibleBuy = 0;
       backtestData.backtestResults.forEach(result => {
-        if (result.backCorrectBuy > 0) {
-          successBuyCount++;
-        }
+        totalCorrectBuy += result.backCorrectBuy || 0;
+        totalPossibleBuy += 2; // 后区每期有2个号码
       });
       
-      const totalPeriods = backtestData.backtestResults.length;
-      const averageCorrectRate = totalPeriods > 0 ? 
-        ((successBuyCount / totalPeriods) * 100) : 0;
+      const averageCorrectRate = totalPossibleBuy > 0 ? 
+        ((totalCorrectBuy / totalPossibleBuy) * 100) : 0;
       
       return { statsPeriod, accuracy: averageCorrectRate };
     } catch (error) {
@@ -2110,16 +2133,15 @@ window.addEventListener('load', async function() {
         return { statsPeriod, accuracy: 0 };
       }
       
-      let successBuyCount = 0;
+      let totalCorrectBuy = 0;
+      let totalPossibleBuy = 0;
       backtestData.backtestResults.forEach(result => {
-        if (result.backCorrectBuy > 0) {
-          successBuyCount++;
-        }
+        totalCorrectBuy += result.backCorrectBuy || 0;
+        totalPossibleBuy += 2; // 后区每期有2个号码
       });
       
-      const totalPeriods = backtestData.backtestResults.length;
-      const averageCorrectRate = totalPeriods > 0 ? 
-        ((successBuyCount / totalPeriods) * 100) : 0;
+      const averageCorrectRate = totalPossibleBuy > 0 ? 
+        ((totalCorrectBuy / totalPossibleBuy) * 100) : 0;
       
       return { statsPeriod, accuracy: averageCorrectRate };
     } catch (error) {
@@ -2136,16 +2158,15 @@ window.addEventListener('load', async function() {
         return { statsPeriod, accuracy: 0 };
       }
       
-      let successBuyCount = 0;
+      let totalCorrectBuy = 0;
+      let totalPossibleBuy = 0;
       backtestData.backtestResults.forEach(result => {
-        if (result.backCorrectBuy > 0) {
-          successBuyCount++;
-        }
+        totalCorrectBuy += result.backCorrectBuy || 0;
+        totalPossibleBuy += 2; // 后区每期有2个号码
       });
       
-      const totalPeriods = backtestData.backtestResults.length;
-      const averageCorrectRate = totalPeriods > 0 ? 
-        ((successBuyCount / totalPeriods) * 100) : 0;
+      const averageCorrectRate = totalPossibleBuy > 0 ? 
+        ((totalCorrectBuy / totalPossibleBuy) * 100) : 0;
       
       return { statsPeriod, accuracy: averageCorrectRate };
     } catch (error) {
@@ -2162,16 +2183,15 @@ window.addEventListener('load', async function() {
         return { statsPeriod, accuracy: 0 };
       }
       
-      let successBuyCount = 0;
+      let totalCorrectBuy = 0;
+      let totalPossibleBuy = 0;
       backtestData.backtestResults.forEach(result => {
-        if (result.backCorrectBuy > 0) {
-          successBuyCount++;
-        }
+        totalCorrectBuy += result.backCorrectBuy || 0;
+        totalPossibleBuy += 2; // 后区每期有2个号码
       });
       
-      const totalPeriods = backtestData.backtestResults.length;
-      const averageCorrectRate = totalPeriods > 0 ? 
-        ((successBuyCount / totalPeriods) * 100) : 0;
+      const averageCorrectRate = totalPossibleBuy > 0 ? 
+        ((totalCorrectBuy / totalPossibleBuy) * 100) : 0;
       
       return { statsPeriod, accuracy: averageCorrectRate };
     } catch (error) {
@@ -2201,7 +2221,7 @@ window.addEventListener('load', async function() {
         backCombinations.forEach(combo => {
           // 累加每个号码的出现次数
           for (let i = 1; i <= 12; i++) {
-            const count = combo.count || 0;
+            const count = combo.numberCounts[i] || 0;
             backTotalCounts[i] += count;
           }
         });
@@ -3734,6 +3754,11 @@ window.addEventListener('load', async function() {
       // 过滤掉下一期后区推荐买号为空的结果
       filteredResults = filteredResults.filter(result => {
         return result.backBuyNumbers && result.backBuyNumbers.length > 0;
+      });
+      
+      // 过滤掉平均正确率为0%的结果
+      filteredResults = filteredResults.filter(result => {
+        return result.accuracy > 0;
       });
       
       // 按平均正确率降序排序

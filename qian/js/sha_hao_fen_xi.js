@@ -454,21 +454,22 @@ async function renderKillAnalysisData(period = '100') {
     <td class="count summary-cell"></td>
   `;
   
-  // 计算排名
+  // 计算排名 - 每个号码都有唯一排名
   const rankMap = {};
   const sortedNumbers = [];
   for (let i = 1; i <= 35; i++) {
     sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
   }
-  // 按出现次数降序排序
-  sortedNumbers.sort((a, b) => b.count - a.count);
-  // 计算排名
-  let currentRank = 1;
-  for (let i = 0; i < sortedNumbers.length; i++) {
-    if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-      currentRank++;
+  // 按出现次数降序排序，次数相同时按球号升序
+  sortedNumbers.sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;
     }
-    rankMap[sortedNumbers[i].number] = currentRank;
+    return a.number - b.number;
+  });
+  // 直接使用索引 +1 作为排名
+  for (let i = 0; i < sortedNumbers.length; i++) {
+    rankMap[sortedNumbers[i].number] = i + 1;
   }
   
   // 添加35个排名单元格
@@ -570,21 +571,22 @@ async function renderKillAnalysisData(period = '100') {
     <td class="count summary-cell"></td>
   `;
   
-  // 计算排名
+  // 计算排名 - 每个号码都有唯一排名
   const backRankMap = {};
   const backSortedNumbers = [];
   for (let i = 1; i <= 12; i++) {
     backSortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
   }
-  // 按出现次数降序排序
-  backSortedNumbers.sort((a, b) => b.count - a.count);
-  // 计算排名
-  let backCurrentRank = 1;
-  for (let i = 0; i < backSortedNumbers.length; i++) {
-    if (i > 0 && backSortedNumbers[i].count !== backSortedNumbers[i - 1].count) {
-      backCurrentRank++;
+  // 按出现次数降序排序，次数相同时按球号升序
+  backSortedNumbers.sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;
     }
-    backRankMap[backSortedNumbers[i].number] = backCurrentRank;
+    return a.number - b.number;
+  });
+  // 直接使用索引 +1 作为排名
+  for (let i = 0; i < backSortedNumbers.length; i++) {
+    backRankMap[backSortedNumbers[i].number] = i + 1;
   }
   
   // 添加12个排名单元格
@@ -907,12 +909,22 @@ async function drawFrontZoneChart(totalCounts, periodValue) {
   // 根据选择的排序方式对数据进行排序
   switch (sortType) {
     case 'count_asc':
-      // 按出现次数升序
-      data.sort((a, b) => a.count - b.count);
+      // 按出现次数升序 (次数相同时按球号升序)
+      data.sort((a, b) => {
+        if (a.count !== b.count) {
+          return a.count - b.count;
+        }
+        return a.number - b.number;
+      });
       break;
     case 'count_desc':
-      // 按出现次数降序
-      data.sort((a, b) => b.count - a.count);
+      // 按出现次数降序 (次数相同时按球号升序)
+      data.sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.number - b.number;
+      });
       break;
     case 'number':
     default:
@@ -921,18 +933,23 @@ async function drawFrontZoneChart(totalCounts, periodValue) {
       break;
   }
   
-  // 计算排名：基于出现次数，最多的为1，顺序排名不跳过数字
-  // 先创建一个副本并按出现次数降序排序
-  const sortedByCount = [...data].sort((a, b) => b.count - a.count);
-  // 计算排名
-  const rankMap = {};
-  let currentRank = 1;
-  for (let i = 0; i < sortedByCount.length; i++) {
-    if (i > 0 && sortedByCount[i].count !== sortedByCount[i - 1].count) {
-      currentRank++;
+  // 计算排名：始终基于出现次数降序 (最多的为第 1 名)
+  // 创建副本按出现次数降序排序，次数相同时按球号升序
+  const sortedByCount = [...data].sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;  // 出现次数降序
     }
-    rankMap[sortedByCount[i].number] = currentRank;
+    return a.number - b.number;  // 次数相同时，球号升序
+  });
+  // 调试：打印排序后的前 10 个号码
+  console.log('【前区排名计算】前 10 个号码:', sortedByCount.slice(0, 10).map(item => `球号${item.number}(次数${item.count})`));
+  // 计算排名 - 每个号码都有唯一排名
+  const rankMap = {};
+  for (let i = 0; i < sortedByCount.length; i++) {
+    rankMap[sortedByCount[i].number] = i + 1;  // 直接使用索引 +1 作为排名
   }
+  // 调试：打印球号 25 和 26 的排名
+  console.log('【前区】球号 25 排名:', rankMap[25], '球号 26 排名:', rankMap[26]);
   // 为原始数据添加排名
   data.forEach(item => {
     item.rank = rankMap[item.number];
@@ -1022,19 +1039,22 @@ async function drawFrontZoneChart(totalCounts, periodValue) {
       ctx.fillText(item.count.toString(), x + barWidth / 2, y - 2);
     }
     
-    // 绘制排名
+    // 绘制图表位置序号：根据排序方式决定显示顺序
+    // 升序时：从右到左 1,2,3... (最右边是 1)
+    // 降序时：从左到右 1,2,3... (最左边是 1)
     ctx.fillStyle = '#ffffff';
     ctx.font = '10px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`${item.rank}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
-    
-    // 绘制排名
-    ctx.fillStyle = '#ffffff';
-    ctx.font = '10px Arial';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'bottom';
-    ctx.fillText(`${item.rank}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
+    let positionNumber;
+    if (sortType === 'count_asc') {
+      // 升序：从右到左 1,2,3...
+      positionNumber = data.length - index;
+    } else {
+      // 降序或按号码：从左到右 1,2,3...
+      positionNumber = index + 1;
+    }
+    ctx.fillText(`${positionNumber}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
   });
   
   // 绘制统计期数信息
@@ -1095,12 +1115,22 @@ async function drawBackZoneChart(backTotalCounts, periodValue) {
   // 根据选择的排序方式对数据进行排序
   switch (sortType) {
     case 'count_asc':
-      // 按出现次数升序
-      data.sort((a, b) => a.count - b.count);
+      // 按出现次数升序 (次数相同时按球号升序)
+      data.sort((a, b) => {
+        if (a.count !== b.count) {
+          return a.count - b.count;
+        }
+        return a.number - b.number;
+      });
       break;
     case 'count_desc':
-      // 按出现次数降序
-      data.sort((a, b) => b.count - a.count);
+      // 按出现次数降序 (次数相同时按球号升序)
+      data.sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.number - b.number;
+      });
       break;
     case 'number':
     default:
@@ -1109,17 +1139,18 @@ async function drawBackZoneChart(backTotalCounts, periodValue) {
       break;
   }
   
-  // 计算排名：基于出现次数，最多的为1，顺序排名不跳过数字
-  // 先创建一个副本并按出现次数降序排序
-  const sortedByCount = [...data].sort((a, b) => b.count - a.count);
-  // 计算排名
-  const rankMap = {};
-  let currentRank = 1;
-  for (let i = 0; i < sortedByCount.length; i++) {
-    if (i > 0 && sortedByCount[i].count !== sortedByCount[i - 1].count) {
-      currentRank++;
+  // 计算排名：始终基于出现次数降序 (最多的为第 1 名)
+  // 创建副本按出现次数降序排序，次数相同时按球号升序
+  const sortedByCount = [...data].sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;  // 出现次数降序
     }
-    rankMap[sortedByCount[i].number] = currentRank;
+    return a.number - b.number;  // 次数相同时，球号升序
+  });
+  // 计算排名 - 每个号码都有唯一排名
+  const rankMap = {};
+  for (let i = 0; i < sortedByCount.length; i++) {
+    rankMap[sortedByCount[i].number] = i + 1;  // 直接使用索引 +1 作为排名
   }
   // 为原始数据添加排名
   data.forEach(item => {
@@ -1210,12 +1241,22 @@ async function drawBackZoneChart(backTotalCounts, periodValue) {
       ctx.fillText(item.count.toString(), x + barWidth / 2, y - 2);
     }
     
-    // 绘制排名
+    // 绘制图表位置序号：根据排序方式决定显示顺序
+    // 升序时：从右到左 1,2,3... (最右边是 1)
+    // 降序时：从左到右 1,2,3... (最左边是 1)
     ctx.fillStyle = '#ffffff';
     ctx.font = '10px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'bottom';
-    ctx.fillText(`${item.rank}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
+    let positionNumber;
+    if (sortType === 'count_asc') {
+      // 升序：从右到左 1,2,3...
+      positionNumber = data.length - index;
+    } else {
+      // 降序或按号码：从左到右 1,2,3...
+      positionNumber = index + 1;
+    }
+    ctx.fillText(`${positionNumber}`, x + barWidth / 2, chartHeight - padding.bottom - 2);
   });
   
   // 绘制统计期数信息

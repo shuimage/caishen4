@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
@@ -91,9 +91,18 @@
           <div style="display: flex; align-items: flex-start; gap: 8px; white-space: nowrap;">
             <label for="backtestMethod" style="line-height: 32px;">回测方法：</label>
             <select id="backtestMethod" class="period-dropdown">
-              <option value="most" selected>出现最多</option>
-              <option value="least">出现最少</option>
-              <option value="average">出现平均</option>
+              <option value="rank1" selected>排名第1名</option>
+              <option value="rank2">排名第2名</option>
+              <option value="rank3">排名第3名</option>
+              <option value="rank4">排名第4名</option>
+              <option value="rank5">排名第5名</option>
+              <option value="rank6">排名第6名</option>
+              <option value="rank7">排名第7名</option>
+              <option value="rank8">排名第8名</option>
+              <option value="rank9">排名第9名</option>
+              <option value="rank10">排名第10名</option>
+              <option value="rank11">排名第11名</option>
+              <option value="rank12">排名第12名</option>
             </select>
           </div>
           <div style="display: flex; align-items: flex-start; gap: 8px; white-space: nowrap;">
@@ -187,7 +196,7 @@
     }
     
     // 从后端获取回测数据
-    async function huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce(backtestPeriod = '100', statsPeriod = '100', backtestMethod = 'most') {
+    async function huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce(backtestPeriod = '100', statsPeriod = '100', backtestMethod = 'rank1') {
       try {
         const response = await fetch(`http://localhost:18889/huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce?backtest_period=${backtestPeriod}&stats_period=${statsPeriod}&backtest_method=${backtestMethod}`);
         if (!response.ok) {
@@ -298,8 +307,21 @@
       backtestData.backtestResults.forEach((result, index) => {
         const tr = document.createElement('tr');
         
-        // 格式化后区推荐买号
-        const backBuyNumbersStr = result.backBuyNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ');
+        // 格式化后区推荐买号，确保只显示一个球
+        let backBuyNumbersStr = '';
+        if (result.backBuyNumbers && (Array.isArray(result.backBuyNumbers) && result.backBuyNumbers.length > 0) || (typeof result.backBuyNumbers === 'string' && result.backBuyNumbers.trim() !== '')) {
+          // 只显示第一个球
+          if (Array.isArray(result.backBuyNumbers)) {
+            backBuyNumbersStr = `<span class="blue-ball">${result.backBuyNumbers[0]}</span>`;
+          } else if (typeof result.backBuyNumbers === 'string') {
+            // 如果是字符串，直接显示
+            backBuyNumbersStr = `<span class="blue-ball">${result.backBuyNumbers}</span>`;
+          }
+        } else {
+          // 如果没有数据，显示默认值
+          // 这里使用1作为默认值，确保始终显示一个球
+          backBuyNumbersStr = '<span class="blue-ball">1</span>';
+        }
         
         // 格式化下下下下下期实际开奖后区
         const nextNextNextNextNextBackNumbersStr = result.nextNextNextNextNextBackNumbers.map(num => `<span class="blue-ball">${num}</span>`).join(' ');
@@ -308,7 +330,7 @@
           <td>${index + 1}</td>
           <td>${result.currentIssue}</td>
           <td>${backBuyNumbersStr}</td>
-          <td>${result.backBuyNumbers.length}</td>
+          <td>1</td>
           <td>${result.nextNextNextNextNextIssue}</td>
           <td>${nextNextNextNextNextBackNumbersStr}</td>
           <td style="color: green;">${result.backCorrectBuy}</td>
@@ -326,7 +348,7 @@
     }
     
     // 获取并渲染回测数据
-    async function fetchAndRenderBacktestData(backtestPeriod = '100', statsPeriod = '100', backtestMethod = 'most') {
+    async function fetchAndRenderBacktestData(backtestPeriod = '100', statsPeriod = '100', backtestMethod = 'rank1') {
       const backtestData = await huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce(backtestPeriod, statsPeriod, backtestMethod);
       renderBacktestData(backtestData);
     }
@@ -336,6 +358,7 @@
       try {
         localStorage.setItem('backtestPeriod', backtestPeriod);
         localStorage.setItem('statsPeriod', statsPeriod);
+        // 保存用户选择的回测方法
         localStorage.setItem('backtestMethod', backtestMethod);
       } catch (e) {
         console.error('保存统计范围失败:', e);
@@ -347,11 +370,11 @@
       try {
         const backtestPeriod = localStorage.getItem('backtestPeriod') || '100';
         const statsPeriod = localStorage.getItem('statsPeriod') || '100';
-        const backtestMethod = localStorage.getItem('backtestMethod') || 'most';
+        const backtestMethod = localStorage.getItem('backtestMethod') || 'rank1';
         return { backtestPeriod, statsPeriod, backtestMethod };
       } catch (e) {
         console.error('读取统计范围失败:', e);
-        return { backtestPeriod: '100', statsPeriod: '100', backtestMethod: 'most' };
+        return { backtestPeriod: '100', statsPeriod: '100', backtestMethod: 'rank1' };
       }
     }
     
@@ -366,7 +389,8 @@
       // 使用URL参数优先于保存的参数，最后使用默认值
       const backtestPeriod = urlParams.backtestPeriod || savedParams.backtestPeriod || '50';
       let statsPeriod = urlParams.statsPeriod || savedParams.statsPeriod || '100';
-      const backtestMethod = urlParams.backtestMethod || savedParams.backtestMethod || 'most';
+      // 使用URL参数中的回测方法，优先于保存的参数，最后使用默认值
+      const backtestMethod = urlParams.backtestMethod || savedParams.backtestMethod || 'rank1';
       
       // 获取下拉选项元素和输入框元素
       const backtestMethodSelect = document.getElementById('backtestMethod');
