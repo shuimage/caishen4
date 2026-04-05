@@ -335,16 +335,16 @@
 
   <script src="js/data.js"></script>
   <script>
-    // 主题切换功能 - 仅从localStorage读取设置，不在此页面提供切换按钮
+    // 主题切换功能 - 仅从 localStorage 读取设置，不在此页面提供切换按钮
     document.addEventListener('DOMContentLoaded', function() {
-      // 从localStorage读取主题设置
+      // 从 localStorage 读取主题设置
       const savedTheme = localStorage.getItem('theme');
       if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.body.classList.add('dark-theme');
       }
       // 确保调用最新开奖信息函数
       xuan_ran_zui_xin_kai_jiang();
-      // 调用倒数第4期开奖信息函数
+      // 调用倒数第 4 期开奖信息函数
       xuan_ran_dao_shu_4_qi_kai_jiang();
     });
   </script>
@@ -1033,15 +1033,16 @@
       for (let i = 1; i <= 35; i++) {
         sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
       }
-      // 按出现次数降序排序
-      sortedNumbers.sort((a, b) => b.count - a.count);
-      // 计算排名
-      let currentRank = 1;
-      for (let i = 0; i < sortedNumbers.length; i++) {
-        if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-          currentRank++;
+      // 按出现次数降序排序，次数相同时按球号升序
+      sortedNumbers.sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;  // 出现次数降序
         }
-        rankMap[sortedNumbers[i].number] = currentRank;
+        return a.number - b.number;  // 次数相同时，球号升序
+      });
+      // 计算排名：每个号码都有唯一排名
+      for (let i = 0; i < sortedNumbers.length; i++) {
+        rankMap[sortedNumbers[i].number] = i + 1;  // 直接使用索引 +1 作为排名
       }
       
       // 添加35个排名单元格
@@ -1356,15 +1357,16 @@
       for (let i = 1; i <= 12; i++) {
         backSortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
       }
-      // 按出现次数降序排序
-      backSortedNumbers.sort((a, b) => b.count - a.count);
-      // 计算排名
-      let backCurrentRank = 1;
-      for (let i = 0; i < backSortedNumbers.length; i++) {
-        if (i > 0 && backSortedNumbers[i].count !== backSortedNumbers[i - 1].count) {
-          backCurrentRank++;
+      // 按出现次数降序排序，次数相同时按球号升序
+      backSortedNumbers.sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;  // 出现次数降序
         }
-        backRankMap[backSortedNumbers[i].number] = backCurrentRank;
+        return a.number - b.number;  // 次数相同时，球号升序
+      });
+      // 计算排名：每个号码都有唯一排名
+      for (let i = 0; i < backSortedNumbers.length; i++) {
+        backRankMap[backSortedNumbers[i].number] = i + 1;  // 直接使用索引 +1 作为排名
       }
       
       // 添加12个排名单元格
@@ -1851,18 +1853,18 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_4_qi_ho
           break;
       }
       
-      // 计算排名：基于出现次数，最多的为1，顺序排名不跳过数字
-      // 先创建一个副本并按出现次数降序排序
-      const sortedByCount = [...data].sort((a, b) => b.count - a.count);
-      // 计算排名
-      const rankMap = {};
-      let currentRank = 1;
-      
-      for (let i = 0; i < sortedByCount.length; i++) {
-        if (i > 0 && sortedByCount[i].count !== sortedByCount[i - 1].count) {
-          currentRank++;
+      // 计算排名：始终基于出现次数降序 (最多的为第 1 名)
+      // 创建副本按出现次数降序排序，次数相同时按球号升序
+      const sortedByCount = [...data].sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;  // 出现次数降序
         }
-        rankMap[sortedByCount[i].number] = currentRank;
+        return a.number - b.number;  // 次数相同时，球号升序
+      });
+      // 计算排名 - 每个号码都有唯一排名
+      const rankMap = {};
+      for (let i = 0; i < sortedByCount.length; i++) {
+        rankMap[sortedByCount[i].number] = i + 1;  // 直接使用索引 +1 作为排名
       }
       // 为原始数据添加排名
       data.forEach(item => {
@@ -1913,13 +1915,14 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_4_qi_ho
         ctx.fillText(count.toString(), padding.left - 10, y);
       }
       
-      // 绘制X轴标签
+      // 绘制 X 轴标签：显示球号
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       for (let i = 0; i < data.length; i++) {
         const x = padding.left + (chartInnerWidth / data.length) * (i + 0.5);
         const y = chartHeight - padding.bottom + 5;
-        ctx.fillText(data[i].number.toString(), x, y);
+        // 显示球号而不是排名序号
+        ctx.fillText(`${data[i].number}`, x, y);
       }
       
       // 绘制柱状图
@@ -2040,18 +2043,18 @@ console.log('4. 后区组合分析数据: http://localhost:18889/dao_shu_4_qi_ho
           break;
       }
       
-      // 计算排名：基于出现次数，最多的为1，顺序排名不跳过数字
-      // 先创建一个副本并按出现次数降序排序
-      const sortedByCount = [...data].sort((a, b) => b.count - a.count);
-      // 计算排名
-      const rankMap = {};
-      let currentRank = 1;
-      
-      for (let i = 0; i < sortedByCount.length; i++) {
-        if (i > 0 && sortedByCount[i].count !== sortedByCount[i - 1].count) {
-          currentRank++;
+      // 计算排名：始终基于出现次数降序 (最多的为第 1 名)
+      // 创建副本按出现次数降序排序，次数相同时按球号升序
+      const sortedByCount = [...data].sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;  // 出现次数降序
         }
-        rankMap[sortedByCount[i].number] = currentRank;
+        return a.number - b.number;  // 次数相同时，球号升序
+      });
+      // 计算排名 - 每个号码都有唯一排名
+      const rankMap = {};
+      for (let i = 0; i < sortedByCount.length; i++) {
+        rankMap[sortedByCount[i].number] = i + 1;  // 直接使用索引 +1 作为排名
       }
       // 为原始数据添加排名
       data.forEach(item => {
@@ -2322,14 +2325,12 @@ function goToBackBuyBacktestPage() {
                 console.warn('返回的数据格式不正确或无数据:', data);
               }
             }
-          })
-          .catch(error => {
-            clearTimeout(timeoutId);
-            console.error('获取开奖信息失败:', error.name, error.message);
-            
-            // 更新UI显示错误信息
-            const infoBox = document.getElementById('latestDrawInfoBoxContent');
-            if (infoBox) {
-              infoBox.innerHTML = '<div style="color: #DF2220;">接口失败</div>';
-            }
-           
+          });
+        }
+        
+        // 初始化加载
+        loadLatestDrawInfo();
+      });
+    </script>
+  </body>
+</html>
