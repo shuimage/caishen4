@@ -47,20 +47,22 @@ function calculateFrontBuyNumbers(combinations, combinationStats, backtestMethod
     // 排名方法：根据排名选择号码
     const rank = parseInt(rankMatch[1]);
     
-    // 按出现次数降序排序号码
+    // 按出现次数降序排序号码 (包括出现次数为 0 的号码),次数相同时按球号升序
     const sortedNumbers = Object.entries(totalNumberCounts)
       .map(([num, count]) => ({ num: parseInt(num), count }))
-      .filter(item => item.count > 0)
-      .sort((a, b) => b.count - a.count);
-    
-    // 获取指定排名的号码
-    if (sortedNumbers.length >= rank) {
-      const targetCount = sortedNumbers[rank - 1].count;
-      // 可能有多个号码具有相同的计数
-      for (const item of sortedNumbers) {
-        if (item.count === targetCount) {
-          buyNumbers.push(item.num);
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;  // 出现次数降序
         }
+        return a.num - b.num;  // 次数相同时，球号升序
+      });
+    
+    // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+    if (sortedNumbers.length >= rank) {
+      // 获取指定排名的号码
+      const selectedNumber = sortedNumbers[rank - 1];
+      if (selectedNumber) {
+        buyNumbers.push(selectedNumber.num);
       }
     }
   } else {
@@ -127,7 +129,7 @@ async function dao_shu_2_qi_mai_hao_hui_ce(backtest_period, stats_period, backte
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
     const validRankMethods = [];
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       validRankMethods.push(`rank${i}`);
     }
     const allValidMethods = [...validMethods, ...validRankMethods];

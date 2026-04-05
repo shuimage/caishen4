@@ -47,35 +47,22 @@ function calculateFrontBuyNumbers(combinations, combinationStats, backtestMethod
     // 排名方法：根据排名选择号码
     const rank = parseInt(rankMatch[1]);
     
-    // 按出现次数降序排序号码
+    // 按出现次数降序排序号码，次数相同时按球号升序
     const sortedNumbers = Object.entries(totalNumberCounts)
       .map(([num, count]) => ({ num: parseInt(num), count }))
-      .filter(item => item.count > 0)
-      .sort((a, b) => b.count - a.count);
+      .sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;  // 出现次数降序
+        }
+        return a.num - b.num;  // 次数相同时，球号升序
+      });
     
-    // 获取指定排名的号码
+    // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
     if (sortedNumbers.length >= rank) {
-      // 计算每个号码的实际排名
-      const rankedNumbers = [];
-      let currentRank = 1;
-      let prevCount = null;
-      
-      for (let i = 0; i < sortedNumbers.length; i++) {
-        const item = sortedNumbers[i];
-        // 如果当前号码的计数与前一个不同，更新排名
-        if (item.count !== prevCount) {
-          currentRank = i + 1;
-          prevCount = item.count;
-        }
-        // 添加排名信息
-        rankedNumbers.push({ ...item, rank: currentRank });
-      }
-      
-      // 找出所有排名等于指定排名的号码
-      for (const item of rankedNumbers) {
-        if (item.rank === rank) {
-          buyNumbers.push(item.num);
-        }
+      // 获取指定排名的号码
+      const selectedNumber = sortedNumbers[rank - 1];
+      if (selectedNumber) {
+        buyNumbers.push(selectedNumber.num);
       }
     }
   } else {
@@ -142,7 +129,7 @@ async function huo_qu_sha_hao_mai_hao_hui_ce(backtest_period, stats_period, back
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
     const validRankMethods = [];
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       validRankMethods.push(`rank${i}`);
     }
     const allValidMethods = [...validMethods, ...validRankMethods];

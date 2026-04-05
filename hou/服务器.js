@@ -128,13 +128,18 @@ const huanYuanHuiCeReLengRouter = require('./huan_yuan_hui_ce_re_leng.js'); // �
 const huiCeJieGuoRouter = require('./回测结果保存获取.js');
 // 导入还原九转连环图路由
 const huanYuanJiuZhuanLianHuanTuRouter = require('./huan_yuan_jiu_zhuan_lian_huan_tu.js');
-// 导入前区深度预测路由
+// 导入深度预测路由
 const qianQuShenDuYuCeRouter = require('./qian_qu_shen_du_yu_ce.js');
+const houQuShenDuYuCeRouter = require('./hou_qu_shen_du_yu_ce.js');
 const qiHaoKaiJiangXinXiRouter = require('./qi_hao_kai_jiang_xin_xi.js');
 
 // 设置中间件
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 配置静态文件服务
+const path = require('path');
+app.use(express.static(path.join(__dirname, '../qian')));
 
 // 启用CORS
 app.use((req, res, next) => {
@@ -206,7 +211,7 @@ const daoShu2QiSanQiuZuHeRouter = require('./倒数2期三球组合.js');
 app.use('/dao_shu_2_qi_san_qiu_zu_he', daoShu2QiSanQiuZuHeRouter); // 注册倒数2期前区三球组合路由
 const daoShu2QiSanQiuZuHeXiangQingRouter = require('./倒数2期三球组合详情.js');
 app.use('/dao_shu_2_qi_san_qiu_zu_he_xiang_qing', daoShu2QiSanQiuZuHeXiangQingRouter); // 注册倒数2期前区三球组合详情路由
-const daoShu3QiSanQiuZuHeRouter = require('./倒数3期三球组合');
+const daoShu3QiSanQiuZuHeRouter = require('./倒数3期三球组合.js');
 app.use('/dao_shu_3_qi_san_qiu_zu_he', daoShu3QiSanQiuZuHeRouter); // 注册倒数3期前区三球组合路由
 const daoShu3QiSanQiuZuHeXiangQingRouter = require('./倒数3期三球组合详情.js');
 app.use('/dao_shu_3_qi_san_qiu_zu_he_xiang_qing', daoShu3QiSanQiuZuHeXiangQingRouter); // 注册倒数3期前区三球组合详情路由
@@ -603,8 +608,9 @@ app.use('/huan_yuan_hui_ce_re_leng', huanYuanHuiCeReLengRouter); // 注册幻圆
 // 注册回测结果保存和获取路由
 app.use('/', huiCeJieGuoRouter);
 
-// 注册前区深度预测路由
+// 注册深度预测路由
 app.use('/qian_qu_shen_du_yu_ce', qianQuShenDuYuCeRouter);
+app.use('/hou_qu_shen_du_yu_ce', houQuShenDuYuCeRouter);
 app.use('/qi_hao_kai_jiang_xin_xi', qiHaoKaiJiangXinXiRouter);
 
 // 测试路由
