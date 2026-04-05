@@ -202,7 +202,8 @@ async function getSecondLastBackZoneAnalysis(period) {
       secondLastDraw: {
         issue: secondLastDraw.issue,
         drawDate: secondLastDraw.draw_date || secondLastDraw.date || new Date().toISOString().split('T')[0],
-        firstZoneNumbers: backNumbers // 使用与前区相同的字段名，保证数据格式一致
+        firstZoneNumbers: [],
+        lastZoneNumbers: backNumbers
       },
       combinations: Object.values(backCombinationStats),
       period: period,

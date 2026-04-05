@@ -109,27 +109,22 @@ function calculateFrontBuyNumbers(combinations, combinationStats, backtestMethod
         if (rankMatch) {
           const targetRank = parseInt(rankMatch[1]);
           
-          // 计算排名
-          const rankMap = {};
-          const sortedNumbers = [];
-          for (const [num, count] of Object.entries(totalNumberCounts)) {
-            sortedNumbers.push({ number: parseInt(num), count: count });
-          }
-          // 按出现次数降序排序
-          sortedNumbers.sort((a, b) => b.count - a.count);
-          // 计算排名
-          let currentRank = 1;
-          for (let i = 0; i < sortedNumbers.length; i++) {
-            if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-              currentRank++;
-            }
-            rankMap[sortedNumbers[i].number] = currentRank;
-          }
+          // 按出现次数降序排序号码 (包括出现次数为 0 的号码),次数相同时按球号升序
+          const sortedNumbers = Object.entries(totalNumberCounts)
+            .map(([num, count]) => ({ num: parseInt(num), count }))
+            .sort((a, b) => {
+              if (b.count !== a.count) {
+                return b.count - a.count;  // 出现次数降序
+              }
+              return a.num - b.num;  // 次数相同时，球号升序
+            });
           
-          // 找出对应排名的号码
-          for (const [num, rank] of Object.entries(rankMap)) {
-            if (rank === targetRank) {
-              buyNumbers.push(parseInt(num));
+          // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+          if (sortedNumbers.length >= targetRank) {
+            // 获取指定排名的号码
+            const selectedNumber = sortedNumbers[targetRank - 1];
+            if (selectedNumber) {
+              buyNumbers.push(selectedNumber.num);
             }
           }
         }

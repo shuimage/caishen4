@@ -44,30 +44,27 @@ function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod 
   // 检查是否是排名方法
   const rankMatch = backtestMethod.match(/^rank(\d+)$/);
   if (rankMatch) {
-    const targetRank = parseInt(rankMatch[1]);
+    // 排名方法：根据排名选择号码
+    const rank = parseInt(rankMatch[1]);
     
-    // 按出现次数降序排序号码（包括出现次数为0的号码）
+    // 按出现次数降序排序号码（包括出现次数为0的号码），次数相同时按球号升序
     const sortedNumbers = [];
     for (let num = 1; num <= 12; num++) {
       sortedNumbers.push({ number: num, count: totalNumberCounts[num] || 0 });
     }
-    sortedNumbers.sort((a, b) => b.count - a.count);
-    
-    // 计算每个号码的实际排名
-    const rankMap = {};
-    let currentRank = 1;
-    
-    for (let i = 0; i < sortedNumbers.length; i++) {
-      if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-        currentRank++;
+    sortedNumbers.sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;  // 出现次数降序
       }
-      rankMap[sortedNumbers[i].number] = currentRank;
-    }
+      return a.number - b.number;  // 次数相同时，球号升序
+    });
     
-    // 找出所有排名等于指定排名的号码
-    for (let num = 1; num <= 12; num++) {
-      if (rankMap[num] === targetRank) {
-        buyNumbers.push(num);
+    // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+    if (sortedNumbers.length >= rank) {
+      // 获取指定排名的号码
+      const selectedNumber = sortedNumbers[rank - 1];
+      if (selectedNumber) {
+        buyNumbers.push(selectedNumber.number);
       }
     }
   } else {
@@ -118,9 +115,10 @@ function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod 
  * @param {string} backtest_period - 回测周期
  * @param {string} stats_period - 统计周期
  * @param {string} backtest_method - 回测方法：most(出现最多), least(出现最少), average(出现平均)
+ * @param {string} target_period - 目标回测期号（可选）
  * @returns {Promise<Object>} 包含回测数据的结果
  */
-async function huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce(backtest_period, stats_period, backtest_method = 'most') {
+async function huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce(backtest_period, stats_period, backtest_method = 'most', target_period = null) {
   try {
     // 验证参数
     if (backtest_period !== 'all' && (isNaN(backtest_period) || parseInt(backtest_period) <= 0)) {
@@ -132,34 +130,65 @@ async function huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
     
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
-    // 支持排名方法：rank1到rank12
-    if (!validMethods.includes(backtest_method) && !backtest_method.match(/^rank(\d+)$/)) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')} 或排名方法（如rank1到rank12）`);
+    const validRankMethods = [];
+    for (let i = 1; i <= 12; i++) {
+      validRankMethods.push(`rank${i}`);
+    }
+    const allValidMethods = [...validMethods, ...validRankMethods];
+    if (!allValidMethods.includes(backtest_method)) {
+      throw new Error(`无效的回测方法参数，必须是以下值之一：${allValidMethods.join(', ')}`);
     }
 
     // 获取历史数据用于回测
-    console.log('开始查询历史数据，backtest_period:', backtest_period, ', stats_period:', stats_period, ', backtest_method:', backtest_method);
-    let historyData;
+    console.log('开始查询历史数据，backtest_period:', backtest_period, ', stats_period:', stats_period, ', backtest_method:', backtest_method, ', target_period:', target_period);
     
-    if (backtest_period === 'all') {
-      // 查询所有历史数据
-      const historySql = `
+    let targetDraw;
+    if (target_period) {
+      // 使用指定的目标期号
+      const targetSql = `
         SELECT * 
         FROM lottery_results 
-        ORDER BY issue DESC
+        WHERE issue = '${target_period}'
       `;
-      historyData = await query(historySql);
+      const targetResult = await query(targetSql);
+      
+      if (!targetResult || targetResult.length === 0) {
+        throw new Error(`未找到期号为 ${target_period} 的开奖数据`);
+      }
+      
+      targetDraw = targetResult[0];
+      console.log('指定的目标回测期号:', targetDraw.issue);
     } else {
-      // 查询指定周期内的历史数据
-      const limit = parseInt(backtest_period);
-      const historySql = `
+      // 先获取倒数2期的开奖数据
+      const secondLastSql = `
         SELECT * 
         FROM lottery_results 
         ORDER BY issue DESC 
-        LIMIT ${limit + 2}  -- 多获取2期，用于回测比较
+        LIMIT 2, 1
       `;
-      historyData = await query(historySql);
+      const secondLastDraw = await query(secondLastSql);
+      
+      if (!secondLastDraw || secondLastDraw.length === 0) {
+        throw new Error('未找到倒数2期开奖数据');
+      }
+      
+      targetDraw = secondLastDraw[0];
+      console.log('默认目标回测期号:', targetDraw.issue);
     }
+    
+    // 验证目标期号
+    console.log('验证目标期号:', targetDraw.issue);
+    
+    // 获取指定周期内的历史数据（从目标期号开始）
+    const limit = parseInt(backtest_period);
+    const historySql = `
+      SELECT * 
+      FROM lottery_results 
+      WHERE issue <= '${targetDraw.issue}'
+      ORDER BY issue DESC 
+      LIMIT ${limit + 2}  -- 多获取2期，用于回测比较
+    `;
+    const historyData = await query(historySql);
     
     console.log('历史数据查询完成，共获取', historyData.length, '条记录');
     
@@ -170,153 +199,197 @@ async function huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
     // 回测数据结果数组
     const backtestResults = [];
     
-    // 对每一期进行回测（跳过最新2期，因为没有下下期数据）
-    for (let i = 2; i < historyData.length; i++) {
-      const currentDraw = historyData[i];  // 当前回测期
-      const nextNextDraw = historyData[i - 2]; // 下下期开奖结果（用于比较）
-      
-      // 解析当前期的后区号码
-      let backNumbers = [];
-      try {
-        if (Array.isArray(currentDraw.blue)) {
-          backNumbers = currentDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
-        } else if (typeof currentDraw.blue === 'string') {
-          const numbers = currentDraw.blue.match(/\d+/g);
-          if (numbers) {
-            backNumbers = numbers.map(num => parseInt(num));
-          }
+    // 直接使用目标期号进行回测
+    const currentDraw = targetDraw;
+    console.log('当前回测期号:', currentDraw.issue);
+    
+    // 确保有下下期数据
+    if (historyData.length > 2) {
+      // 查找目标期号在历史数据中的索引
+      let targetIndex = -1;
+      for (let i = 0; i < historyData.length; i++) {
+        if (historyData[i].issue === currentDraw.issue) {
+          targetIndex = i;
+          break;
         }
-      } catch (e) {
-        console.error('解析当前期后区号码失败:', e);
-        continue;
       }
       
-      // 生成当前期后区号码的两球组合
-      const backCombinations = [];
-      if (backNumbers.length >= 2) {
-        // 后区只有2个号码，直接生成组合
-        const ball1 = Math.min(backNumbers[0], backNumbers[1]);
-        const ball2 = Math.max(backNumbers[0], backNumbers[1]);
-        backCombinations.push(`${ball1}-${ball2}`);
-      }
-      
-      if (backCombinations.length === 0) {
-        console.error('无法生成当前期后区两球组合:', currentDraw.issue);
-        continue;
-      }
-      
-      // 获取用于统计的历史数据（当前期之前的历史数据）
-      const statsHistorySql = `
-        SELECT * 
-        FROM lottery_results 
-        WHERE issue < '${currentDraw.issue}' 
-        ORDER BY issue DESC 
-        LIMIT ${stats_period === 'all' ? 1000 : parseInt(stats_period)}
-      `;
-      const statsHistoryData = await query(statsHistorySql);
-      
-      // 统计后区每个组合出现时下下期的号码
-      const backCombinationStats = {};
-      backCombinations.forEach(combination => {
-        backCombinationStats[combination] = {
-          combination: combination,
-          numberCounts: {} // 统计每个号码出现的次数
-        };
-      });
-      
-      // 遍历统计历史数据，查找组合出现的位置，并记录下下期的号码
-      for (let j = 2; j < statsHistoryData.length; j++) {
-        const statsCurrentDraw = statsHistoryData[j];
-        const statsNextNextDraw = statsHistoryData[j - 2];
+      if (targetIndex === -1) {
+        console.error('目标期号不在历史数据中');
+      } else if (targetIndex + 2 < historyData.length) {
+        const nextNextDraw = historyData[targetIndex + 2]; // 下下期开奖结果（用于比较）
         
-        // 解析统计当前期的后区号码
-        let statsCurrentBackNumbers = [];
+        // 解析当前期的后区号码
+        let backNumbers = [];
         try {
-          if (Array.isArray(statsCurrentDraw.blue)) {
-            statsCurrentBackNumbers = statsCurrentDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
-          } else if (typeof statsCurrentDraw.blue === 'string') {
-            statsCurrentBackNumbers = statsCurrentDraw.blue.match(/\d+/g)?.map(num => parseInt(num)) || [];
+          if (Array.isArray(currentDraw.blue)) {
+            backNumbers = currentDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
+          } else if (typeof currentDraw.blue === 'string') {
+            const numbers = currentDraw.blue.match(/\d+/g);
+            if (numbers) {
+              backNumbers = numbers.map(num => parseInt(num));
+            }
           }
         } catch (e) {
-          console.error('解析统计当前期后区号码失败:', e);
-          continue;
+          console.error('解析当前期后区号码失败:', e);
         }
         
-        // 生成统计当前期后区的两球组合
-        const statsCurrentBackCombinations = [];
-        if (statsCurrentBackNumbers.length >= 2) {
-          const ball1 = Math.min(statsCurrentBackNumbers[0], statsCurrentBackNumbers[1]);
-          const ball2 = Math.max(statsCurrentBackNumbers[0], statsCurrentBackNumbers[1]);
-          statsCurrentBackCombinations.push(`${ball1}-${ball2}`);
+        // 生成当前期后区号码的两球组合
+        const backCombinations = [];
+        if (backNumbers.length >= 2) {
+          // 后区只有2个号码，直接生成组合
+          const ball1 = Math.min(backNumbers[0], backNumbers[1]);
+          const ball2 = Math.max(backNumbers[0], backNumbers[1]);
+          backCombinations.push(`${ball1}-${ball2}`);
         }
         
-        // 检查后区是否包含我们关心的组合
-        statsCurrentBackCombinations.forEach(comb => {
-          if (backCombinations.includes(comb)) {
-            // 获取下下期的后区号码
-            let nextNumbers = [];
+        if (backCombinations.length > 0) {
+          // 获取用于统计的历史数据（当前期之前的历史数据）
+          const statsHistorySql = `
+            SELECT * 
+            FROM lottery_results 
+            WHERE issue < '${currentDraw.issue}' 
+            ORDER BY issue DESC 
+            LIMIT ${stats_period === 'all' ? 1000 : parseInt(stats_period)}
+          `;
+          console.log('执行统计历史数据查询:', statsHistorySql);
+          const statsHistoryData = await query(statsHistorySql);
+          console.log('统计历史数据查询完成，共获取', statsHistoryData.length, '条记录');
+          
+          if (statsHistoryData.length > 0) {
+            console.log('统计历史数据的第一期号:', statsHistoryData[0].issue);
+            console.log('统计历史数据的最后一期号:', statsHistoryData[statsHistoryData.length - 1].issue);
+          }
+          
+          // 统计后区每个组合出现时下下期的号码
+          const backCombinationStats = {};
+          backCombinations.forEach(combination => {
+            backCombinationStats[combination] = {
+              combination: combination,
+              numberCounts: {} // 统计每个号码出现的次数
+            };
+          });
+          
+          // 遍历统计历史数据，查找组合出现的位置，并记录下下期的号码
+          console.log('开始遍历统计历史数据，共', statsHistoryData.length, '条记录');
+          console.log('当前期后区组合:', backCombinations);
+          
+          for (let j = 2; j < statsHistoryData.length; j++) {
+            const statsCurrentDraw = statsHistoryData[j];
+            const statsNextNextDraw = statsHistoryData[j - 2];
+            
+            // 解析统计当前期的后区号码
+            let statsCurrentBackNumbers = [];
             try {
-              if (Array.isArray(statsNextNextDraw.blue)) {
-                nextNumbers = statsNextNextDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
-              } else if (typeof statsNextNextDraw.blue === 'string') {
-                nextNumbers = statsNextNextDraw.blue.match(/\d+/g)?.map(num => parseInt(num)) || [];
+              if (Array.isArray(statsCurrentDraw.blue)) {
+                statsCurrentBackNumbers = statsCurrentDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
+              } else if (typeof statsCurrentDraw.blue === 'string') {
+                const numbers = statsCurrentDraw.blue.match(/\d+/g);
+                if (numbers) {
+                  statsCurrentBackNumbers = numbers.map(num => parseInt(num));
+                }
               }
             } catch (e) {
-              console.error('解析统计下下期后区号码失败:', e);
-              return;
+              console.error('解析统计当前期后区号码失败:', e);
+              continue;
             }
             
-            // 更新号码计数
-            nextNumbers.forEach(num => {
-              backCombinationStats[comb].numberCounts[num] = 
-                (backCombinationStats[comb].numberCounts[num] || 0) + 1;
+            // 生成统计当前期后区的两球组合
+            const statsCurrentBackCombinations = [];
+            if (statsCurrentBackNumbers.length >= 2) {
+              const ball1 = Math.min(statsCurrentBackNumbers[0], statsCurrentBackNumbers[1]);
+              const ball2 = Math.max(statsCurrentBackNumbers[0], statsCurrentBackNumbers[1]);
+              statsCurrentBackCombinations.push(`${ball1}-${ball2}`);
+            }
+            
+            // 检查后区是否包含我们关心的组合
+            console.log('统计当前期号:', statsCurrentDraw.issue, '后区号码:', statsCurrentBackNumbers, '组合:', statsCurrentBackCombinations);
+            
+            statsCurrentBackCombinations.forEach(comb => {
+              if (backCombinations.includes(comb)) {
+                console.log('找到匹配的组合:', comb, '在期号:', statsCurrentDraw.issue);
+                // 获取下下期的后区号码
+                let nextNumbers = [];
+                try {
+                  if (Array.isArray(statsNextNextDraw.blue)) {
+                    nextNumbers = statsNextNextDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
+                  } else if (typeof statsNextNextDraw.blue === 'string') {
+                    const numbers = statsNextNextDraw.blue.match(/\d+/g);
+                    if (numbers) {
+                      nextNumbers = numbers.map(num => parseInt(num));
+                    }
+                  }
+                } catch (e) {
+                  console.error('解析统计下下期后区号码失败:', e);
+                  return;
+                }
+                
+                console.log('下下期期号:', statsNextNextDraw.issue, '后区号码:', nextNumbers);
+                
+                // 更新号码计数
+                nextNumbers.forEach(num => {
+                  backCombinationStats[comb].numberCounts[num] = 
+                    (backCombinationStats[comb].numberCounts[num] || 0) + 1;
+                  console.log('更新号码', num, '的计数为:', backCombinationStats[comb].numberCounts[num]);
+                });
+              }
             });
           }
-        });
-      }
-      
-      // 计算当前期的后区推荐买号
-      const recommendedBackBuyNumbers = calculateBackBuyNumbers(backCombinations, backCombinationStats, backtest_method);
-      
-      // 解析下下期的后区号码
-      let nextNextBackNumbers = [];
-      try {
-        if (Array.isArray(nextNextDraw.blue)) {
-          nextNextBackNumbers = nextNextDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
-        } else if (typeof nextNextDraw.blue === 'string') {
-          const numbers = nextNextDraw.blue.match(/\d+/g);
-          if (numbers) {
-            nextNextBackNumbers = numbers.map(num => parseInt(num));
+          
+          console.log('统计完成后的组合统计数据:', backCombinationStats);
+          
+          // 计算当前期的后区推荐买号
+          console.log('组合统计数据:', backCombinationStats);
+          console.log('回测方法:', backtest_method);
+          const recommendedBackBuyNumbers = calculateBackBuyNumbers(backCombinations, backCombinationStats, backtest_method);
+          console.log('推荐买号:', recommendedBackBuyNumbers);
+          
+          // 解析下下期的后区号码
+          let nextNextBackNumbers = [];
+          try {
+            if (Array.isArray(nextNextDraw.blue)) {
+              nextNextBackNumbers = nextNextDraw.blue.map(num => typeof num === 'string' ? parseInt(num) : num);
+            } else if (typeof nextNextDraw.blue === 'string') {
+              const numbers = nextNextDraw.blue.match(/\d+/g);
+              if (numbers) {
+                nextNextBackNumbers = numbers.map(num => parseInt(num));
+              }
+            }
+          } catch (e) {
+            console.error('解析下下期后区号码失败:', e);
           }
-        }
-      } catch (e) {
-        console.error('解析下下期后区号码失败:', e);
-        continue;
-      }
-      
-      // 计算后区正确买号和错误买号数量
-      let backCorrectBuy = 0;
-      let backWrongBuy = 0;
-      
-      recommendedBackBuyNumbers.forEach(buyNum => {
-        if (nextNextBackNumbers.includes(buyNum)) {
-          // 正确买号：推荐买号出现在下下期开奖号中
-          backCorrectBuy++;
+          
+          // 计算后区正确买号和错误买号数量
+          let backCorrectBuy = 0;
+          let backWrongBuy = 0;
+          
+          recommendedBackBuyNumbers.forEach(buyNum => {
+            if (nextNextBackNumbers.includes(buyNum)) {
+              // 正确买号：推荐买号出现在下下期开奖号中
+              backCorrectBuy++;
+            } else {
+              // 错误买号：推荐买号没有出现在下下期开奖号中
+              backWrongBuy++;
+            }
+          });
+          
+          // 添加到回测结果
+          backtestResults.push({
+            currentIssue: currentDraw.issue, // 当前回测期号
+            backBuyNumbers: recommendedBackBuyNumbers, // 后区推荐买号
+            nextIssue: nextNextDraw.issue, // 下下期开奖期号
+            nextBackNumbers: nextNextBackNumbers, // 下下期实际开奖后区
+            backCorrectBuy: backCorrectBuy, // 正确买号数量
+            backWrongBuy: backWrongBuy // 错误买号数量
+          });
         } else {
-          // 错误买号：推荐买号没有出现在下下期开奖号中
-          backWrongBuy++;
+          console.error('无法生成当前期后区两球组合:', currentDraw.issue);
         }
-      });
-      
-      // 添加到回测结果
-      backtestResults.push({
-        currentIssue: currentDraw.issue, // 当前回测期号
-        backBuyNumbers: recommendedBackBuyNumbers, // 后区推荐买号
-        nextIssue: nextNextDraw.issue, // 下下期开奖期号
-        nextBackNumbers: nextNextBackNumbers, // 下下期实际开奖后区
-        backCorrectBuy: backCorrectBuy, // 正确买号数量
-        backWrongBuy: backWrongBuy // 错误买号数量
-      });
+      } else {
+        console.error('目标期号之后的数据不足，无法进行回测');
+      }
+    } else {
+      console.error('历史数据不足，无法进行回测');
     }
     
     // 整理结果
@@ -347,13 +420,16 @@ async function huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
  * @param {string} backtest_period.query.required - 回测周期 (35, 50, 100, 200, 300, 500, 1000, all)
  * @param {string} stats_period.query.required - 统计周期 (35, 50, 100, 200, 300, 500, 1000, all)
  * @param {string} backtest_method.query - 回测方法 (most, least, average)，默认 most
+ * @param {string} target_period.query - 目标回测期号（可选）
  * @returns {object} 200 - 成功响应，包含回测数据
  * @returns {object} 400 - 参数错误
  * @returns {object} 500 - 服务器内部错误
  */
 router.get('/', async (req, res) => {
   try {
-    const { backtest_period, stats_period, backtest_method = 'most' } = req.query;
+    const { backtest_period, stats_period, backtest_method = 'most', target_period } = req.query;
+    
+    console.log('接收到的参数:', { backtest_period, stats_period, backtest_method, target_period });
     
     if (!backtest_period || !stats_period) {
       return res.status(400).json({
@@ -362,7 +438,7 @@ router.get('/', async (req, res) => {
       });
     }
 
-    const result = await huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce(backtest_period, stats_period, backtest_method);
+    const result = await huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce(backtest_period, stats_period, backtest_method, target_period);
     
     res.status(200).json(result);
   } catch (error) {

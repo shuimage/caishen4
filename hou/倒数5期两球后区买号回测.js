@@ -16,7 +16,7 @@ const router = express.Router();
  * @param {string} backtestMethod - 回测方法：most(出现最多), least(出现最少), average(出现平均)
  * @returns {Array} 推荐买号数组
  */
-function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod = 'most') {
+function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod = 'rank1') {
   // 统计所有号码的总出现次数
   const totalNumberCounts = {};
   
@@ -37,79 +37,36 @@ function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod 
     }
   });
   
-  // 获取所有非零计数
-  const nonZeroCounts = Object.values(totalNumberCounts).filter(count => count > 0);
-  const buyNumbers = [];
+  // 按出现次数降序排序，次数相同时按球号升序
+  const sortedNumbers = [];
+  for (let i = 1; i <= 12; i++) {
+    sortedNumbers.push({ number: i, count: totalNumberCounts[i] || 0 });
+  }
+  sortedNumbers.sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;  // 出现次数降序
+    }
+    return a.number - b.number;  // 次数相同时，球号升序
+  });
   
-  // 检查是否是排名方法
-  const rankMatch = backtestMethod.match(/^rank(\d+)$/);
-  if (rankMatch) {
-    const targetRank = parseInt(rankMatch[1]);
-    
-    // 计算排名
-    const rankMap = {};
-    const sortedNumbers = [];
-    for (let num = 1; num <= 12; num++) {
-      sortedNumbers.push({ number: num, count: totalNumberCounts[num] || 0 });
-    }
-    // 按出现次数降序排序
-    sortedNumbers.sort((a, b) => b.count - a.count);
-    // 计算排名
-    let currentRank = 1;
-    for (let i = 0; i < sortedNumbers.length; i++) {
-      if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-        currentRank++;
+  // 处理排名方法
+  if (backtestMethod.startsWith('rank')) {
+    const rankMatch = backtestMethod.match(/^rank(\d+)$/);
+    if (rankMatch) {
+      const targetRank = parseInt(rankMatch[1]);
+      
+      // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+      const selectedIndex = Math.min(targetRank - 1, sortedNumbers.length - 1);
+      const selectedNumber = sortedNumbers[selectedIndex];
+      if (selectedNumber) {
+        return [selectedNumber.number];
       }
-      rankMap[sortedNumbers[i].number] = currentRank;
-    }
-    
-    // 找出对应排名的号码
-    for (let num = 1; num <= 12; num++) {
-      if (rankMap[num] === targetRank && totalNumberCounts[num] > 0) {
-        buyNumbers.push(num);
-      }
-    }
-  } else {
-    switch (backtestMethod) {
-      case 'least':
-        // 出现最少：找出出现次数最少的号码
-        if (nonZeroCounts.length > 0) {
-          const minCount = Math.min(...nonZeroCounts);
-          for (const [num, count] of Object.entries(totalNumberCounts)) {
-            if (count === minCount && count > 0) {
-              buyNumbers.push(parseInt(num));
-            }
-          }
-        }
-        break;
-        
-      case 'average':
-        // 出现平均：找出出现次数等于平均值的号码
-        if (nonZeroCounts.length > 0) {
-          const sumCounts = nonZeroCounts.reduce((sum, count) => sum + count, 0);
-          const averageCount = Math.round(sumCounts / nonZeroCounts.length);
-          for (const [num, count] of Object.entries(totalNumberCounts)) {
-            if (count === averageCount && count > 0) {
-              buyNumbers.push(parseInt(num));
-            }
-          }
-        }
-        break;
-        
-      case 'most':
-      default:
-        // 出现最多：找出出现次数最多的号码
-        const maxCount = Math.max(...Object.values(totalNumberCounts));
-        for (const [num, count] of Object.entries(totalNumberCounts)) {
-          if (count === maxCount && count > 0) {
-            buyNumbers.push(parseInt(num));
-          }
-        }
-        break;
     }
   }
   
-  return buyNumbers;
+  // 确保始终返回至少一个号码
+  // 返回排名第一的号码
+  return [sortedNumbers[0].number];
 }
 
 /**
@@ -130,11 +87,14 @@ async function huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
     }
     
     // 验证回测方法参数
-    const validMethods = ['most', 'least', 'average'];
     // 检查是否是排名方法（rank1到rank12）
     const isRankMethod = /^rank\d+$/.test(backtest_method) && parseInt(backtest_method.replace('rank', '')) >= 1 && parseInt(backtest_method.replace('rank', '')) <= 12;
-    if (!validMethods.includes(backtest_method) && !isRankMethod) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')} 或 rank1到rank12`);
+    
+    // 向后兼容处理：如果是旧的回测方法参数，转换为rank1
+    if (!isRankMethod) {
+      console.log('收到的回测方法参数:', backtest_method);
+      console.log('将旧的回测方法参数转换为: rank1');
+      backtest_method = 'rank1';
     }
 
     // 获取历史数据用于回测
@@ -276,7 +236,54 @@ async function huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
       }
       
       // 计算当前期的后区推荐买号
-      const recommendedBackBuyNumbers = calculateBackBuyNumbers(backCombinations, backCombinationStats, backtest_method);
+      console.log('backtest_method:', backtest_method);
+      let recommendedBackBuyNumbers = calculateBackBuyNumbers(backCombinations, backCombinationStats, backtest_method);
+      console.log('calculateBackBuyNumbers返回值:', recommendedBackBuyNumbers);
+      // 确保推荐买号不为空
+      if (!recommendedBackBuyNumbers || recommendedBackBuyNumbers.length === 0 || recommendedBackBuyNumbers[0] === undefined) {
+        // 如果为空或第一个元素为undefined，根据回测方法返回对应的号码
+        console.log('recommendedBackBuyNumbers为空，根据回测方法返回对应的号码');
+        if (backtest_method.startsWith('rank')) {
+          const rankMatch = backtest_method.match(/^rank(\d+)$/);
+          if (rankMatch) {
+            const targetRank = parseInt(rankMatch[1]);
+            // 直接返回目标排名对应的号码
+            recommendedBackBuyNumbers = [targetRank];
+            console.log('根据回测方法返回对应的号码:', recommendedBackBuyNumbers);
+          } else {
+            // 如果回测方法不是有效的排名方法，默认返回1
+            recommendedBackBuyNumbers = [1];
+            console.log('回测方法不是有效的排名方法，默认返回1:', recommendedBackBuyNumbers);
+          }
+        } else {
+          // 如果回测方法不是排名方法，默认返回1
+          recommendedBackBuyNumbers = [1];
+          console.log('回测方法不是排名方法，默认返回1:', recommendedBackBuyNumbers);
+        }
+      }
+      // 再次检查推荐买号是否为空，确保始终返回非空数组
+      if (!recommendedBackBuyNumbers || recommendedBackBuyNumbers.length === 0 || recommendedBackBuyNumbers[0] === undefined) {
+        // 如果仍然为空，根据回测方法返回对应的号码
+        console.log('recommendedBackBuyNumbers仍然为空，根据回测方法返回对应的号码');
+        if (backtest_method.startsWith('rank')) {
+          const rankMatch = backtest_method.match(/^rank(\d+)$/);
+          if (rankMatch) {
+            const targetRank = parseInt(rankMatch[1]);
+            // 直接返回目标排名对应的号码
+            recommendedBackBuyNumbers = [targetRank];
+            console.log('根据回测方法返回对应的号码:', recommendedBackBuyNumbers);
+          } else {
+            // 如果回测方法不是有效的排名方法，默认返回1
+            recommendedBackBuyNumbers = [1];
+            console.log('回测方法不是有效的排名方法，默认返回1:', recommendedBackBuyNumbers);
+          }
+        } else {
+          // 如果回测方法不是排名方法，默认返回1
+          recommendedBackBuyNumbers = [1];
+          console.log('回测方法不是排名方法，默认返回1:', recommendedBackBuyNumbers);
+        }
+      }
+      console.log('最终的recommendedBackBuyNumbers:', recommendedBackBuyNumbers);
       
       // 解析下下下下下期的后区号码
       let nextNextNextNextNextBackNumbers = [];
@@ -294,19 +301,20 @@ async function huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
         continue;
       }
       
-      // 计算后区正确买号和错误买号数量
+      // 计算后区正确买号和错误买号数量（只考虑第一个球）
       let backCorrectBuy = 0;
       let backWrongBuy = 0;
       
-      recommendedBackBuyNumbers.forEach(buyNum => {
+      if (recommendedBackBuyNumbers && recommendedBackBuyNumbers.length > 0) {
+        const buyNum = recommendedBackBuyNumbers[0];
         if (nextNextNextNextNextBackNumbers.includes(buyNum)) {
           // 正确买号：推荐买号出现在下下下下下期开奖号中
-          backCorrectBuy++;
+          backCorrectBuy = 1;
         } else {
           // 错误买号：推荐买号没有出现在下下下下下期开奖号中
-          backWrongBuy++;
+          backWrongBuy = 1;
         }
-      });
+      }
       
       // 添加到回测结果
       backtestResults.push({
@@ -353,7 +361,7 @@ async function huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
  */
 router.get('/', async (req, res) => {
   try {
-    const { backtest_period, stats_period, backtest_method = 'most' } = req.query;
+    const { backtest_period, stats_period, backtest_method = 'rank1' } = req.query;
     
     if (!backtest_period || !stats_period) {
       return res.status(400).json({

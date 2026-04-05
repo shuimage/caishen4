@@ -47,28 +47,24 @@ function calculateFrontBuyNumbers(combinations, combinationStats, backtestMethod
     // 排名方法：根据排名选择号码
     const rank = parseInt(rankMatch[1]);
     
-    // 按出现次数降序排序号码（包括出现次数为0的号码）
+    // 按出现次数降序排序号码 (包括出现次数为 0 的号码),次数相同时按球号升序
     const sortedNumbers = [];
-    for (let num = 1; num <= 35; num++) {
-      sortedNumbers.push({ number: num, count: totalNumberCounts[num] || 0 });
+    for (let i = 1; i <= 35; i++) {
+      sortedNumbers.push({ number: i, count: totalNumberCounts[i] || 0 });
     }
-    sortedNumbers.sort((a, b) => b.count - a.count);
-    
-    // 计算每个号码的实际排名
-    const rankMap = {};
-    let currentRank = 1;
-    
-    for (let i = 0; i < sortedNumbers.length; i++) {
-      if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-        currentRank++;
+    sortedNumbers.sort((a, b) => {
+      if (b.count !== a.count) {
+        return b.count - a.count;  // 出现次数降序
       }
-      rankMap[sortedNumbers[i].number] = currentRank;
-    }
+      return a.number - b.number;  // 次数相同时，球号升序
+    });
     
-    // 找出所有排名等于指定排名的号码
-    for (let num = 1; num <= 35; num++) {
-      if (rankMap[num] === rank) {
-        buyNumbers.push(num);
+    // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+    if (sortedNumbers.length >= rank) {
+      // 获取指定排名的号码
+      const selectedNumber = sortedNumbers[rank - 1];
+      if (selectedNumber) {
+        buyNumbers.push(selectedNumber.number);
       }
     }
   } else {
@@ -133,9 +129,13 @@ async function dao_shu_3_qi_mai_hao_hui_ce(backtest_period, stats_period, backte
     
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
-    // 允许排名方法（如 rank1, rank2 等）
-    if (!validMethods.includes(backtest_method) && !backtest_method.match(/^rank(\d+)$/)) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')} 或排名方法（如 rank1, rank2 等）`);
+    const validRankMethods = [];
+    for (let i = 1; i <= 35; i++) {
+      validRankMethods.push(`rank${i}`);
+    }
+    const allValidMethods = [...validMethods, ...validRankMethods];
+    if (!allValidMethods.includes(backtest_method)) {
+      throw new Error(`无效的回测方法参数，必须是以下值之一：${allValidMethods.join(', ')}`);
     }
 
     // 获取历史数据用于回测

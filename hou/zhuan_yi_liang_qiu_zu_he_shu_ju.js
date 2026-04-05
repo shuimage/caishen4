@@ -111,11 +111,11 @@ async function main() {
     console.error('❌ 数据转换失败:', error.message);
     console.error('错误堆栈:', error.stack);
   } finally {
-    // 关闭数据库连接池
-    await pool.end();
-    console.log('数据库连接已关闭');
+    // 注意：不要在服务器启动时关闭连接池，只在手动执行时关闭
+    // await pool.end();
+    // console.log('数据库连接已关闭');
   }
 }
 
-// 执行主函数
-main();
+// 注意：已移除自动执行，只在需要时手动调用
+// main();

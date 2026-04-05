@@ -16,7 +16,7 @@ const router = express.Router();
  * @param {string} backtestMethod - 回测方法：most(出现最多), least(出现最少), average(出现平均)
  * @returns {Array} 推荐买号数组
  */
-function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod = 'most') {
+function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod = 'rank1') {
   // 统计所有号码的总出现次数
   const totalNumberCounts = {};
   
@@ -37,81 +37,48 @@ function calculateBackBuyNumbers(combinations, combinationStats, backtestMethod 
     }
   });
   
-  // 获取所有非零计数
-  const nonZeroCounts = Object.values(totalNumberCounts).filter(count => count > 0);
-  const buyNumbers = [];
-  
   // 处理排名方法
   if (backtestMethod.startsWith('rank')) {
     const rankMatch = backtestMethod.match(/^rank(\d+)$/);
     if (rankMatch) {
       const targetRank = parseInt(rankMatch[1]);
       
-      // 计算排名
-      const rankMap = {};
+      // 按出现次数降序排序，次数相同时按球号升序
       const sortedNumbers = [];
       for (let i = 1; i <= 12; i++) {
         sortedNumbers.push({ number: i, count: totalNumberCounts[i] || 0 });
       }
-      // 按出现次数降序排序
-      sortedNumbers.sort((a, b) => b.count - a.count);
-      // 计算排名
-      let currentRank = 1;
-      for (let i = 0; i < sortedNumbers.length; i++) {
-        if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-          currentRank++;
+      sortedNumbers.sort((a, b) => {
+        if (b.count !== a.count) {
+          return b.count - a.count;  // 出现次数降序
         }
-        rankMap[sortedNumbers[i].number] = currentRank;
-      }
+        return a.number - b.number;  // 次数相同时，球号升序
+      });
       
-      // 找出对应排名的号码
-      for (let i = 1; i <= 12; i++) {
-        if (rankMap[i] === targetRank && totalNumberCounts[i] > 0) {
-          buyNumbers.push(i);
-        }
+      // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+      const selectedIndex = Math.min(targetRank - 1, sortedNumbers.length - 1);
+      const selectedNumber = sortedNumbers[selectedIndex];
+      if (selectedNumber) {
+        return [selectedNumber.number];
       }
-    }
-  } else {
-    switch (backtestMethod) {
-      case 'least':
-        // 出现最少：找出出现次数最少的号码
-        if (nonZeroCounts.length > 0) {
-          const minCount = Math.min(...nonZeroCounts);
-          for (const [num, count] of Object.entries(totalNumberCounts)) {
-            if (count === minCount && count > 0) {
-              buyNumbers.push(parseInt(num));
-            }
-          }
-        }
-        break;
-        
-      case 'average':
-        // 出现平均：找出出现次数等于平均值的号码
-        if (nonZeroCounts.length > 0) {
-          const sumCounts = nonZeroCounts.reduce((sum, count) => sum + count, 0);
-          const averageCount = Math.round(sumCounts / nonZeroCounts.length);
-          for (const [num, count] of Object.entries(totalNumberCounts)) {
-            if (count === averageCount && count > 0) {
-              buyNumbers.push(parseInt(num));
-            }
-          }
-        }
-        break;
-        
-      case 'most':
-      default:
-        // 出现最多：找出出现次数最多的号码
-        const maxCount = Math.max(...Object.values(totalNumberCounts));
-        for (const [num, count] of Object.entries(totalNumberCounts)) {
-          if (count === maxCount && count > 0) {
-            buyNumbers.push(parseInt(num));
-          }
-        }
-        break;
     }
   }
   
-  return buyNumbers;
+  // 默认返回排名第1的号码
+  // 按出现次数降序排序，次数相同时按球号升序
+  const sortedNumbers = [];
+  for (let i = 1; i <= 12; i++) {
+    sortedNumbers.push({ number: i, count: totalNumberCounts[i] || 0 });
+  }
+  sortedNumbers.sort((a, b) => {
+    if (b.count !== a.count) {
+      return b.count - a.count;  // 出现次数降序
+    }
+    return a.number - b.number;  // 次数相同时，球号升序
+  });
+  
+  // 返回排名第一的号码
+  return [sortedNumbers[0].number];
 }
 
 /**
@@ -131,11 +98,19 @@ async function huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
       throw new Error('无效的统计周期参数，必须是正整数或"all"');
     }
     
+    // 打印回测方法参数
+    console.log('收到的回测方法参数:', backtest_method);
+    
+    // 处理旧的回测方法参数，向后兼容
+    if (backtest_method === 'most' || backtest_method === 'least' || backtest_method === 'average') {
+      backtest_method = 'rank1';
+      console.log('将旧的回测方法参数转换为:', backtest_method);
+    }
+    
     // 验证回测方法参数
-    const validMethods = ['most', 'least', 'average'];
-    const isValidRankMethod = /^rank\d+$/.test(backtest_method);
-    if (!validMethods.includes(backtest_method) && !isValidRankMethod) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')} 或 rank1-rank12`);
+    const isValidRankMethod = /^rank(1[0-2]|[1-9])$/.test(backtest_method);
+    if (!isValidRankMethod) {
+      throw new Error('无效的回测方法参数，必须是 rank1-rank12 中的一个');
     }
 
     // 获取历史数据用于回测
@@ -347,14 +322,14 @@ async function huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce(backtest_period, stats_per
  * @group 数据分析 - 买号回测相关接口
  * @param {string} backtest_period.query.required - 回测周期 (35, 50, 100, 200, 300, 500, 1000, all)
  * @param {string} stats_period.query.required - 统计周期 (35, 50, 100, 200, 300, 500, 1000, all)
- * @param {string} backtest_method.query - 回测方法 (most, least, average)，默认 most
+ * @param {string} backtest_method.query - 回测方法 (rank1-rank12)，默认 rank1
  * @returns {object} 200 - 成功响应，包含回测数据
  * @returns {object} 400 - 参数错误
  * @returns {object} 500 - 服务器内部错误
  */
 router.get('/', async (req, res) => {
   try {
-    const { backtest_period, stats_period, backtest_method = 'most' } = req.query;
+    const { backtest_period, stats_period, backtest_method = 'rank1' } = req.query;
     
     if (!backtest_period || !stats_period) {
       return res.status(400).json({

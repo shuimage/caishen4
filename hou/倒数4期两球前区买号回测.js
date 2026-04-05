@@ -84,27 +84,22 @@ function calculateFrontBuyNumbers(combinations, combinationStats, backtestMethod
         if (rankMatch) {
           const targetRank = parseInt(rankMatch[1]);
           
-          // 计算排名
-          const rankMap = {};
-          const sortedNumbers = [];
-          for (const [num, count] of Object.entries(totalNumberCounts)) {
-            sortedNumbers.push({ number: parseInt(num), count: count });
-          }
-          // 按出现次数降序排序
-          sortedNumbers.sort((a, b) => b.count - a.count);
-          // 计算排名
-          let currentRank = 1;
-          for (let i = 0; i < sortedNumbers.length; i++) {
-            if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-              currentRank++;
-            }
-            rankMap[sortedNumbers[i].number] = currentRank;
-          }
+          // 按出现次数降序排序号码 (包括出现次数为 0 的号码),次数相同时按球号升序
+          const sortedNumbers = Object.entries(totalNumberCounts)
+            .map(([num, count]) => ({ num: parseInt(num), count }))
+            .sort((a, b) => {
+              if (b.count !== a.count) {
+                return b.count - a.count;  // 出现次数降序
+              }
+              return a.num - b.num;  // 次数相同时，球号升序
+            });
           
-          // 找出对应排名的号码
-          for (const [num, rank] of Object.entries(rankMap)) {
-            if (rank === targetRank) {
-              buyNumbers.push(parseInt(num));
+          // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+          if (sortedNumbers.length >= targetRank) {
+            // 获取指定排名的号码
+            const selectedNumber = sortedNumbers[targetRank - 1];
+            if (selectedNumber) {
+              buyNumbers.push(selectedNumber.num);
             }
           }
         }
@@ -142,9 +137,13 @@ async function dao_shu_4_qi_mai_hao_hui_ce(backtest_period, stats_period, backte
     
     // 验证回测方法参数
     const validMethods = ['most', 'least', 'average'];
-    // 允许排名方法（如 rank1, rank2 等）
-    if (!validMethods.includes(backtest_method) && !backtest_method.match(/^rank(\d+)$/)) {
-      throw new Error(`无效的回测方法参数，必须是以下值之一：${validMethods.join(', ')} 或排名方法（如 rank1, rank2 等）`);
+    const validRankMethods = [];
+    for (let i = 1; i <= 35; i++) {
+      validRankMethods.push(`rank${i}`);
+    }
+    const allValidMethods = [...validMethods, ...validRankMethods];
+    if (!allValidMethods.includes(backtest_method)) {
+      throw new Error(`无效的回测方法参数，必须是以下值之一：${allValidMethods.join(', ')}`);
     }
 
     // 获取历史数据用于回测
