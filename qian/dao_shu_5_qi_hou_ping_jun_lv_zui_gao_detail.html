@@ -482,10 +482,10 @@
       }
     }
 
-    // 获取后区推荐买号 - 使用与dao_shu_5_qi_liang_qiu_zu_he.html相同的算法
+    // 获取后区推荐买号 - 使用与dao_shu_5_qi_mai_hao_hou_qu_hui_ce_xiang_qing.html相同的算法
     async function huo_qu_hou_qu_tui_jian_mai_hao(statsPeriod, backtestMethod) {
       try {
-        // 调用与dao_shu_5_qi_liang_qiu_zu_he.html相同的接口获取倒数5期后区两球组合数据
+        // 调用与dao_shu_5_qi_mai_hao_hou_qu_hui_ce_xiang_qing.html相同的接口获取倒数5期后区两球组合数据
         const response = await fetch(`http://localhost:18889/dao_shu_5_qi_hou_qu_zu_he?period=${statsPeriod}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
@@ -494,53 +494,54 @@
         if (result.success) {
           const analysisData = result.data;
           const backCombinations = analysisData.combinations;
-          let backBuyNumbers = [];
           
-          // 初始化汇总计数数组 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-          const backTotalCounts = new Array(13).fill(0); // 索引0不使用，1-12对应后区号码
+          // 统计所有号码的总出现次数
+          const totalNumberCounts = {};
           
-          // 遍历后区组合，统计每个号码的出现次数 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
+          // 初始化统计对象（后区号码1-12）
+          for (let num = 1; num <= 12; num++) {
+            totalNumberCounts[num] = 0;
+          }
+          
+          // 遍历所有组合的统计数据
           backCombinations.forEach(combo => {
             // 累加每个号码的出现次数
             for (let i = 1; i <= 12; i++) {
               const count = combo.numberCounts[i] || 0;
-              backTotalCounts[i] += count;
+              totalNumberCounts[i] += count;
             }
           });
           
-          // 排名方法：根据排名获取对应的号码
+          // 按出现次数降序排序，次数相同时按球号升序
+          const sortedNumbers = [];
+          for (let i = 1; i <= 12; i++) {
+            sortedNumbers.push({ number: i, count: totalNumberCounts[i] || 0 });
+          }
+          sortedNumbers.sort((a, b) => {
+            if (b.count !== a.count) {
+              return b.count - a.count;  // 出现次数降序
+            }
+            return a.number - b.number;  // 次数相同时，球号升序
+          });
+          
+          // 处理排名方法
           if (backtestMethod.startsWith('rank')) {
             const rankMatch = backtestMethod.match(/^rank(\d+)$/);
             if (rankMatch) {
               const targetRank = parseInt(rankMatch[1]);
               
-              // 计算排名 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-              const rankMap = {};
-              const sortedNumbers = [];
-              for (let i = 1; i <= 12; i++) {
-                sortedNumbers.push({ number: i, count: backTotalCounts[i] || 0 });
-              }
-              // 按出现次数降序排序
-              sortedNumbers.sort((a, b) => b.count - a.count);
-              // 计算排名
-              let currentRank = 1;
-              for (let i = 0; i < sortedNumbers.length; i++) {
-                if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-                  currentRank++;
-                }
-                rankMap[sortedNumbers[i].number] = currentRank;
-              }
-              
-              // 找出对应排名的号码
-              for (let i = 1; i <= 12; i++) {
-                if (rankMap[i] === targetRank) {
-                  backBuyNumbers.push(i);
-                }
+              // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+              const selectedIndex = Math.min(targetRank - 1, sortedNumbers.length - 1);
+              const selectedNumber = sortedNumbers[selectedIndex];
+              if (selectedNumber) {
+                return [selectedNumber.number];
               }
             }
           }
           
-          return backBuyNumbers;
+          // 确保始终返回至少一个号码
+          // 返回排名第一的号码
+          return [sortedNumbers[0].number];
         } else {
           alert('接口失败');
           return [];

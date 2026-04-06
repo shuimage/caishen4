@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>回测结果详情</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            padding: 20px;
+            background-color: #1e1e1e;
+            color: #fff;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        h1, h2, h3 {
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+        .info-box {
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .info-item {
+            display: flex;
+            margin-bottom: 10px;
+        }
+        .info-label {
+            font-weight: bold;
+            width: 150px;
+            color: #4CAF50;
+        }
+        .info-value {
+            color: #fff;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background-color: #2d2d2d;
+        }
+        th, td {
+            border: 1px solid #444;
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        tr:hover {
+            background-color: #3d3d3d;
+        }
+        .ball {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            line-height: 30px;
+            text-align: center;
+            border-radius: 50%;
+            background-color: #9c27b0;
+            color: white;
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        .accuracy-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .accuracy-high {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .accuracy-low {
+            background-color: #f44336;
+            color: white;
+        }
+        .step-box {
+            background-color: #2d2d2d;
+            border: 1px solid #444;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .step-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #4CAF50;
+            margin-bottom: 10px;
+        }
+        .highlight {
+            background-color: #4CAF50;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+        .error-message {
+            background-color: #f44336;
+            color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        .back-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+        .back-btn:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="javascript:history.back()" class="back-btn">← 返回上一页</a>
+        
+        <h1>📊 回测结果详情</h1>
+        
+        <div id="loading" style="text-align: center; padding: 50px;">
+            <p style="font-size: 18px;">加载中...</p>
+        </div>
+        
+        <div id="error" class="error-message" style="display: none;"></div>
+        
+        <div id="content" style="display: none;">
+            <!-- 基本信息 -->
+            <div class="info-box">
+                <h2>📋 基本信息</h2>
+                <div class="info-item">
+                    <span class="info-label">回测期号：</span>
+                    <span class="info-value" id="period"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">回测方法：</span>
+                    <span class="info-value" id="backtestMethod"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">回测期数：</span>
+                    <span class="info-value" id="backtestPeriod"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">统计期数：</span>
+                    <span class="info-value" id="statsPeriod"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">结果排名：</span>
+                    <span class="info-value" id="resultRank"></span>
+                </div>
+                <div class="info-item">
+                    <span class="info-label">回测结果值：</span>
+                    <span class="info-value" id="resultValue"></span>
+                </div>
+            </div>
+            
+            <!-- 步骤 1：原始回测数据 -->
+            <div class="step-box">
+                <div class="step-title">📈 步骤 1：原始回测数据（所有排名方法的正确率）</div>
+                <table id="originalDataTable">
+                    <thead>
+                        <tr>
+                            <th>序号</th>
+                            <th>回测方法</th>
+                            <th>统计期数</th>
+                            <th>平均正确率</th>
+                            <th>后区推荐买号</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <!-- 步骤 2：号码统计 -->
+            <div class="step-box">
+                <div class="step-title">🔢 步骤 2：号码出现次数统计</div>
+                <table id="numberCountTable">
+                    <thead>
+                        <tr>
+                            <th>号码</th>
+                            <th>出现次数</th>
+                            <th>涉及的回测方法</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <!-- 步骤 3：平均正确率累加计算 -->
+            <div class="step-box">
+                <div class="step-title">🧮 步骤 3：平均正确率累加计算（按号码分组）</div>
+                <p style="margin-bottom: 15px; color: #aaa;">
+                    规则：同一个号码，如果回测方法不同，则累加正确率；如果回测方法相同，则只保留最大的正确率
+                </p>
+                <table id="accuracyCalcTable">
+                    <thead>
+                        <tr>
+                            <th>号码</th>
+                            <th>回测方法 1</th>
+                            <th>回测方法 2</th>
+                            <th>累计正确率</th>
+                            <th>最终正确率</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            
+            <!-- 步骤 4：最终排序结果 -->
+            <div class="step-box">
+                <div class="step-title">🏆 步骤 4：最终排序结果（按正确率降序）</div>
+                <table id="finalRankTable">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>号码</th>
+                            <th>最终正确率</th>
+                            <th>标记</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // 获取 URL 参数
+        function getUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            return {
+                period: params.get('period'),
+                backtestMethod: params.get('backtestMethod'),
+                backtestPeriod: params.get('backtestPeriod'),
+                resultRank: params.get('resultRank'),
+                resultValue: params.get('resultValue')
+            };
+        }
+        
+        // 页面加载时获取并显示数据
+        async function loadDetails() {
+            try {
+                const params = getUrlParams();
+                
+                if (!params.period || !params.backtestMethod) {
+                    throw new Error('缺少必要的参数');
+                }
+                
+                // 显示基本信息
+                document.getElementById('period').textContent = params.period;
+                document.getElementById('backtestMethod').textContent = params.backtestMethod;
+                document.getElementById('backtestPeriod').textContent = params.backtestPeriod;
+                document.getElementById('resultRank').textContent = params.resultRank;
+                
+                const resultValues = params.resultValue.split(',').map(v => v.trim());
+                document.getElementById('resultValue').innerHTML = resultValues.map(v => 
+                    `<span class="ball">${v}</span>`
+                ).join('');
+                
+                // 获取回测详情数据
+                const response = await fetch(`/huo_qu_dao_shu_2_qi_hou_mai_hao_hui_ce_xiang_qing?period=${params.period}&backtestPeriod=${params.backtestPeriod}&backtestMethod=倒数 2 期`);
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error('获取回测详情失败：' + result.message);
+                }
+                
+                const detailData = result.data;
+                
+                // 显示原始数据
+                displayOriginalData(detailData.originalResults || []);
+                
+                // 显示号码统计
+                displayNumberCounts(detailData.numberCounts || []);
+                
+                // 显示正确率计算
+                displayAccuracyCalculation(detailData.accuracyCalculation || []);
+                
+                // 显示最终排序
+                displayFinalRank(detailData.finalRank || [], resultValues);
+                
+                // 隐藏加载提示，显示内容
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('content').style.display = 'block';
+                
+            } catch (error) {
+                console.error('加载详情失败:', error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error').textContent = '加载失败：' + error.message;
+                document.getElementById('error').style.display = 'block';
+            }
+        }
+        
+        // 显示原始回测数据
+        function displayOriginalData(results) {
+            const tbody = document.querySelector('#originalDataTable tbody');
+            tbody.innerHTML = '';
+            
+            results.forEach((item, index) => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.backtestMethod}</td>
+                    <td>${item.statsPeriod}</td>
+                    <td>
+                        <span class="accuracy-badge ${item.accuracy >= 50 ? 'accuracy-high' : 'accuracy-low'}">
+                            ${item.accuracy.toFixed(2)}%
+                        </span>
+                    </td>
+                    <td>
+                        ${(item.backBuyNumbers || []).map(num => 
+                            `<span class="ball">${num}</span>`
+                        ).join('')}
+                    </td>
+                `;
+            });
+        }
+        
+        // 显示号码统计
+        function displayNumberCounts(counts) {
+            const tbody = document.querySelector('#numberCountTable tbody');
+            tbody.innerHTML = '';
+            
+            for (let num = 1; num <= 12; num++) {
+                const countData = counts[num] || { count: 0, methods: [] };
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><span class="ball">${num}</span></td>
+                    <td>${countData.count}</td>
+                    <td>${countData.methods.join(', ') || '-'}</td>
+                `;
+            }
+        }
+        
+        // 显示正确率计算
+        function displayAccuracyCalculation(calculation) {
+            const tbody = document.querySelector('#accuracyCalcTable tbody');
+            tbody.innerHTML = '';
+            
+            calculation.forEach(item => {
+                const row = tbody.insertRow();
+                row.innerHTML = `
+                    <td><span class="ball">${item.number}</span></td>
+                    <td>${item.method1 || '-'}: ${item.accuracy1 || 0}%</td>
+                    <td>${item.method2 || '-'}: ${item.accuracy2 || 0}%</td>
+                    <td>${item.totalAccuracy || 0}%</td>
+                    <td class="highlight">${item.finalAccuracy || 0}%</td>
+                `;
+            });
+        }
+        
+        // 显示最终排序
+        function displayFinalRank(rank, targetValues) {
+            const tbody = document.querySelector('#finalRankTable tbody');
+            tbody.innerHTML = '';
+            
+            rank.forEach((item, index) => {
+                const row = tbody.insertRow();
+                const isTarget = targetValues.includes(item.number.toString());
+                const isRank1 = index === 0;
+                const isLastRank = index === rank.length - 1;
+                
+                let mark = '';
+                if (isTarget) {
+                    mark = '<span class="highlight">← 目标值</span>';
+                }
+                if (isRank1) {
+                    mark += ' <span class="accuracy-badge accuracy-high">🥇 第 1 名</span>';
+                }
+                if (isLastRank) {
+                    mark += ' <span class="accuracy-badge accuracy-low">🔻 最后 1 名</span>';
+                }
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><span class="ball">${item.number}</span></td>
+                    <td>
+                        <span class="accuracy-badge ${item.accuracy >= 50 ? 'accuracy-high' : 'accuracy-low'}">
+                            ${item.accuracy.toFixed(2)}%
+                        </span>
+                    </td>
+                    <td>${mark}</td>
+                `;
+            });
+        }
+        
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', loadDetails);
+    </script>
+</body>
+</html>

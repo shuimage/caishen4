@@ -412,6 +412,9 @@
           return;
         }
         
+        // 按平均正确率降序排序
+        allResults.sort((a, b) => b.accuracy - a.accuracy);
+        
         // 遍历所有结果
         for (const result of allResults) {
           const { statsPeriod, accuracy, backtestMethod, frontBuyNumbers } = result;
@@ -482,69 +485,18 @@
       }
     }
 
-    // 获取前区推荐买号 - 使用与dao_shu_5_qi_liang_qiu_zu_he.html相同的算法
+    // 获取前区推荐买号 - 使用与dao_shu_5_qi_mai_hao_qian_qu_hui_ce_xiang_qing.html相同的算法
     async function huo_qu_qian_qu_tui_jian_mai_hao(statsPeriod, backtestMethod) {
       try {
-        // 调用dao_shu_5_qi_liang_qiu_zu_he接口获取前区两球组合数据
-        const response = await fetch(`http://localhost:18889/dao_shu_5_qi_liang_qiu_zu_he?period=${statsPeriod}`);
+        // 调用huo_qu_dao_shu_5_qi_mai_hao_hui_ce接口获取前区推荐买号
+        const response = await fetch(`http://localhost:18889/dao_shu_5_qi_mai_hao_hui_ce?backtest_period=1&stats_period=${statsPeriod}&backtest_method=${backtestMethod}`);
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const result = await response.json();
-        if (result.success) {
-          const analysisData = result.data;
-          
-          // 初始化汇总计数数组 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-          const totalCounts = new Array(36).fill(0); // 索引0不使用，1-35对应前区号码
-          
-          // 遍历前区组合，统计每个号码的出现次数 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-          analysisData.combinations.forEach(combo => {
-            // 累加每个号码的出现次数
-            for (let i = 1; i <= 35; i++) {
-              const numStr = String(i).padStart(2, '0'); // 使用两位格式的号码，与后端一致
-              // 安全访问nextDrawNumbers属性
-              let count = 0;
-              if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
-                count = combo.nextDrawNumbers.filter(n => n === numStr).length;
-              }
-              totalCounts[i] += count;
-            }
-          });
-          
-          // 排名方法：根据排名获取对应的号码
-          let frontBuyNumbers = [];
-          if (backtestMethod.startsWith('rank')) {
-            const rankMatch = backtestMethod.match(/^rank(\d+)$/);
-            if (rankMatch) {
-              const targetRank = parseInt(rankMatch[1]);
-              
-              // 计算排名 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-              const rankMap = {};
-              const sortedNumbers = [];
-              for (let i = 1; i <= 35; i++) {
-                sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
-              }
-              // 按出现次数降序排序
-              sortedNumbers.sort((a, b) => b.count - a.count);
-              // 计算排名
-              let currentRank = 1;
-              for (let i = 0; i < sortedNumbers.length; i++) {
-                if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-                  currentRank++;
-                }
-                rankMap[sortedNumbers[i].number] = currentRank;
-              }
-              
-              // 找出对应排名的号码
-              for (let i = 1; i <= 35; i++) {
-                if (rankMap[i] === targetRank) {
-                  frontBuyNumbers.push(i);
-                }
-              }
-            }
-          }
-          
-          return frontBuyNumbers;
+        if (result.success && result.data && result.data.backtestResults && result.data.backtestResults.length > 0) {
+          // 获取第一个回测结果的前区推荐买号
+          return result.data.backtestResults[0].frontBuyNumbers || [];
         } else {
           alert('接口失败');
           return [];
@@ -631,8 +583,8 @@
           { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
         ];
         
-        // 回测方法列表，只包括排名方法（后区只有12个号码，排名最多到12）
-        const backtestMethods = Array.from({length: 12}, (_, i) => `rank${i + 1}`);
+        // 回测方法列表，只包括排名方法（前区有35个号码，排名最多到35）
+        const backtestMethods = Array.from({length: 35}, (_, i) => `rank${i + 1}`);
         const allResults = [];
         
         // 计算总工作量
