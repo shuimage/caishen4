@@ -1,0 +1,13 @@
+{
+  "name": "caishen4-frontend",
+  "version": "1.0.0",
+  "description": "大乐透前端项目",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

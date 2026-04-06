@@ -667,7 +667,7 @@
     // 跳转到前区买号回测页面
     function goToFrontBuyBacktestPage() {
       // 获取当前选择的统计周期
-      const periodValue = document.querySelector('.period-dropdown').value;
+      const periodValue = getSelectedStatsRange();
       // 跳转到回测页面，传递回测期数和统计期数参数
       window.location.href = `dao_shu_9_qi_mai_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
     }
@@ -675,7 +675,7 @@
     // 跳转到后区买号回测页面
     function goToBackBuyBacktestPage() {
       // 获取当前选择的统计周期
-      const periodValue = document.querySelector('.period-dropdown').value;
+      const periodValue = getSelectedStatsRange();
       // 跳转到回测页面，传递回测期数和统计期数参数
       window.location.href = `dao_shu_9_qi_mai_hao_hui_ce_hou_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
     }
@@ -683,7 +683,7 @@
     // 跳转到后区回测页面
     function goToBacktestHouPage() {
       // 获取当前选择的统计周期
-      const periodValue = document.querySelector('.period-dropdown').value;
+      const periodValue = getSelectedStatsRange();
       // 跳转到回测页面，传递回测期数和统计期数参数
       window.location.href = `dao_shu_9_qi_mai_hao_hui_ce_hou_xiang_qing.html?backtest_period=50&stats_period=${periodValue}`;
     }
@@ -1611,18 +1611,6 @@
           }
         }
       }
-    }
-    
-    // 跳转到前区买号回测页面
-    function goToFrontBuyBacktestPage() {
-      const statsPeriod = getSelectedStatsRange();
-      window.location.href = `dao_shu_2_qi_mai_hao_hui_ce_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
-    }
-    
-    // 跳转到后区买号回测页面
-    function goToBackBuyBacktestPage() {
-      const statsPeriod = getSelectedStatsRange();
-      window.location.href = `dao_shu_2_qi_mai_hao_hui_ce_hou_xiang_qing.html?backtest_period=50&stats_period=${statsPeriod}`;
     }
     
     // 获取当前选择的统计范

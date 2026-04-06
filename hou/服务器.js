@@ -100,6 +100,12 @@ const daoShu4QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数4期两球前�
 const daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数5期两球前区买号回测.js'); // 导入倒数5期两球前区买号回测路由
 // 导入倒数6期两球前区买号回测路由
 const daoShu6QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数6期两球前区买号回测.js'); // 导入倒数6期两球前区买号回测路由
+// 导入倒数7期两球前区买号回测路由
+const daoShu7QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数7期两球前区买号回测.js'); // 导入倒数7期两球前区买号回测路由
+// 导入倒数8期两球前区买号回测路由
+const daoShu8QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数8期两球前区买号回测.js'); // 导入倒数8期两球前区买号回测路由
+// 导入倒数9期两球前区买号回测路由
+const daoShu9QiLiangQiuQianQuMaiHaoHuiCeRouter = require('./倒数9期两球前区买号回测.js'); // 导入倒数9期两球前区买号回测路由
 // 导入近两期两球前区买号回测路由
 const jinLiangQiLiangQiuQianQuMaiHaoHuiCeRouter = require('./近两期两球前区买号回测.js'); // 导入近两期两球前区买号回测路由
 // 导入近两期两球后区买号回测路由
@@ -118,6 +124,14 @@ const daoShu3QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数3期两球后�
 const daoShu4QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数4期两球后区买号回测.js'); // 导入倒数4期两球后区买号回测路由
 // 导入倒数5期两球后区买号回测路由
 const daoShu5QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数5期两球后区买号回测.js'); // 导入倒数5期两球后区买号回测路由
+// 导入倒数6期两球后区买号回测路由
+const daoShu6QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数6期两球后区买号回测.js'); // 导入倒数6期两球后区买号回测路由
+// 导入倒数7期两球后区买号回测路由
+const daoShu7QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数7期两球后区买号回测.js'); // 导入倒数7期两球后区买号回测路由
+// 导入倒数8期两球后区买号回测路由
+const daoShu8QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数8期两球后区买号回测.js'); // 导入倒数8期两球后区买号回测路由
+// 导入倒数9期两球后区买号回测路由
+const daoShu9QiLiangQiuHouQuMaiHaoHuiCeRouter = require('./倒数9期两球后区买号回测.js'); // 导入倒数9期两球后区买号回测路由
 // 导入幻圆回测路由
 const huanYuanHuiCeJingXiangRouter = require('./huan_yuan_hui_ce_jing_xiang.js'); // 导入幻圆回测镜像对称路由
 const huanYuanHuiCeZhouXianRouter = require('./huan_yuan_hui_ce_zhou_xian.js'); // 导入幻圆回测轴线对称路由
@@ -580,6 +594,12 @@ app.use('/dao_shu_4_qi_mai_hao_hui_ce', daoShu4QiLiangQiuQianQuMaiHaoHuiCeRouter
 app.use('/dao_shu_5_qi_mai_hao_hui_ce', daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数5期两球前区买号回测路由
 // 注册倒数6期两球前区买号回测路由
 app.use('/dao_shu_6_qi_mai_hao_hui_ce', daoShu6QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数6期两球前区买号回测路由
+// 注册倒数7期两球前区买号回测路由
+app.use('/dao_shu_7_qi_mai_hao_hui_ce', daoShu7QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数7期两球前区买号回测路由
+// 注册倒数8期两球前区买号回测路由
+app.use('/dao_shu_8_qi_mai_hao_hui_ce', daoShu8QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数8期两球前区买号回测路由
+// 注册倒数9期两球前区买号回测路由
+app.use('/dao_shu_9_qi_mai_hao_hui_ce', daoShu9QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数9期两球前区买号回测路由
 app.use('/dao_shu_5_qi_qian_qu_mai_hao_hui_ce', daoShu5QiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册倒数5期前区买号回测路由（兼容前端请求路径）
 // 注册近两期两球前区买号回测路由
 app.use('/jin_liang_qi_mai_hao_hui_ce', jinLiangQiLiangQiuQianQuMaiHaoHuiCeRouter); // 注册近两期两球前区买号回测路由
@@ -598,6 +618,18 @@ app.use('/huo_qu_dao_shu_4_qi_hou_mai_hao_hui_ce', daoShu4QiLiangQiuHouQuMaiHaoH
 app.use('/dao_shu_4_qi_hou_mai_hao_hui_ce', daoShu4QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数4期两球后区买号回测路由（兼容前端请求路径）
 app.use('/huo_qu_dao_shu_5_qi_hou_mai_hao_hui_ce', daoShu5QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数5期两球后区买号回测路由
 app.use('/dao_shu_5_qi_hou_mai_hao_hui_ce', daoShu5QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数5期两球后区买号回测路由（兼容前端请求路径）
+// 注册倒数6期两球后区买号回测路由
+app.use('/huo_qu_dao_shu_6_qi_hou_mai_hao_hui_ce', daoShu6QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数6期两球后区买号回测路由
+app.use('/dao_shu_6_qi_mai_hao_hui_ce_hou', daoShu6QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数6期两球后区买号回测路由（兼容前端请求路径）
+// 注册倒数7期两球后区买号回测路由
+app.use('/huo_qu_dao_shu_7_qi_hou_mai_hao_hui_ce', daoShu7QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数7期两球后区买号回测路由
+app.use('/dao_shu_7_qi_mai_hao_hui_ce_hou', daoShu7QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数7期两球后区买号回测路由（兼容前端请求路径）
+// 注册倒数8期两球后区买号回测路由
+app.use('/huo_qu_dao_shu_8_qi_hou_mai_hao_hui_ce', daoShu8QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数8期两球后区买号回测路由
+app.use('/dao_shu_8_qi_mai_hao_hui_ce_hou', daoShu8QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数8期两球后区买号回测路由（兼容前端请求路径）
+// 注册倒数9期两球后区买号回测路由
+app.use('/huo_qu_dao_shu_9_qi_hou_mai_hao_hui_ce', daoShu9QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数9期两球后区买号回测路由
+app.use('/dao_shu_9_qi_mai_hao_hui_ce_hou', daoShu9QiLiangQiuHouQuMaiHaoHuiCeRouter); // 注册倒数9期两球后区买号回测路由（兼容前端请求路径）
 // 注册幻圆回测路由
 app.use('/huan_yuan_hui_ce_jing_xiang', huanYuanHuiCeJingXiangRouter); // 注册幻圆回测镜像对称路由
 app.use('/huan_yuan_hui_ce_zhou_xian', huanYuanHuiCeZhouXianRouter); // 注册幻圆回测轴线对称路由
