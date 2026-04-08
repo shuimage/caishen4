@@ -1,9 +1,46 @@
 // 主题切换功能 - 仅从localStorage读取设置，不在此页面提供切换按钮
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
   // 从localStorage读取主题设置
   const savedTheme = localStorage.getItem('theme');
   if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
     document.body.classList.add('dark-theme');
+  }
+  
+  try {
+    // 调用主函数初始化页面数据
+    await main();
+    setupBacktestControls();
+    
+    // 获取并监听回测期数输入框
+    const backtestPeriodInput = document.getElementById('backtestPeriod');
+    if (backtestPeriodInput) {
+      // 初始化回测期数
+      backtestPeriod = backtestPeriodInput.value;
+      
+      // 监听输入框变化
+      backtestPeriodInput.addEventListener('change', function() {
+        backtestPeriod = this.value;
+      });
+    }
+    
+    // 添加刷新总集按钮事件
+    const refreshBtn = document.getElementById('refreshTotalBuyNumbersBtn');
+    if (refreshBtn) {
+      refreshBtn.addEventListener('click', generateTotalBuyNumbers);
+    }
+  } catch (error) {
+    console.error('页面加载失败:', error);
+    // 显示友好的错误信息，避免白屏
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+      mainContent.innerHTML = `
+        <div style="text-align: center; padding: 50px;">
+          <h2>页面加载失败</h2>
+          <p>请刷新页面重试</p>
+          <button onclick="location.reload()" class="btn back-btn">刷新页面</button>
+        </div>
+      `;
+    }
   }
 });
 
@@ -490,44 +527,7 @@ function generateTotalBuyNumberChart(sortedNumbers) {
   ctx.fillText('前区推荐买号累计平均正确率', canvas.width / 2, 20);
 }
 
-// 页面加载完成后执行
-window.addEventListener('load', async function() {
-  try {
-    await main();
-    setupBacktestControls();
-    
-    // 获取并监听回测期数输入框
-    const backtestPeriodInput = document.getElementById('backtestPeriod');
-    if (backtestPeriodInput) {
-      // 初始化回测期数
-      backtestPeriod = backtestPeriodInput.value;
-      
-      // 监听输入框变化
-      backtestPeriodInput.addEventListener('change', function() {
-        backtestPeriod = this.value;
-      });
-    }
-    
-    // 添加刷新总集按钮事件
-    const refreshBtn = document.getElementById('refreshTotalBuyNumbersBtn');
-    if (refreshBtn) {
-      refreshBtn.addEventListener('click', generateTotalBuyNumbers);
-    }
-  } catch (error) {
-    console.error('页面加载失败:', error);
-    // 显示友好的错误信息，避免白屏
-    const mainContent = document.querySelector('.main-content');
-    if (mainContent) {
-      mainContent.innerHTML = `
-        <div style="text-align: center; padding: 50px;">
-          <h2>页面加载失败</h2>
-          <p>请刷新页面重试</p>
-          <button onclick="location.reload()" class="btn back-btn">刷新页面</button>
-        </div>
-      `;
-    }
-  }
-});
+
 
 // 以下是各个回测函数的实现，确保它们不会抛出错误
 
