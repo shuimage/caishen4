@@ -716,28 +716,24 @@ async function huo_qu_qian_qu_tui_jian_mai_hao(statsPeriod, backtestMethod) {
         const rankMatch = backtestMethod.match(/^rank(\d+)$/);
         const rank = parseInt(rankMatch[1]);
         
-        // 按出现次数降序排序号码（包括出现次数为0的号码）
+        // 按出现次数降序排序号码 (包括出现次数为 0 的号码),次数相同时按球号升序
         const sortedNumbers = [];
         for (let i = 1; i <= 35; i++) {
           sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
         }
-        sortedNumbers.sort((a, b) => b.count - a.count);
-        
-        // 计算每个号码的实际排名
-        const rankMap = {};
-        let currentRank = 1;
-        
-        for (let i = 0; i < sortedNumbers.length; i++) {
-          if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-            currentRank++;
+        sortedNumbers.sort((a, b) => {
+          if (b.count !== a.count) {
+            return b.count - a.count;  // 出现次数降序
           }
-          rankMap[sortedNumbers[i].number] = currentRank;
-        }
+          return a.number - b.number;  // 次数相同时，球号升序
+        });
         
-        // 找出所有排名等于指定排名的号码
-        for (let i = 1; i <= 35; i++) {
-          if (rankMap[i] === rank) {
-            frontBuyNumbers.push(i);
+        // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
+        if (sortedNumbers.length >= rank) {
+          // 获取指定排名的号码
+          const selectedNumber = sortedNumbers[rank - 1];
+          if (selectedNumber) {
+            frontBuyNumbers.push(selectedNumber.number);
           }
         }
       }
@@ -1168,10 +1164,10 @@ async function performSearchNewest() {
       { step: 10, expansion: 30 }     // 第三阶段：步长10，扩展范围30
     ];
     
-    // 回测方法：只包含排名方法
+    // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
     const backtestMethods = [];
     // 添加排名方法
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       backtestMethods.push(`rank${i}`);
     }
     const allResults = [];
@@ -1205,8 +1201,8 @@ async function performSearchNewest() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从1500期开始
-      let currentStart = 1500;
+      // 所有回测方法都从2000期开始，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      let currentStart = 2000;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -1272,8 +1268,8 @@ async function performSearchNewest() {
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
         // 扩展搜索范围，确保不遗漏相邻区域
-        // 所有回测方法都使用1500期作为最小限制
-        const minLimit = 1500;
+      // 所有回测方法都使用2000期作为最小限制，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      const minLimit = 2000;
         currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
@@ -1351,16 +1347,36 @@ async function performSearchNewest() {
     if (isBacktestStopped) {
       detailResults.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
     } else {
+      // 过滤回测结果：如果回测方法相同且下一期前区推荐买号相同，只保留一条，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      const uniqueResultsMap = new Map();
+      
+      validResults.forEach(result => {
+        // 基于回测方法和下一期前区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+        
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
+        }
+      });
+      
+      // 将过滤后的结果转换回数组
+      const filteredResults = Array.from(uniqueResultsMap.values());
+      
+      // 按照平均正确率降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+      
       // 更新进度
-      await updateProgress(`找到 ${validResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
+      await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
       currentStep++;
       
       // 渲染详情数据，传递过滤后的结果和下一期期号
-      await renderDetailData(validResults, nextPeriod);
+      await renderDetailData(filteredResults, nextPeriod);
       
       // 存储回测结果到全局变量
       backtestResults['newest'] = {
-        results: validResults,
+        results: filteredResults,
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
@@ -1446,110 +1462,15 @@ async function testStatsPeriodSecondLast(backtestPeriod, statsPeriod, backtestMe
 // 获取前区推荐买号 - 使用与dao_shu_2_qi_liang_qiu_zu_he.html相同的算法
 async function huo_qu_qian_qu_tui_jian_mai_hao_second_last(statsPeriod, backtestMethod) {
   try {
-    // 调用dao_shu_2_qi_liang_qiu_zu_he接口获取倒数2期两球组合数据
-    const response = await fetch(`http://localhost:18889/dao_shu_2_qi_liang_qiu_zu_he?period=${statsPeriod}`);
+    // 调用dao_shu_2_qi_mai_hao_hui_ce接口获取前区推荐买号，与dao_shu_2_qi_ping_jun_lv_zui_gao_detail.html保持一致
+    const response = await fetch(`http://localhost:18889/dao_shu_2_qi_mai_hao_hui_ce?backtest_period=1&stats_period=${statsPeriod}&backtest_method=${backtestMethod}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result = await response.json();
-    if (result.success) {
-      const analysisData = result.data;
-      let frontBuyNumbers = [];
-      
-      // 初始化汇总计数数组 - 与dao_shu_2_qi_liang_qiu_zu_he.html完全相同
-      const totalCounts = new Array(36).fill(0); // 索引0不使用，1-35对应前区号码
-      
-      // 遍历前区组合，统计每个号码的出现次数 - 与dao_shu_2_qi_liang_qiu_zu_he.html完全相同
-      analysisData.combinations.forEach(combo => {
-        // 累加每个号码的出现次数
-        for (let i = 1; i <= 35; i++) {
-          const numStr = String(i);
-          let count = 0;
-          if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
-            count = combo.nextDrawNumbers.filter(n => n === numStr).length;
-          }
-          totalCounts[i] += count;
-        }
-      });
-      
-      // 根据回测方法计算对应的前区推荐买号 - 与dao_shu_2_qi_liang_qiu_zu_he.html完全相同
-      if (backtestMethod === 'most') {
-        // 1. 出现最多球：找到totalCounts中的最大值对应的号码
-        const maxFirstCount = Math.max(...totalCounts);
-        if (maxFirstCount > 0) {
-          // 找出所有最大值对应的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === maxFirstCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod === 'least') {
-        // 2. 出现最少球：找到totalCounts中除0以外的最小值对应的号码
-        const nonZeroCounts = totalCounts.filter(count => count > 0);
-        if (nonZeroCounts.length > 0) {
-          const minFirstCount = Math.min(...nonZeroCounts);
-          // 找出所有最小值对应的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === minFirstCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod === 'average') {
-        // 3. 出现平均球：找到totalCounts中次数等于平均值的号码
-        const nonZeroTotalCounts = totalCounts.filter(count => count > 0);
-        if (nonZeroTotalCounts.length > 0) {
-          const sumCounts = nonZeroTotalCounts.reduce((sum, count) => sum + count, 0);
-          const averageCount = Math.round(sumCounts / nonZeroTotalCounts.length);
-          // 找出所有等于平均值的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === averageCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod.match(/^rank(\d+)$/)) {
-        // 排名方法：根据排名选择号码
-        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
-        const rank = parseInt(rankMatch[1]);
-        
-        // 按出现次数降序排序号码（包括出现次数为0的号码） - 与dao_shu_2_qi_liang_qiu_zu_he.html完全一致
-        const sortedNumbers = [];
-        for (let i = 1; i <= 35; i++) {
-          sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
-        }
-        sortedNumbers.sort((a, b) => b.count - a.count);
-        
-        // 计算每个号码的实际排名 - 与dao_shu_2_qi_liang_qiu_zu_he.html完全一致
-        const rankMap = {};
-        let currentRank = 1;
-        
-        for (let i = 0; i < sortedNumbers.length; i++) {
-          if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-            currentRank++;
-          }
-          rankMap[sortedNumbers[i].number] = currentRank;
-        }
-        
-        // 找出所有排名等于指定排名的号码
-        for (let i = 1; i <= 35; i++) {
-          if (rankMap[i] === rank) {
-            frontBuyNumbers.push(i);
-          }
-        }
-      }
-      
-      // 对于排名方法，如果没有找到对应排名的号码，返回空数组
-      // 对于其他方法，如果没有找到对应号码，返回所有前区号码作为默认值
-      if (frontBuyNumbers.length === 0 && !backtestMethod.match(/^rank(\d+)$/)) {
-        // 如果所有条件都不满足，返回所有前区号码作为默认值
-        for (let i = 1; i <= 35; i++) {
-          frontBuyNumbers.push(i);
-        }
-      }
-      
-      return frontBuyNumbers;
+    if (result.success && result.data && result.data.backtestResults && result.data.backtestResults.length > 0) {
+      // 获取第一个回测结果的前区推荐买号
+      return result.data.backtestResults[0].frontBuyNumbers || [];
     } else {
       alert('接口失败');
       return [];
@@ -1813,10 +1734,10 @@ async function performSearchSecondLast() {
       { step: 10, expansion: 30 }     // 第三阶段：步长10，扩展范围30
     ];
     
-    // 回测方法：只包含排名方法
+    // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
     const backtestMethods = [];
     // 添加排名方法
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       backtestMethods.push(`rank${i}`);
     }
     const allResults = [];
@@ -1850,8 +1771,8 @@ async function performSearchSecondLast() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从1500期开始
-      let currentStart = 1500;
+      // 所有回测方法都从2000期开始，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      let currentStart = 2000;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -1917,8 +1838,8 @@ async function performSearchSecondLast() {
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
         // 扩展搜索范围，确保不遗漏相邻区域
-        // 所有回测方法都使用1500期作为最小限制
-        const minLimit = 1500;
+      // 所有回测方法都使用2000期作为最小限制，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      const minLimit = 2000;
         currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
@@ -1996,16 +1917,36 @@ async function performSearchSecondLast() {
     if (isBacktestStopped) {
       detailResults.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
     } else {
+      // 过滤回测结果：如果回测方法相同且下下期前区推荐买号相同，只保留一条，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      const uniqueResultsMap = new Map();
+      
+      validResults.forEach(result => {
+        // 基于回测方法和下下期前区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+        
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
+        }
+      });
+      
+      // 将过滤后的结果转换回数组
+      const filteredResults = Array.from(uniqueResultsMap.values());
+      
+      // 按照平均正确率降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+      
       // 更新进度
-      await updateProgress(`找到 ${validResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
+      await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
       currentStep++;
       
       // 渲染详情数据，传递过滤后的结果和下下期期号
-      await renderDetailDataSecondLast(validResults, nextPeriod);
+      await renderDetailDataSecondLast(filteredResults, nextPeriod);
       
       // 存储回测结果到全局变量
       backtestResults['secondLast'] = {
-        results: validResults,
+        results: filteredResults,
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
@@ -2187,101 +2128,15 @@ async function testStatsPeriodFifthLast(backtestPeriod, statsPeriod, backtestMet
 // 获取前区推荐买号 - 使用与dao_shu_3_qi_liang_qiu_zu_he.html相同的算法
 async function huo_qu_qian_qu_tui_jian_mai_hao_third_last(statsPeriod, backtestMethod) {
   try {
-    // 调用dao_shu_3_qi_liang_qiu_zu_he接口获取倒数3期两球组合数据
-    const response = await fetch(`http://localhost:18889/dao_shu_3_qi_liang_qiu_zu_he?period=${statsPeriod}`);
+    // 调用dao_shu_3_qi_mai_hao_hui_ce接口获取前区推荐买号，与dao_shu_3_qi_ping_jun_lv_zui_gao_detail.html保持一致
+    const response = await fetch(`http://localhost:18889/dao_shu_3_qi_mai_hao_hui_ce?backtest_period=1&stats_period=${statsPeriod}&backtest_method=${backtestMethod}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result = await response.json();
-    if (result.success) {
-      const analysisData = result.data;
-      let frontBuyNumbers = [];
-      
-      // 初始化汇总计数数组 - 与dao_shu_3_qi_liang_qiu_zu_he.html完全相同
-      const totalCounts = new Array(36).fill(0); // 索引0不使用，1-35对应前区号码
-      
-      // 遍历前区组合，统计每个号码的出现次数 - 与dao_shu_3_qi_liang_qiu_zu_he.html完全相同
-      analysisData.combinations.forEach(combo => {
-        // 累加每个号码的出现次数
-        for (let i = 1; i <= 35; i++) {
-          const numStr = String(i);
-          let count = 0;
-          if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
-            count = combo.nextDrawNumbers.filter(n => n === numStr).length;
-          }
-          totalCounts[i] += count;
-        }
-      });
-      
-      // 根据回测方法计算对应的前区推荐买号 - 与dao_shu_3_qi_liang_qiu_zu_he.html完全相同
-      if (backtestMethod === 'most') {
-        // 1. 出现最多球：找到totalCounts中的最大值对应的号码
-        const maxFirstCount = Math.max(...totalCounts);
-        if (maxFirstCount > 0) {
-          // 找出所有最大值对应的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === maxFirstCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod === 'least') {
-        // 2. 出现最少球：找到totalCounts中除0以外的最小值对应的号码
-        const nonZeroCounts = totalCounts.filter(count => count > 0);
-        if (nonZeroCounts.length > 0) {
-          const minFirstCount = Math.min(...nonZeroCounts);
-          // 找出所有最小值对应的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === minFirstCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod === 'average') {
-        // 3. 出现平均球：找到totalCounts中次数等于平均值的号码
-        const nonZeroTotalCounts = totalCounts.filter(count => count > 0);
-        if (nonZeroTotalCounts.length > 0) {
-          const sumCounts = nonZeroTotalCounts.reduce((sum, count) => sum + count, 0);
-          const averageCount = Math.round(sumCounts / nonZeroTotalCounts.length);
-          // 找出所有等于平均值的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === averageCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod.match(/^rank(\d+)$/)) {
-        // 排名方法：根据排名选择号码
-        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
-        const rank = parseInt(rankMatch[1]);
-        
-        // 按出现次数降序排序号码（包括出现次数为0的号码） - 与dao_shu_3_qi_liang_qiu_zu_he.html完全一致
-        const sortedNumbers = [];
-        for (let i = 1; i <= 35; i++) {
-          sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
-        }
-        sortedNumbers.sort((a, b) => b.count - a.count);
-        
-        // 计算每个号码的实际排名 - 与dao_shu_3_qi_liang_qiu_zu_he.html完全一致
-        const rankMap = {};
-        let currentRank = 1;
-        
-        for (let i = 0; i < sortedNumbers.length; i++) {
-          if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-            currentRank++;
-          }
-          rankMap[sortedNumbers[i].number] = currentRank;
-        }
-        
-        // 找出所有排名等于指定排名的号码
-        for (let i = 1; i <= 35; i++) {
-          if (rankMap[i] === rank) {
-            frontBuyNumbers.push(i);
-          }
-        }
-      }
-      
-      return frontBuyNumbers;
+    if (result.success && result.data && result.data.backtestResults && result.data.backtestResults.length > 0) {
+      // 获取第一个回测结果的前区推荐买号
+      return result.data.backtestResults[0].frontBuyNumbers || [];
     } else {
       alert('接口失败');
       return [];
@@ -2295,101 +2150,15 @@ async function huo_qu_qian_qu_tui_jian_mai_hao_third_last(statsPeriod, backtestM
 // 获取前区推荐买号 - 使用与dao_shu_4_qi_liang_qiu_zu_he.html相同的算法
 async function huo_qu_qian_qu_tui_jian_mai_hao_fourth_last(statsPeriod, backtestMethod) {
   try {
-    // 调用dao_shu_4_qi_liang_qiu_zu_he接口获取倒数4期两球组合数据
-    const response = await fetch(`http://localhost:18889/dao_shu_4_qi_liang_qiu_zu_he?period=${statsPeriod}`);
+    // 调用dao_shu_4_qi_mai_hao_hui_ce接口获取前区推荐买号，与dao_shu_4_qi_ping_jun_lv_zui_gao_detail.html保持一致
+    const response = await fetch(`http://localhost:18889/dao_shu_4_qi_mai_hao_hui_ce?backtest_period=1&stats_period=${statsPeriod}&backtest_method=${backtestMethod}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result = await response.json();
-    if (result.success) {
-      const analysisData = result.data;
-      let frontBuyNumbers = [];
-      
-      // 初始化汇总计数数组 - 与dao_shu_4_qi_liang_qiu_zu_he.html完全相同
-      const totalCounts = new Array(36).fill(0); // 索引0不使用，1-35对应前区号码
-      
-      // 遍历前区组合，统计每个号码的出现次数 - 与dao_shu_4_qi_liang_qiu_zu_he.html完全相同
-      analysisData.combinations.forEach(combo => {
-        // 累加每个号码的出现次数
-        for (let i = 1; i <= 35; i++) {
-          const numStr = String(i).padStart(2, '0'); // 使用两位格式的号码，与后端一致
-          // 安全访问nextDrawNumbers属性
-          let count = 0;
-          if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
-            count = combo.nextDrawNumbers.filter(n => n === numStr).length;
-          }
-          totalCounts[i] += count;
-        }
-      });
-      
-      // 根据回测方法计算对应的前区推荐买号 - 与dao_shu_4_qi_liang_qiu_zu_he.html完全相同
-      if (backtestMethod === 'most') {
-        // 1. 出现最多球：找到totalCounts中的最大值对应的号码
-        const maxFirstCount = Math.max(...totalCounts);
-        if (maxFirstCount > 0) {
-          // 找出所有最大值对应的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === maxFirstCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod === 'least') {
-        // 2. 出现最少球：找到totalCounts中除0以外的最小值对应的号码
-        const nonZeroCounts = totalCounts.filter(count => count > 0);
-        if (nonZeroCounts.length > 0) {
-          const minFirstCount = Math.min(...nonZeroCounts);
-          // 找出所有最小值对应的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === minFirstCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod === 'average') {
-        // 3. 出现平均球：找到totalCounts中次数等于平均值的号码
-        const nonZeroTotalCounts = totalCounts.filter(count => count > 0);
-        if (nonZeroTotalCounts.length > 0) {
-          const sumCounts = nonZeroTotalCounts.reduce((sum, count) => sum + count, 0);
-          const averageCount = Math.round(sumCounts / nonZeroTotalCounts.length);
-          // 找出所有等于平均值的号码
-          for (let i = 1; i <= 35; i++) {
-            if (totalCounts[i] === averageCount) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      } else if (backtestMethod.match(/^rank(\d+)$/)) {
-        // 排名方法：根据排名选择号码
-        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
-        const rank = parseInt(rankMatch[1]);
-        
-        // 计算排名 - 与dao_shu_4_qi_liang_qiu_zu_he.html完全相同
-        const rankMap = {};
-        const sortedNumbers = [];
-        for (let i = 1; i <= 35; i++) {
-          sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
-        }
-        // 按出现次数降序排序
-        sortedNumbers.sort((a, b) => b.count - a.count);
-        // 计算排名
-        let currentRank = 1;
-        for (let i = 0; i < sortedNumbers.length; i++) {
-          if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-            currentRank++;
-          }
-          rankMap[sortedNumbers[i].number] = currentRank;
-        }
-        
-        // 找出对应排名的号码
-        for (let i = 1; i <= 35; i++) {
-          if (rankMap[i] === rank) {
-            frontBuyNumbers.push(i);
-          }
-        }
-      }
-      
-      return frontBuyNumbers;
+    if (result.success && result.data && result.data.backtestResults && result.data.backtestResults.length > 0) {
+      // 获取第一个回测结果的前区推荐买号
+      return result.data.backtestResults[0].frontBuyNumbers || [];
     } else {
       alert('接口失败');
       return [];
@@ -2403,66 +2172,15 @@ async function huo_qu_qian_qu_tui_jian_mai_hao_fourth_last(statsPeriod, backtest
 // 获取前区推荐买号 - 使用与dao_shu_5_qi_liang_qiu_zu_he.html相同的算法
 async function huo_qu_qian_qu_tui_jian_mai_hao_fifth_last(statsPeriod, backtestMethod) {
   try {
-    // 调用dao_shu_5_qi_liang_qiu_zu_he接口获取倒数5期两球组合数据
-    const response = await fetch(`http://localhost:18889/dao_shu_5_qi_liang_qiu_zu_he?period=${statsPeriod}`);
+    // 调用dao_shu_5_qi_mai_hao_hui_ce接口获取前区推荐买号，与dao_shu_5_qi_ping_jun_lv_zui_gao_detail.html保持一致
+    const response = await fetch(`http://localhost:18889/dao_shu_5_qi_mai_hao_hui_ce?backtest_period=1&stats_period=${statsPeriod}&backtest_method=${backtestMethod}`);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
     const result = await response.json();
-    if (result.success) {
-      const analysisData = result.data;
-      
-      // 初始化汇总计数数组 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-      const totalCounts = new Array(36).fill(0); // 索引0不使用，1-35对应前区号码
-      
-      // 遍历前区组合，统计每个号码的出现次数 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-      analysisData.combinations.forEach(combo => {
-        // 累加每个号码的出现次数
-        for (let i = 1; i <= 35; i++) {
-          const numStr = String(i).padStart(2, '0'); // 使用两位格式的号码，与后端一致
-          // 安全访问nextDrawNumbers属性
-          let count = 0;
-          if (combo.nextDrawNumbers && Array.isArray(combo.nextDrawNumbers)) {
-            count = combo.nextDrawNumbers.filter(n => n === numStr).length;
-          }
-          totalCounts[i] += count;
-        }
-      });
-      
-      // 排名方法：根据排名获取对应的号码
-      let frontBuyNumbers = [];
-      if (backtestMethod.startsWith('rank')) {
-        const rankMatch = backtestMethod.match(/^rank(\d+)$/);
-        if (rankMatch) {
-          const targetRank = parseInt(rankMatch[1]);
-          
-          // 计算排名 - 与dao_shu_5_qi_liang_qiu_zu_he.html完全相同
-          const rankMap = {};
-          const sortedNumbers = [];
-          for (let i = 1; i <= 35; i++) {
-            sortedNumbers.push({ number: i, count: totalCounts[i] || 0 });
-          }
-          // 按出现次数降序排序
-          sortedNumbers.sort((a, b) => b.count - a.count);
-          // 计算排名
-          let currentRank = 1;
-          for (let i = 0; i < sortedNumbers.length; i++) {
-            if (i > 0 && sortedNumbers[i].count !== sortedNumbers[i - 1].count) {
-              currentRank++;
-            }
-            rankMap[sortedNumbers[i].number] = currentRank;
-          }
-          
-          // 找出对应排名的号码
-          for (let i = 1; i <= 35; i++) {
-            if (rankMap[i] === targetRank) {
-              frontBuyNumbers.push(i);
-            }
-          }
-        }
-      }
-      
-      return frontBuyNumbers;
+    if (result.success && result.data && result.data.backtestResults && result.data.backtestResults.length > 0) {
+      // 获取第一个回测结果的前区推荐买号
+      return result.data.backtestResults[0].frontBuyNumbers || [];
     } else {
       alert('接口失败');
       return [];
@@ -3024,10 +2742,10 @@ async function performSearchThirdLast() {
       { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
     ];
     
-    // 回测方法：只包含排名方法
+    // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
     const backtestMethods = [];
     // 添加排名方法
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       backtestMethods.push(`rank${i}`);
     }
     const allResults = [];
@@ -3062,8 +2780,8 @@ async function performSearchThirdLast() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从1500期开始
-      let currentStart = 1500;
+      // 所有回测方法都从2000期开始，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      let currentStart = 2000;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -3137,8 +2855,8 @@ async function performSearchThirdLast() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 所有回测方法都使用1500期作为最小限制
-        const minLimit = 1500;
+        // 所有回测方法都使用2000期作为最小限制，与dao_shu_3_qi_ping_jun_lv_zui_gao_detail.html保持一致
+        const minLimit = 2000;
         currentStart = Math.max(minLimit, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
@@ -3216,16 +2934,36 @@ async function performSearchThirdLast() {
     if (isBacktestStopped) {
       detailResults.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
     } else {
+      // 过滤回测结果：如果回测方法相同且下下下期前区推荐买号相同，只保留一条，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      const uniqueResultsMap = new Map();
+      
+      validResults.forEach(result => {
+        // 基于回测方法和下下下期前区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+        
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
+        }
+      });
+      
+      // 将过滤后的结果转换回数组
+      const filteredResults = Array.from(uniqueResultsMap.values());
+      
+      // 按照平均正确率降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+      
       // 更新进度
-      await updateProgress(`找到 ${validResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
+      await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
       currentStep++;
       
       // 渲染详情数据，传递过滤后的结果和下下下期期号
-      await renderDetailDataThirdLast(validResults, nextPeriod);
+      await renderDetailDataThirdLast(filteredResults, nextPeriod);
       
       // 存储回测结果到全局变量
       backtestResults['thirdLast'] = {
-        results: validResults,
+        results: filteredResults,
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
@@ -3337,10 +3075,10 @@ async function performSearchFourthLast() {
       { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
     ];
     
-    // 回测方法：只包含排名方法
+    // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
     const backtestMethods = [];
     // 添加排名方法
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       backtestMethods.push(`rank${i}`);
     }
     const allResults = [];
@@ -3375,8 +3113,8 @@ async function performSearchFourthLast() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从1500期开始
-      let currentStart = 1500;
+      // 所有回测方法都从2000期开始，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      let currentStart = 2000;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -3450,8 +3188,8 @@ async function performSearchFourthLast() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从1500期开始
-        currentStart = Math.max(1500, minStatsPeriod - expansion);
+        // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从2000期开始，与dao_shu_4_qi_ping_jun_lv_zui_gao_detail.html保持一致
+        currentStart = Math.max(2000, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
       
@@ -3528,16 +3266,36 @@ async function performSearchFourthLast() {
     if (isBacktestStopped) {
       detailResults.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
     } else {
+      // 过滤回测结果：如果回测方法相同且下下下下期前区推荐买号相同，只保留一条，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      const uniqueResultsMap = new Map();
+      
+      validResults.forEach(result => {
+        // 基于回测方法和下下下下期前区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+        
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
+        }
+      });
+      
+      // 将过滤后的结果转换回数组
+      const filteredResults = Array.from(uniqueResultsMap.values());
+      
+      // 按照平均正确率降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+      
       // 更新进度
-      await updateProgress(`找到 ${validResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
+      await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
       currentStep++;
       
       // 渲染详情数据，传递过滤后的结果和下下下下期期号
-      await renderDetailDataFourthLast(validResults, nextPeriod);
+      await renderDetailDataFourthLast(filteredResults, nextPeriod);
       
       // 存储回测结果到全局变量
       backtestResults['fourthLast'] = {
-        results: validResults,
+        results: filteredResults,
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
@@ -3649,8 +3407,8 @@ async function performSearchFifthLast() {
       { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
     ];
     
-    // 回测方法列表，只包括排名方法
-    const backtestMethods = Array.from({length: 30}, (_, i) => `rank${i + 1}`);
+    // 回测方法列表，只包括排名方法 (排名第 1 到排名第 35)
+    const backtestMethods = Array.from({length: 35}, (_, i) => `rank${i + 1}`);
     const allResults = [];
     
     // 计算总工作量
@@ -3678,8 +3436,8 @@ async function performSearchFifthLast() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从1500期开始
-      let currentStart = 1500;
+      // 所有回测方法都从2000期开始，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      let currentStart = 2000;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -3753,8 +3511,8 @@ async function performSearchFifthLast() {
         const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
         const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
         
-        // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从1500期开始
-        currentStart = Math.max(1500, minStatsPeriod - expansion);
+        // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从2000期开始，与dao_shu_5_qi_ping_jun_lv_zui_gao_detail.html保持一致
+        currentStart = Math.max(2000, minStatsPeriod - expansion);
         currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
       }
       
@@ -3821,40 +3579,49 @@ async function performSearchFifthLast() {
     
     // 过滤结果：过滤空推荐号码并实现去重
     const filteredResults = [];
-    const seenResults = new Set();
-    
+    const validResults = [];
     for (const result of allResults) {
       // 如果是排名方法且没有找到对应排名的号码（返回空数组），则跳过该结果
       if (result.backtestMethod.match(/^rank(\d+)$/) && result.frontBuyNumbers.length === 0) {
         continue;
       }
-      
-      // 去重：使用回测方法和统计期数的组合作为唯一标识
-      const resultKey = `${result.backtestMethod}-${result.statsPeriod}`;
-      if (!seenResults.has(resultKey)) {
-        seenResults.add(resultKey);
-        filteredResults.push(result);
-      }
+      validResults.push(result);
     }
-    
-    // 使用过滤后的结果
-    allResults.length = 0;
-    allResults.push(...filteredResults);
     
     // 检查是否需要终止回测
     if (isBacktestStopped) {
       detailResults.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 20px; color: #ff0000;">回测已终止</td></tr>';
     } else {
+      // 过滤回测结果：如果回测方法相同且下下下下下期前区推荐买号相同，只保留一条，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      const uniqueResultsMap = new Map();
+      
+      validResults.forEach(result => {
+        // 基于回测方法和下下下下下期前区推荐买号（排序后）创建唯一键
+        const sortedBuyNumbers = [...(result.frontBuyNumbers || [])].sort((a, b) => a - b);
+        const uniqueKey = `${result.backtestMethod}_${sortedBuyNumbers.join('_')}`;
+        
+        // 只保留第一条出现的结果
+        if (!uniqueResultsMap.has(uniqueKey)) {
+          uniqueResultsMap.set(uniqueKey, result);
+        }
+      });
+      
+      // 将过滤后的结果转换回数组
+      const filteredResults = Array.from(uniqueResultsMap.values());
+      
+      // 按照平均正确率降序排序
+      filteredResults.sort((a, b) => b.accuracy - a.accuracy);
+      
       // 更新进度
-      await updateProgress(`找到 ${allResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
+      await updateProgress(`找到 ${filteredResults.length} 个平均率最高的统计期，正在渲染结果...`, 98, '渲染结果');
       currentStep++;
       
-      // 渲染详情数据，传递所有结果和下一期期号
-      await renderDetailDataFifthLast(allResults, nextPeriod);
+      // 渲染详情数据，传递过滤后的结果和下下下下下期期号
+      await renderDetailDataFifthLast(filteredResults, nextPeriod);
       
       // 存储回测结果到全局变量
       backtestResults['fifthLast'] = {
-        results: allResults,
+        results: filteredResults,
         nextPeriod: nextPeriod,
         timestamp: new Date().toISOString()
       };
@@ -4290,10 +4057,10 @@ async function performSearchNearTwoPeriods() {
       { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范100
     ];
     
-    // 回测方法：只包含排名方法
+    // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
     const backtestMethods = [];
     // 添加排名方法
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       backtestMethods.push(`rank${i}`);
     }
     const allResults = [];
@@ -4897,10 +4664,10 @@ async function performSearchThreeBall() {
       { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
     ];
     
-    // 回测方法：只包含排名方法
+    // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
     const backtestMethods = [];
     // 添加排名方法
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       backtestMethods.push(`rank${i}`);
     }
     const allResults = [];
@@ -4930,8 +4697,8 @@ async function performSearchThreeBall() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从1500期开始
-      let currentStart = 1500;
+      // 所有回测方法都从2000期开始，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      let currentStart = 2000;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -5862,10 +5629,10 @@ async function performSearchSecondLastThreeBall() {
       { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
     ];
     
-    // 回测方法：只包含排名方法
+    // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
     const backtestMethods = [];
     // 添加排名方法
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       backtestMethods.push(`rank${i}`);
     }
     const allResults = [];
@@ -5895,8 +5662,8 @@ async function performSearchSecondLastThreeBall() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从1500期开始
-      let currentStart = 1500;
+      // 所有回测方法都从2000期开始，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      let currentStart = 2000;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       
@@ -6230,10 +5997,10 @@ async function performSearchThirdLastThreeBall() {
       { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
     ];
     
-    // 回测方法：只包含排名方法
+    // 回测方法：只包含排名方法 (排名第 1 到排名第 35)
     const backtestMethods = [];
     // 添加排名方法
-    for (let i = 1; i <= 30; i++) {
+    for (let i = 1; i <= 35; i++) {
       backtestMethods.push(`rank${i}`);
     }
     const allResults = [];
@@ -6263,8 +6030,8 @@ async function performSearchThirdLastThreeBall() {
       await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
       currentStep++;
       
-      // 所有回测方法都从1500期开始
-      let currentStart = 1500;
+      // 所有回测方法都从2000期开始，与sha_qiu_ping_jun_lv_zui_gao_detail.html保持一致
+      let currentStart = 2000;
       let currentEnd = totalPeriods;
       let allTestResults = [];
       

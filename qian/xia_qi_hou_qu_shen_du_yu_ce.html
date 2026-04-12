@@ -234,6 +234,9 @@
                             <div style="display: flex; align-items: center;">
                                 <input type="checkbox" id="period30" checked> <label for="period30" style="margin-left: 5px;">30期</label>
                             </div>
+                            <div style="display: flex; align-items: center;">
+                                <input type="checkbox" id="period50" checked> <label for="period50" style="margin-left: 5px;">50期</label>
+                            </div>
                         </div>
                     </div>
                     <div style="flex: 1; min-width: 300px;">
@@ -310,6 +313,7 @@
                                 <option value="10">10期</option>
                                 <option value="20">20期</option>
                                 <option value="30">30期</option>
+                                <option value="50">50期</option>
                             </select>
                         </div>
                         <div>
@@ -1114,6 +1118,7 @@
             if (document.getElementById('period10').checked) backtestPeriods.push(10);
             if (document.getElementById('period20').checked) backtestPeriods.push(20);
             if (document.getElementById('period30').checked) backtestPeriods.push(30);
+            if (document.getElementById('period50').checked) backtestPeriods.push(50);
             
             if (backtestPeriods.length === 0) {
                 showError('请至少选择一个回测期数');
