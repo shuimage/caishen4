@@ -517,7 +517,7 @@
             }
           });
           
-          // 处理排名方法
+          // 处理排名方法 - 与 dao_shu_2_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
           if (backtestMethod.startsWith('rank')) {
             const rankMatch = backtestMethod.match(/^rank(\d+)$/);
             if (rankMatch) {
@@ -536,10 +536,12 @@
               });
               
               // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
-              const selectedIndex = Math.min(targetRank - 1, sortedNumbers.length - 1);
-              const selectedNumber = sortedNumbers[selectedIndex];
-              if (selectedNumber) {
-                return [selectedNumber.number];
+              if (sortedNumbers.length >= targetRank) {
+                // 获取指定排名的号码
+                const selectedNumber = sortedNumbers[targetRank - 1];
+                if (selectedNumber) {
+                  return [selectedNumber.number];
+                }
               }
             }
           }
@@ -632,11 +634,11 @@
         
         const totalPeriods = await getTotalPeriods();
         
-        // 多阶段搜索策略，从大到小变化步长
+        // 多阶段搜索策略，从大到小变化步长 - 与 dao_shu_2_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
         const searchStages = [
-          { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
-          { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
-          { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
+          { step: 100, expansion: 200 }, // 第一阶段：步长 100，扩展范围 200
+          { step: 50, expansion: 100 },   // 第二阶段：步长 50，扩展范围 100
+          { step: 10, expansion: 30 }     // 第三阶段：步长 10，扩展范围 30
         ];
         
         // 只使用排名方法（rank1-rank12）
@@ -665,12 +667,12 @@
           }
           
           // 更新进度
-          await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
-          currentStep++;
-          
-          // 从1500期开始搜索
-          let currentStart = 1500;
-          let currentEnd = totalPeriods;
+            await updateProgress(`正在搜索回测方法：${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法：${methodName}`);
+            currentStep++;
+            
+            // 从 2000 期开始搜索 - 与 dao_shu_2_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
+            let currentStart = 2000;
+            let currentEnd = totalPeriods;
           let allTestResults = [];
           
           // 执行每个阶段的搜索
@@ -693,26 +695,38 @@
             const stageTotal = Math.ceil((currentEnd - currentStart) / step) + 1;
             let stageCount = 0;
             
-            // 在当前范围内使用当前步长进行搜索
+            // 在当前范围内使用当前步长进行搜索 - 使用并行处理，与 dao_shu_2_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
+            const testPeriods = [];
             for (let i = currentStart; i <= currentEnd; i += step) {
+              testPeriods.push(i);
+            }
+            
+            // 并行处理，每次处理 5 个统计期
+            const batchSize = 5;
+            for (let batchStart = 0; batchStart < testPeriods.length; batchStart += batchSize) {
               // 检查是否需要终止回测
               if (isBacktestStopped) {
                 break;
               }
               
-              stageCount++;
-              // 实时更新进度
+              const batchEnd = Math.min(batchStart + batchSize, testPeriods.length);
+              const currentBatch = testPeriods.slice(batchStart, batchEnd);
+              
+              // 实时更新进度（每批次更新一次）
+              stageCount = batchEnd;
               const loopProgress = 15 + ((currentStep - 1 + (stageCount / stageTotal)) / totalSteps) * 60;
               await updateProgress(
-                `正在测试统计期${i}期..`, 
+                `正在测试统计期..`, 
                 loopProgress, 
-                `测试期数: ${i}，进度 ${stageCount}/${stageTotal}`
+                `测试期数：${currentBatch[0]}-${currentBatch[currentBatch.length - 1]}，进度 ${stageCount}/${stageTotal}`
               );
               
-              // 顺序测试，不使用并行
-              const result = await testStatsPeriod(backtestPeriod, i, backtestMethod);
-              stageResults.push(result);
-              allTestResults.push(result);
+              // 并行处理当前批次
+              const batchPromises = currentBatch.map(period => testStatsPeriod(backtestPeriod, period, backtestMethod));
+              const batchResults = await Promise.all(batchPromises);
+              
+              stageResults.push(...batchResults);
+              allTestResults.push(...batchResults);
             }
             
             // 检查是否需要终止回测

@@ -16,7 +16,7 @@ async function fetchNewLotteryData(startIssue = null) {
   try {
     console.log('开始从sporttery.cn抓取大乐透数据...', startIssue ? `起始期号: ${startIssue}` : '获取全部最新数据');
     // 增加获取的数据量，确保能获取到更多历史数据
-    const apiUrl = 'https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry?gameNo=85&provinceId=0&pageSize=50&isVerify=1&pageNo=1';
+    const apiUrl = 'https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry?gameNo=85&provinceId=0&pageSize=100&isVerify=1&pageNo=1';
     
     // 设置超时
     const controller = new AbortController();
@@ -390,7 +390,7 @@ async function syncDataToDatabase(newData) {
     }
     
     // 获取最新的几条记录用于返回，使用正确的列名
-    const latestResults = await query('SELECT issue, draw_date AS drawDate, week, red, blue, sum, span, area_ratio, odd_even_ratio FROM lottery_results ORDER BY CAST(issue AS UNSIGNED) DESC LIMIT 5');
+    const latestResults = await query('SELECT issue, draw_date AS drawDate, week, red, blue, sum, span, area_ratio, odd_even_ratio FROM lottery_results ORDER BY CAST(issue AS UNSIGNED) DESC LIMIT 100');
     
     // 格式化返回的数据
     const formattedResults = latestResults.map(item => {
@@ -460,6 +460,46 @@ router.get('/', async (req, res) => {
     res.json({
       success: false,
       message: '抓取数据失败',
+      updatedCount: 0,
+      lastIssue: '',
+      latestResults: []
+    });
+  }
+});
+
+/**
+ * 大乐透数据更新接口（POST方式，接收勾选的数据）
+ * 接口功能: 将前端勾选的大乐透开奖数据同步到数据库
+ */
+router.post('/', async (req, res) => {
+  try {
+    const selectedData = req.body;
+    
+    if (!selectedData || !selectedData.latestResults || !Array.isArray(selectedData.latestResults)) {
+      return res.json({
+        success: false,
+        message: '无效的数据格式',
+        updatedCount: 0
+      });
+    }
+    
+    console.log('开始同步勾选的数据到数据库，共', selectedData.latestResults.length, '条记录');
+    
+    // 同步数据到数据库
+    const syncResult = await syncDataToDatabase(selectedData.latestResults);
+    
+    return res.json({
+      success: true,
+      message: syncResult.message,
+      updatedCount: syncResult.updatedCount,
+      lastIssue: syncResult.lastIssue,
+      latestResults: syncResult.latestResults
+    });
+  } catch (error) {
+    console.error('数据更新失败:', error);
+    res.json({
+      success: false,
+      message: '同步数据失败',
       updatedCount: 0,
       lastIssue: '',
       latestResults: []

@@ -6,10 +6,11 @@ export default defineConfig({
     host: true,
     open: false,
     proxy: {
-      '/': {
+      '/api': {
         target: 'http://localhost:18889',
         changeOrigin: true,
-        secure: false
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, '')
       }
     }
   },

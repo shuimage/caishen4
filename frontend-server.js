@@ -1,5 +1,6 @@
 const express = require('express');
 const path = require('path');
+const { createProxyMiddleware } = require('http-proxy-middleware');
 
 const app = express();
 const PORT = 8080;
@@ -8,25 +9,52 @@ const PORT = 8080;
 const qianDir = path.join(__dirname, 'qian');
 app.use(express.static(qianDir));
 
-// 处理 SPA 路由 - 所有未匹配的路由都返回 index.html
-app.get('*', (req, res) => {
-  const indexPath = path.join(qianDir, 'index.html');
-  res.sendFile(indexPath, (err) => {
-    if (err) {
-      res.status(404).send('页面未找到');
-    }
-  });
-});
+// API 代理 - 将/api 请求转发到后端服务器
+app.use('/api', createProxyMiddleware({
+  target: 'http://localhost:18889',
+  changeOrigin: true,
+  pathRewrite: {
+    '^/api': '' // 移除/api 前缀
+  },
+  onError: (err, req, res) => {
+    console.error('代理错误:', err);
+    res.status(500).json({ success: false, message: '后端服务不可用' });
+  }
+}));
 
-// 错误处理
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).send('服务器错误');
-});
+// 代理后区深度预测接口
+app.use('/hou_qu_shen_du_yu_ce', createProxyMiddleware({
+  target: 'http://localhost:18889',
+  changeOrigin: true,
+  onError: (err, req, res) => {
+    console.error('代理错误:', err);
+    res.status(500).json({ success: false, message: '后端服务不可用' });
+  }
+}));
+
+// 代理前区深度预测接口
+app.use('/qian_qu_shen_du_yu_ce', createProxyMiddleware({
+  target: 'http://localhost:18889',
+  changeOrigin: true,
+  onError: (err, req, res) => {
+    console.error('代理错误:', err);
+    res.status(500).json({ success: false, message: '后端服务不可用' });
+  }
+}));
+
+// 代理期号开奖信息接口
+app.use('/qi_hao_kai_jiang_xin_xi', createProxyMiddleware({
+  target: 'http://localhost:18889',
+  changeOrigin: true,
+  onError: (err, req, res) => {
+    console.error('代理错误:', err);
+    res.status(500).json({ success: false, message: '后端服务不可用' });
+  }
+}));
 
 // 启动服务器
 app.listen(PORT, () => {
-  console.log(`✅ 前端服务器运行在 http://127.0.0.1:${PORT}`);
-  console.log(`📁 静态文件目录：${qianDir}`);
-  console.log(`🌐 访问地址：http://127.0.0.1:${PORT}`);
+  console.log(`前端服务器运行在 http://localhost:${PORT}`);
+  console.log(`静态文件目录：${qianDir}`);
+  console.log(`API 代理：/api -> http://localhost:18889`);
 });

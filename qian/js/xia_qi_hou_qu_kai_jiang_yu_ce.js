@@ -656,81 +656,61 @@ window.addEventListener('load', async function() {
           });
           
           // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
-          // 即使排名超出范围，也返回最后一个号码
-          const selectedIndex = Math.min(rank - 1, sortedNumbers.length - 1);
-          const selectedNumber = sortedNumbers[selectedIndex];
-          if (selectedNumber) {
-            backBuyNumbers.push(selectedNumber.number);
+          if (sortedNumbers.length >= rank) {
+            // 获取指定排名的号码
+            const selectedNumber = sortedNumbers[rank - 1];
+            if (selectedNumber) {
+              backBuyNumbers.push(selectedNumber.number);
+            }
           }
         } else {
           switch (backtestMethod) {
             case 'least':
-              // 出现最少：找出出现次数最少的号码
+              // 出现最少：找出出现次数最少的号码 - 与 dao_shu_3_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
               const nonZeroCounts = Object.values(totalNumberCounts).filter(count => count > 0);
               if (nonZeroCounts.length > 0) {
                 const minCount = Math.min(...nonZeroCounts);
-                // 找出所有出现次数等于最小值的号码
-                const minCountNumbers = [];
                 for (const [num, count] of Object.entries(totalNumberCounts)) {
                   if (count === minCount && count > 0) {
-                    minCountNumbers.push(parseInt(num));
+                    backBuyNumbers.push(parseInt(num));
                   }
                 }
-                // 只选择最小的号码，避免多球
-                if (minCountNumbers.length > 0) {
-                  backBuyNumbers.push(Math.min(...minCountNumbers));
-                }
-              } else {
-                // 所有号码出现次数都为0，返回最小的号码
-                backBuyNumbers.push(1);
               }
               break;
               
             case 'average':
-              // 出现平均：找出出现次数等于平均值的号码
+              // 出现平均：找出出现次数等于平均值的号码 - 与 dao_shu_3_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
               const nonZeroTotalCounts = Object.values(totalNumberCounts).filter(count => count > 0);
               if (nonZeroTotalCounts.length > 0) {
                 const sumCounts = nonZeroTotalCounts.reduce((sum, count) => sum + count, 0);
                 const averageCount = Math.round(sumCounts / nonZeroTotalCounts.length);
-                // 找出所有出现次数等于平均值的号码
-                const averageCountNumbers = [];
                 for (const [num, count] of Object.entries(totalNumberCounts)) {
                   if (count === averageCount && count > 0) {
-                    averageCountNumbers.push(parseInt(num));
+                    backBuyNumbers.push(parseInt(num));
                   }
                 }
-                // 只选择最小的号码，避免多球
-                if (averageCountNumbers.length > 0) {
-                  backBuyNumbers.push(Math.min(...averageCountNumbers));
-                } else {
-                  // 没有号码等于平均值，返回最小的号码
-                  backBuyNumbers.push(1);
-                }
-              } else {
-                // 所有号码出现次数都为0，返回最小的号码
-                backBuyNumbers.push(1);
               }
               break;
               
             case 'most':
             default:
-              // 出现最多：找出出现次数最多的号码
+              // 出现最多：找出出现次数最多的号码 - 与 dao_shu_3_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
               const maxCount = Math.max(...Object.values(totalNumberCounts));
-              // 找出所有出现次数等于最大值的号码
-              const maxCountNumbers = [];
               for (const [num, count] of Object.entries(totalNumberCounts)) {
                 if (count === maxCount && count > 0) {
-                  maxCountNumbers.push(parseInt(num));
+                  backBuyNumbers.push(parseInt(num));
                 }
               }
-              // 只选择最小的号码，避免多球
-              if (maxCountNumbers.length > 0) {
-                backBuyNumbers.push(Math.min(...maxCountNumbers));
-              } else {
-                // 所有号码出现次数都为0，返回最小的号码
-                backBuyNumbers.push(1);
-              }
               break;
+          }
+        }
+        
+        // 对于排名方法，如果没有找到对应排名的号码，返回空数组
+        // 对于其他方法，如果没有找到对应号码，返回所有后区号码作为默认值
+        if (backBuyNumbers.length === 0 && !backtestMethod.match(/^rank(\d+)$/)) {
+          // 如果所有条件都不满足，返回所有后区号码作为默认值
+          for (let i = 1; i <= 12; i++) {
+            backBuyNumbers.push(i);
           }
         }
         
@@ -798,11 +778,13 @@ window.addEventListener('load', async function() {
               return a.number - b.number;  // 次数相同时，球号升序
             });
             
-            // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名
-            const selectedIndex = Math.min(targetRank - 1, sortedNumbers.length - 1);
-            const selectedNumber = sortedNumbers[selectedIndex];
-            if (selectedNumber) {
-              return [selectedNumber.number];
+            // 直接使用索引 +1 作为排名，确保每个号码都有唯一排名 - 与 dao_shu_4_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
+            if (sortedNumbers.length >= targetRank) {
+              // 获取指定排名的号码
+              const selectedNumber = sortedNumbers[targetRank - 1];
+              if (selectedNumber) {
+                return [selectedNumber.number];
+              }
             }
           }
         }
@@ -1670,8 +1652,8 @@ window.addEventListener('load', async function() {
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        // 所有回测方法都从1500期开始
-        let currentStart = 1500;
+        // 所有回测方法都从 2000 期开始 - 与 dao_shu_3_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
+        let currentStart = 2000;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -3556,11 +3538,11 @@ window.addEventListener('load', async function() {
       
       const totalPeriods = await getTotalPeriods();
       
-      // 多阶段搜索策略，从大到小变化步长
+      // 多阶段搜索策略，从大到小变化步长 - 与 dao_shu_3_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
       const searchStages = [
-        { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
-        { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
-        { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
+        { step: 100, expansion: 200 }, // 第一阶段：步长 100，扩展范围 200
+        { step: 50, expansion: 100 },   // 第二阶段：步长 50，扩展范围 100
+        { step: 10, expansion: 30 }     // 第三阶段：步长 10，扩展范围 30
       ];
       
       // 回测方法：只包含排名方法
@@ -3596,8 +3578,8 @@ window.addEventListener('load', async function() {
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        // 所有回测方法都从1500期开始
-        let currentStart = 1500;
+        // 所有回测方法都从 2000 期开始 - 与 dao_shu_3_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
+        let currentStart = 2000;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -3882,11 +3864,11 @@ window.addEventListener('load', async function() {
       
       const totalPeriods = await getTotalPeriods();
       
-      // 多阶段搜索策略，从大到小变化步长
+      // 多阶段搜索策略，从大到小变化步长 - 与 dao_shu_4_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
       const searchStages = [
-        { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
-        { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
-        { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
+        { step: 100, expansion: 200 }, // 第一阶段：步长 100，扩展范围 200
+        { step: 50, expansion: 100 },   // 第二阶段：步长 50，扩展范围 100
+        { step: 10, expansion: 30 }     // 第三阶段：步长 10，扩展范围 30
       ];
       
       // 回测方法：只包含排名方法
@@ -3926,8 +3908,8 @@ window.addEventListener('load', async function() {
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        // 从1500期开始搜索
-        let currentStart = 1500;
+        // 从 2000 期开始搜索 - 与 dao_shu_4_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
+        let currentStart = 2000;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -3992,8 +3974,8 @@ window.addEventListener('load', async function() {
           const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
           const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
           
-          // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从1500期开始
-          currentStart = Math.max(1500, minStatsPeriod - expansion);
+          // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从 2000 期开始
+          currentStart = Math.max(2000, minStatsPeriod - expansion);
           currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
         }
         
@@ -4192,11 +4174,11 @@ window.addEventListener('load', async function() {
       
       const totalPeriods = await getTotalPeriods();
       
-      // 多阶段搜索策略，从大到小变化步长
+      // 多阶段搜索策略，从大到小变化步长 - 与 dao_shu_5_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
       const searchStages = [
-        { step: 200, expansion: 400 }, // 第一阶段：步长200，扩展范围400
-        { step: 100, expansion: 200 }, // 第二阶段：步长100，扩展范围200
-        { step: 50, expansion: 100 }    // 第三阶段：步长50，扩展范围100
+        { step: 100, expansion: 200 }, // 第一阶段：步长 100，扩展范围 200
+        { step: 50, expansion: 100 },   // 第二阶段：步长 50，扩展范围 100
+        { step: 10, expansion: 30 }     // 第三阶段：步长 10，扩展范围 30
       ];
       
       // 回测方法：只包含排名方法
@@ -4236,8 +4218,8 @@ window.addEventListener('load', async function() {
         await updateProgress(`正在搜索回测方法: ${methodName}...`, 15 + (currentStep / totalSteps) * 60, `搜索回测方法: ${methodName}`);
         currentStep++;
         
-        // 从1500期开始搜索
-        let currentStart = 1500;
+        // 从 2000 期开始搜索 - 与 dao_shu_5_qi_hou_ping_jun_lv_zui_gao_detail.html 一致
+        let currentStart = 2000;
         let currentEnd = totalPeriods;
         let allTestResults = [];
         
@@ -4302,8 +4284,8 @@ window.addEventListener('load', async function() {
           const minStatsPeriod = Math.min(...highestResultsInStage.map(result => result.statsPeriod));
           const maxStatsPeriod = Math.max(...highestResultsInStage.map(result => result.statsPeriod));
           
-          // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从1500期开始
-          currentStart = Math.max(1500, minStatsPeriod - expansion);
+          // 扩展搜索范围，确保不遗漏相邻区域，且统计期数始终从 2000 期开始
+          currentStart = Math.max(2000, minStatsPeriod - expansion);
           currentEnd = Math.min(totalPeriods, maxStatsPeriod + expansion);
         }
         

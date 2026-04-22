@@ -688,7 +688,7 @@
       
       // 弹窗标题
       const modalTitle = document.createElement('h3');
-      modalTitle.textContent = '数据据预览';
+      modalTitle.textContent = '数据预览';
       modalTitle.style.marginTop = '0';
       modalTitle.style.color = isDarkTheme ? '#ffffff' : '#333333';
       modalContent.appendChild(modalTitle);
@@ -696,7 +696,7 @@
       // 数据据信息
       const infoDiv = document.createElement('div');
       infoDiv.style.marginBottom = '15px';
-      infoDiv.innerHTML = `<p style="color: ${isDarkTheme ? '#cccccc' : '#333333'};">发现 ${data.latestResults.length} 条数据据，最低新期数号：${data.lastIssue || '未知'}</p>`;
+      infoDiv.innerHTML = `<p style="color: ${isDarkTheme ? '#cccccc' : '#333333'};">发现 ${data.latestResults.length} 条数据，最低新期数号：${data.lastIssue || '未知'}</p>`;
       modalContent.appendChild(infoDiv);
       
       // 数据据表格
@@ -710,7 +710,7 @@
       const headerRow = document.createElement('tr');
       headerRow.style.backgroundColor = isDarkTheme ? '#444444' : '#f5f5f5';
 
-      const headers = ['期数号', '日期数期数', '星期数', '前区区', '后区区', '和值', '跨度'];
+      const headers = ['选择', '期数号', '日期数期数', '星期数', '前区区', '后区区', '和值', '跨度'];
       headers.forEach(headerText => {
         const th = document.createElement('th');
         th.textContent = headerText;
@@ -723,6 +723,9 @@
       thead.appendChild(headerRow);
       table.appendChild(thead);
       
+      // 存储勾选状态
+      const selectedItems = new Set();
+      
       // 表格数据据
       const tbody = document.createElement('tbody');
       data.latestResults.forEach((item, index) => {
@@ -730,6 +733,25 @@
         tr.style.backgroundColor = isDarkTheme 
           ? index % 2 === 0 ? '#3d3d3d' : '#4a4a4a' 
           : index % 2 === 0 ? '#fff' : '#f9f9f9';
+        
+        // 添加复选框
+        const checkboxCell = document.createElement('td');
+        const checkbox = document.createElement('input');
+        checkbox.type = 'checkbox';
+        checkbox.style.margin = '0';
+        checkbox.style.verticalAlign = 'middle';
+        checkbox.addEventListener('change', () => {
+          if (checkbox.checked) {
+            selectedItems.add(index);
+          } else {
+            selectedItems.delete(index);
+          }
+        });
+        checkboxCell.appendChild(checkbox);
+        checkboxCell.style.border = `1px solid ${isDarkTheme ? '#555555' : '#ddd'}`;
+        checkboxCell.style.padding = '8px';
+        checkboxCell.style.textAlign = 'center';
+        tr.appendChild(checkboxCell);
         
         // 处理日期数期数格式，只显示年月日期数
         let formattedDate = item.drawDate || '';
@@ -800,7 +822,7 @@
       
       // 确认同步按钮
       const confirmBtn = document.createElement('button');
-      confirmBtn.textContent = '确认同步数据据';
+      confirmBtn.textContent = '确认同步数据';
       confirmBtn.style.cssText = `
         padding: 8px 16px;
         background-color: #28a745;
@@ -818,6 +840,21 @@
       });
       confirmBtn.addEventListener('click', async () => {
         modal.remove();
+        
+        // 过滤出勾选的数据
+        const selectedData = data.latestResults.filter((_, index) => selectedItems.has(index));
+        if (selectedData.length === 0) {
+          alert('请至少选择一条数据进行同步');
+          pendingSyncData = null;
+          return;
+        }
+        
+        // 更新待同步数据
+        pendingSyncData = {
+          ...data,
+          latestResults: selectedData
+        };
+        
         await syncDataToDatabase();
       });
       buttonContainer.appendChild(confirmBtn);
@@ -910,10 +947,11 @@
       try {
         // 调用geng_xin_kai_jiang.js提供的同步到数据据库接?
         const response = await fetch('http://localhost:18889/geng_xin_kai_jiang', {
-          method: 'GET',
+          method: 'POST',
           headers: {
             'Content-Type': 'application/json'
-          }
+          },
+          body: JSON.stringify(pendingSyncData)
         });
         
         if (!response.ok) {

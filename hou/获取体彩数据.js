@@ -22,7 +22,7 @@ async function fetchNewLotteryData(startIssue = null) {
   try {
     console.log('开始从sporttery.cn抓取大乐透数据...');
     console.log('起始期号:', startIssue || '获取全部最新数据');
-    const apiUrl = 'https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry?gameNo=85&provinceId=0&pageSize=50&isVerify=1&pageNo=1';
+    const apiUrl = 'https://webapi.sporttery.cn/gateway/lottery/getHistoryPageListV1.qry?gameNo=85&provinceId=0&pageSize=100&isVerify=1&pageNo=1';
     console.log('API地址:', apiUrl);
     
     console.log('准备发送请求，设置10秒超时...');

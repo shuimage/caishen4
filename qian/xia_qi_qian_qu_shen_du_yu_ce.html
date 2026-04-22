@@ -2016,12 +2016,37 @@
                 document.body.appendChild(dialog);
                 
                 // 添加事件监听器
-                document.getElementById('confirmBtn').addEventListener('click', () => {
+                const confirmBtn = document.getElementById('confirmBtn');
+                const cancelBtn = document.getElementById('cancelBtn');
+                
+                let countdown = 10;
+                let countdownInterval;
+                
+                // 更新按钮文本
+                function updateButtonText() {
+                    confirmBtn.textContent = `保存 (${countdown}s)`;
+                }
+                
+                // 开始倒计时
+                updateButtonText();
+                countdownInterval = setInterval(() => {
+                    countdown--;
+                    updateButtonText();
+                    
+                    if (countdown <= 0) {
+                        clearInterval(countdownInterval);
+                        confirmBtn.click(); // 自动触发保存
+                    }
+                }, 1000);
+                
+                confirmBtn.addEventListener('click', () => {
+                    clearInterval(countdownInterval); // 清除倒计时
                     document.body.removeChild(dialog);
                     resolve(true);
                 });
                 
-                document.getElementById('cancelBtn').addEventListener('click', () => {
+                cancelBtn.addEventListener('click', () => {
+                    clearInterval(countdownInterval); // 清除倒计时
                     document.body.removeChild(dialog);
                     resolve(false);
                 });

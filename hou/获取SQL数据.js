@@ -114,9 +114,25 @@ async function huo_qu_sql_shu_ju(req, res) {
     }
     
     // 如果没有提供期号范围，使用原来的类型查询
-    // 验证期数类型参数
+    // 验证期数类型参数，支持中文类型
+    let normalizedType = type;
+    const typeMap = {
+      '近10期': '10',
+      '近30期': '30', 
+      '近35期': '35',
+      '近50期': '50',
+      '近120期': '120',
+      '全部': 'all'
+    };
+    
+    // 转换中文类型到数字类型
+    if (typeMap[type]) {
+      normalizedType = typeMap[type];
+      console.log('转换中文类型:', type, '->', normalizedType);
+    }
+    
     const validTypes = ['10', '30', '35', '50', '120', 'all'];
-    if (!validTypes.includes(type)) {
+    if (!validTypes.includes(normalizedType)) {
       return res.status(400).json({
         success: false,
         message: '无效的期数类型'
@@ -125,8 +141,8 @@ async function huo_qu_sql_shu_ju(req, res) {
     
     // 根据类型确定查询的期数
     let limitClause = '';
-    if (type !== 'all') {
-      const limit = parseInt(type);
+    if (normalizedType !== 'all') {
+      const limit = parseInt(normalizedType);
       limitClause = `LIMIT ${limit}`;
     }
     
