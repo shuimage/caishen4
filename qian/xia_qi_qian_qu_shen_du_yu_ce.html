@@ -277,6 +277,8 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <h2>回测结果</h2>
                         <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-warning" id="exportExcelBtn">导出Excel</button>
+                            <button class="btn btn-success" id="aiAnalysisBtn">AI分析</button>
                             <button class="btn btn-primary" id="loadDataBtn">加载数据</button>
                             <button class="btn btn-secondary" id="toggleResultsBtn">展开</button>
                         </div>
@@ -411,6 +413,22 @@
     </div>
     
     <!-- 主题切换脚本 -->
+    <!-- AI分析结果弹窗 -->
+    <div id="aiAnalysisModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 1000; overflow-y: auto;">
+        <div style="background-color: white; margin: 5% auto; padding: 20px; border-radius: 10px; max-width: 900px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h2 style="color: #333;">AI分析结果 - 下期开奖预测</h2>
+                <button id="closeModalBtn" style="padding: 8px 16px; background-color: #f44336; color: white; border: none; border-radius: 4px; cursor: pointer;">关闭</button>
+            </div>
+            <div id="aiAnalysisContent" style="min-height: 300px;">
+                <div style="text-align: center; padding: 50px; color: #666;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🔄</div>
+                    <div>AI正在分析数据，请稍候...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <script src="js/theme-toggle.js"></script>
     
     <!-- 导航栏脚本 -->
@@ -593,6 +611,18 @@
             
             // 终止按钮
             document.getElementById('stopBtn').addEventListener('click', stopBacktest);
+            
+            // 导出Excel按钮
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', exportToExcel);
+            }
+            
+            // AI分析按钮
+            const aiAnalysisBtn = document.getElementById('aiAnalysisBtn');
+            if (aiAnalysisBtn) {
+                aiAnalysisBtn.addEventListener('click', performAIAnalysis);
+            }
             
             // 加载数据按钮
             const loadDataBtn = document.getElementById('loadDataBtn');
@@ -2256,6 +2286,279 @@
         function viewDetails(period, backtestPeriod) {
             // 实际项目中，这里应该显示详细的回测结果
             alert(`期号 ${period}，回测期数 ${backtestPeriod} 的详细结果`);
+        }
+        
+        // AI分析相关功能
+        document.addEventListener('DOMContentLoaded', function() {
+            // 关闭弹窗按钮
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            if (closeModalBtn) {
+                closeModalBtn.addEventListener('click', closeAIAnalysisModal);
+            }
+            
+            // 点击弹窗背景关闭弹窗
+            const modal = document.getElementById('aiAnalysisModal');
+            if (modal) {
+                modal.addEventListener('click', function(e) {
+                    if (e.target === modal) {
+                        closeAIAnalysisModal();
+                    }
+                });
+            }
+        });
+        
+        // 关闭AI分析弹窗
+        function closeAIAnalysisModal() {
+            const modal = document.getElementById('aiAnalysisModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // 导出Excel功能
+        function exportToExcel() {
+            const table = document.getElementById('resultsTable');
+            if (!table) {
+                alert('未找到数据表格');
+                return;
+            }
+            
+            const headers = [];
+            const rows = [];
+            
+            // 获取表头
+            const headerCells = table.querySelectorAll('thead th');
+            headerCells.forEach(cell => {
+                headers.push(cell.textContent.trim());
+            });
+            
+            // 获取所有显示的数据行
+            const dataRows = table.querySelectorAll('tbody tr');
+            dataRows.forEach(row => {
+                // 跳过隐藏的行
+                if (row.style.display === 'none') {
+                    return;
+                }
+                
+                const rowData = [];
+                const cells = row.querySelectorAll('td');
+                
+                // 确保有足够的单元格
+                if (cells.length === headers.length) {
+                    cells.forEach(cell => {
+                        let text = cell.textContent.trim();
+                        if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+                            text = '"' + text.replace(/"/g, '""') + '"';
+                        }
+                        rowData.push(text);
+                    });
+                    rows.push(rowData);
+                }
+            });
+            
+            if (rows.length === 0) {
+                alert('没有数据可以导出');
+                return;
+            }
+            
+            // 创建CSV格式内容，使用逗号分隔
+            let csvContent = headers.map(h => 
+                h.includes(',') || h.includes('"') ? '"' + h.replace(/"/g, '""') + '"' : h
+            ).join(',') + '\n';
+            
+            rows.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+            
+            // 创建下载链接
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `回测结果_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+        
+        // 执行AI分析
+        async function performAIAnalysis() {
+            const tableBody = document.querySelector('#resultsTable tbody');
+            const rows = tableBody.querySelectorAll('tr');
+            
+            // 获取筛选后显示的数据
+            const filteredData = [];
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    const cells = row.querySelectorAll('td');
+                    if (cells.length >= 11) {
+                        filteredData.push({
+                            index: cells[0].textContent,
+                            period: cells[1].textContent,
+                            backtestMethod: cells[2].textContent,
+                            backtestPeriod: cells[3].textContent,
+                            resultRank: cells[4].textContent,
+                            resultValue: cells[5].textContent,
+                            nextPeriod: cells[6].textContent,
+                            nextFrontNumbers: cells[7].textContent,
+                            isCorrect: cells[8].textContent,
+                            correctBalls: cells[9].textContent,
+                            correctRate: cells[10].textContent
+                        });
+                    }
+                }
+            });
+            
+            if (filteredData.length === 0) {
+                alert('请先加载数据并确保有筛选后显示的数据');
+                return;
+            }
+            
+            // 显示弹窗
+            const modal = document.getElementById('aiAnalysisModal');
+            const content = document.getElementById('aiAnalysisContent');
+            modal.style.display = 'block';
+            content.innerHTML = `
+                <div style="text-align: center; padding: 50px; color: #666;">
+                    <div style="font-size: 24px; margin-bottom: 10px;">🔄</div>
+                    <div>AI正在分析数据，请稍候...</div>
+                </div>
+            `;
+            
+            try {
+                // 调用后端AI分析接口（通过后端代理解决CORS问题）
+                const response = await fetch('http://localhost:18889/ai_analysis', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data: filteredData })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    displayAIAnalysisResult(result.data);
+                } else {
+                    throw new Error(result.message || 'AI分析失败');
+                }
+            } catch (error) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 50px; color: #f44336;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">❌</div>
+                        <div>AI分析失败: ${error.message}</div>
+                    </div>
+                `;
+            }
+        }
+        
+        
+        
+        // 显示AI分析结果
+        function displayAIAnalysisResult(result) {
+            const content = document.getElementById('aiAnalysisContent');
+            
+            // 始终显示原始响应内容作为调试信息
+            let html = `
+                <div style="margin-bottom: 20px; padding: 15px; background-color: #f0f8ff; border-radius: 8px; border: 1px solid #b3d9ff;">
+                    <h3 style="color: #1e6091; margin-bottom: 10px;">📋 AI原始响应</h3>
+                    <pre style="color: #333; font-size: 12px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; word-break: break-all;">${escapeHtml(result)}</pre>
+                </div>
+            `;
+            
+            try {
+                // 尝试解析JSON结果
+                const analysisData = JSON.parse(result);
+                
+                // 添加解析后的结构化内容
+                html += `
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: #f5f5f5; border-radius: 8px;">
+                        <h3 style="color: #333; margin-bottom: 10px;">📊 分析概述</h3>
+                        <p style="color: #666;">${analysisData.analysis || '暂无分析概述'}</p>
+                    </div>
+                `;
+                
+                // 推荐球号
+                if (analysisData.recommendedBalls && analysisData.recommendedBalls.length > 0) {
+                    html += `
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #333; margin-bottom: 15px;">🎯 推荐球号（按优先级排序）</h3>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    `;
+                    
+                    analysisData.recommendedBalls.forEach((ball, index) => {
+                        const colors = ['#DF2220', '#E53935', '#EF5350', '#E57373', '#EF9A9A'];
+                        html += `
+                            <div style="text-align: center;">
+                                <div style="width: 60px; height: 60px; border-radius: 50%; background-color: ${colors[index % colors.length]}; color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                                    ${ball}
+                                </div>
+                                <div style="margin-top: 8px; font-size: 12px; color: #666;">第${index + 1}推荐</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // 各球号推荐理由
+                if (analysisData.ballReasons && typeof analysisData.ballReasons === 'object') {
+                    html += `
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="color: #333; margin-bottom: 15px;">📝 各球号推荐理由</h3>
+                    `;
+                    
+                    Object.entries(analysisData.ballReasons).forEach(([ball, reason]) => {
+                        html += `
+                            <div style="margin-bottom: 15px; padding: 12px; background-color: #fff3e0; border-left: 4px solid #ff9800; border-radius: 0 4px 4px 0;">
+                                <div style="font-weight: bold; color: #e65100; margin-bottom: 5px;">球号 ${ball}</div>
+                                <div style="color: #666; line-height: 1.6;">${reason || '暂无推荐理由'}</div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += `
+                        </div>
+                    `;
+                }
+                
+                // 置信度评估
+                html += `
+                    <div style="padding: 15px; background-color: #e8f5e9; border-radius: 8px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <span style="font-size: 18px;">📈</span>
+                            <div>
+                                <div style="font-weight: bold; color: #2e7d32;">置信度评估</div>
+                                <div style="color: #666;">${analysisData.confidence || '未评估'}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+            } catch (e) {
+                // 如果JSON解析失败，添加错误提示
+                html += `
+                    <div style="margin-bottom: 20px; padding: 15px; background-color: #fff3e0; border-radius: 8px;">
+                        <h3 style="color: #e65100; margin-bottom: 10px;">⚠️ JSON解析失败</h3>
+                        <p style="color: #666;">AI返回的内容不是有效JSON格式，已显示原始响应。错误信息: ${e.message}</p>
+                    </div>
+                `;
+            }
+            
+            content.innerHTML = html;
+        }
+        
+        // HTML转义函数
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
     </script>
 </body>

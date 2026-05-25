@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
@@ -226,16 +226,16 @@
                         <label style="display: block; margin-bottom: 5px; font-weight: bold;">回测期数：</label>
                         <div style="display: flex; gap: 15px; align-items: center;">
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="period10"> <label for="period10" style="margin-left: 5px;">10期</label>
+                                <input type="checkbox" id="period10" checked> <label for="period10" style="margin-left: 5px;">10 期</label>
                             </div>
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="period20"> <label for="period20" style="margin-left: 5px;">20期</label>
+                                <input type="checkbox" id="period20" checked> <label for="period20" style="margin-left: 5px;">20 期</label>
                             </div>
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="period30"> <label for="period30" style="margin-left: 5px;">30期</label>
+                                <input type="checkbox" id="period30" checked> <label for="period30" style="margin-left: 5px;">30 期</label>
                             </div>
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="period50" checked> <label for="period50" style="margin-left: 5px;">50期</label>
+                                <input type="checkbox" id="period50" checked> <label for="period50" style="margin-left: 5px;">50 期</label>
                             </div>
                         </div>
                     </div>
@@ -243,19 +243,19 @@
                         <label style="display: block; margin-bottom: 5px; font-weight: bold;">回测方法：</label>
                         <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: center;">
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="methodNewest" checked> <label for="methodNewest" style="margin-left: 5px;">最新1期</label>
+                                <input type="checkbox" id="methodNewest" checked> <label for="methodNewest" style="margin-left: 5px;">最新 1 期</label>
                             </div>
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="methodSecondLast"> <label for="methodSecondLast" style="margin-left: 5px;">倒数2期</label>
+                                <input type="checkbox" id="methodSecondLast" checked> <label for="methodSecondLast" style="margin-left: 5px;">倒数 2 期</label>
                             </div>
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="methodThirdLast"> <label for="methodThirdLast" style="margin-left: 5px;">倒数3期</label>
+                                <input type="checkbox" id="methodThirdLast" checked> <label for="methodThirdLast" style="margin-left: 5px;">倒数 3 期</label>
                             </div>
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="methodFourthLast"> <label for="methodFourthLast" style="margin-left: 5px;">倒数4期</label>
+                                <input type="checkbox" id="methodFourthLast" checked> <label for="methodFourthLast" style="margin-left: 5px;">倒数 4 期</label>
                             </div>
                             <div style="display: flex; align-items: center;">
-                                <input type="checkbox" id="methodFifthLast"> <label for="methodFifthLast" style="margin-left: 5px;">倒数5期</label>
+                                <input type="checkbox" id="methodFifthLast" checked> <label for="methodFifthLast" style="margin-left: 5px;">倒数 5 期</label>
                             </div>
                         </div>
                     </div>
@@ -289,6 +289,7 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
                         <h2>回测结果</h2>
                         <div style="display: flex; gap: 10px;">
+                            <button class="btn btn-warning" id="exportExcelBtn">导出Excel</button>
                             <button class="btn btn-primary" id="loadDataBtn">加载数据</button>
                             <button class="btn btn-secondary" id="toggleResultsBtn">展开</button>
                         </div>
@@ -610,6 +611,12 @@
             
             // 终止按钮
             document.getElementById('stopBtn').addEventListener('click', stopBacktest);
+            
+            // 导出Excel按钮
+            const exportExcelBtn = document.getElementById('exportExcelBtn');
+            if (exportExcelBtn) {
+                exportExcelBtn.addEventListener('click', exportToExcel);
+            }
             
             // 加载数据按钮
             const loadDataBtn = document.getElementById('loadDataBtn');
@@ -1000,6 +1007,75 @@
         }
         
 
+        
+        // 导出Excel功能
+        function exportToExcel() {
+            const table = document.getElementById('resultsTable');
+            if (!table) {
+                alert('未找到数据表格');
+                return;
+            }
+            
+            const headers = [];
+            const rows = [];
+            
+            // 获取表头
+            const headerCells = table.querySelectorAll('thead th');
+            headerCells.forEach(cell => {
+                headers.push(cell.textContent.trim());
+            });
+            
+            // 获取所有显示的数据行
+            const dataRows = table.querySelectorAll('tbody tr');
+            dataRows.forEach(row => {
+                // 跳过隐藏的行
+                if (row.style.display === 'none') {
+                    return;
+                }
+                
+                const rowData = [];
+                const cells = row.querySelectorAll('td');
+                
+                // 确保有足够的单元格
+                if (cells.length === headers.length) {
+                    cells.forEach(cell => {
+                        let text = cell.textContent.trim();
+                        if (text.includes(',') || text.includes('"') || text.includes('\n')) {
+                            text = '"' + text.replace(/"/g, '""') + '"';
+                        }
+                        rowData.push(text);
+                    });
+                    rows.push(rowData);
+                }
+            });
+            
+            if (rows.length === 0) {
+                alert('没有数据可以导出');
+                return;
+            }
+            
+            // 创建CSV格式内容，使用逗号分隔
+            let csvContent = headers.map(h => 
+                h.includes(',') || h.includes('"') ? '"' + h.replace(/"/g, '""') + '"' : h
+            ).join(',') + '\n';
+            
+            rows.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+            
+            // 创建下载链接
+            const blob = new Blob(['\uFEFF' + csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            
+            link.setAttribute('href', url);
+            link.setAttribute('download', `回测结果_${new Date().toLocaleDateString('zh-CN').replace(/\//g, '-')}.csv`);
+            link.style.visibility = 'hidden';
+            
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
         
         // 展开/收起回测结果
         function toggleResults() {
